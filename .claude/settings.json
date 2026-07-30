@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost/repositoriosPuklla/public/)",
+      "Bash(curl -s http://localhost/repositoriosPuklla/public/ -o \"C:\\\\Users\\\\Jaime\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--xampp-htdocs-repositoriosPuklla\\\\98211a7c-737a-4513-8e69-bc5fbe128e6f\\\\scratchpad\\\\hub.html\")",
+      "Bash(curl -s http://localhost/repositoriosPuklla/public/repositorio/sisipedia)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost/Biblioteca/public/)",
+      "Bash(curl -s -I http://localhost/Biblioteca/public/)",
+      "Bash(php -l resources/views/eesppukllasunchis.blade.php)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost/repositoriosPuklla/public/eesppukllasunchis)",
+      "Bash(curl -s http://localhost/repositoriosPuklla/public/eesppukllasunchis -o \"C:\\\\Users\\\\Jaime\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--xampp-htdocs-repositoriosPuklla\\\\98211a7c-737a-4513-8e69-bc5fbe128e6f\\\\scratchpad\\\\eesp.html\")",
+      "Bash(curl -s http://localhost/repositoriosPuklla/public/ -o \"C:\\\\Users\\\\Jaime\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--xampp-htdocs-repositoriosPuklla\\\\98211a7c-737a-4513-8e69-bc5fbe128e6f\\\\scratchpad\\\\hub2.html\")",
+      "Bash(curl -s http://localhost/repositoriosPuklla/public/eesppukllasunchis -o \"C:\\\\Users\\\\Jaime\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--xampp-htdocs-repositoriosPuklla\\\\98211a7c-737a-4513-8e69-bc5fbe128e6f\\\\scratchpad\\\\eesp2.html\")",
+      "Bash(curl -s http://localhost/repositoriosPuklla/public/eesppukllasunchis -o \"C:\\\\Users\\\\Jaime\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--xampp-htdocs-repositoriosPuklla\\\\98211a7c-737a-4513-8e69-bc5fbe128e6f\\\\scratchpad\\\\eesp3.html\")",
+      "Bash(curl -s http://localhost/repositoriosPuklla/public/eesppukllasunchis -o \"C:\\\\Users\\\\Jaime\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--xampp-htdocs-repositoriosPuklla\\\\98211a7c-737a-4513-8e69-bc5fbe128e6f\\\\scratchpad\\\\eesp4.html\")",
+      "Bash(php -l resources/views/layouts/padre.blade.php)",
+      "Bash(curl -s -o /dev/null -w \"eesp: %{http_code}\\\\n\" http://localhost/repositoriosPuklla/public/eesppukllasunchis)",
+      "Bash(curl -s -o /dev/null -w \"sisipedia: %{http_code}\\\\n\" http://localhost/repositoriosPuklla/public/repositorio/sisipedia)",
+      "Bash(curl -s -o /dev/null -w \"hub: %{http_code}\\\\n\" http://localhost/repositoriosPuklla/public/)",
+      "Bash(pkill -f \"artisan serve\")",
+      "Bash(curl -s -o /tmp/busqueda_hit.html -w \"busqueda \\(con resultados\\) => %{http_code}\\\\n\" \"http://127.0.0.1:8123/resultados-de-busqueda?query=Prueba%20Puklla%20Search%20Test\")",
+      "Bash(php -l public/../app/Http/Controllers/EnlacesController.php)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost/eesppukllasunchis)",
+      "Bash(curl -s -L http://localhost/)",
+      "Bash(curl -s http://localhost/repositoriosPuklla/public/eesppukllasunchis)",
+      "Bash(curl -s http://localhost/repositoriosPuklla/public/kawsay)",
+      "Bash(curl -s \"http://localhost/repositoriosPuklla/public/catalogo-fisico\")",
+      "Bash(curl -s \"http://localhost/repositoriosPuklla/public/catalogo-fisico\" -o /dev/null -w \"%{http_code}\\\\n\")"
+    ]
+  }
+}

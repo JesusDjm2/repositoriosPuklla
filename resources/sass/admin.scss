@@ -1,0 +1,392 @@
+// ─── Paleta de marca Asociación Pukllasunchis ───────────────────────────────
+// Nota: este archivo NO importa Bootstrap (ni 4 ni 5). El panel admin sigue
+// cargando Bootstrap 4 + jQuery vía CDN (ver layouts/app.blade.php) porque ~20
+// vistas existentes dependen de sus plugins jQuery (modales, colapsables) que
+// Bootstrap 5 eliminó. Este archivo solo añade componentes nuevos (stat-card,
+// project-card, sidebar) y la paleta de marca, sin tocar ese código heredado.
+$puk-maroon: #6a0310;
+$puk-maroon-dark: #4a0212;
+$puk-gold: #c88e41;
+
+:root {
+    --puk-maroon: #{$puk-maroon};
+    --puk-maroon-dark: #{$puk-maroon-dark};
+    --puk-gold: #{$puk-gold};
+    --puk-gold-light: #e5b978;
+    --puk-sidebar-bg: #203855;
+    --puk-sidebar-bg-dark: #16293d;
+}
+
+// ─── Estructura general ─────────────────────────────────────────────────────
+body {
+    background: var(--body-bg, #f4f6f9);
+}
+
+.wrapper {
+    width: 100%;
+    align-items: stretch;
+}
+
+#sidebar {
+    min-width: 268px;
+    max-width: 268px;
+    background: linear-gradient(180deg, var(--puk-sidebar-bg) 0%, var(--puk-sidebar-bg-dark) 100%);
+    color: #fff;
+    transition: margin-left 0.3s ease;
+    position: relative;
+}
+
+#sidebar h1 .logo {
+    color: #fff;
+}
+
+#sidebar ul.components {
+    padding: 0;
+}
+
+#sidebar ul li a {
+    padding: 0.65rem 0.25rem;
+    display: block;
+    color: rgba(255, 255, 255, 0.82);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.4rem;
+    transition: background-color 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+}
+
+#sidebar ul li a:hover {
+    color: #fff;
+    background: rgba(200, 142, 65, 0.14);
+    padding-left: 0.5rem;
+}
+
+#sidebar ul li.active > a {
+    background: rgba(200, 142, 65, 0.18);
+    color: var(--puk-gold-light);
+    font-weight: 600;
+}
+
+#sidebar .custom-menu .btn.btn-primary {
+    background: #fff;
+    border-color: var(--puk-sidebar-bg);
+}
+
+#sidebar .custom-menu .btn.btn-primary .fa-bars {
+    color: var(--puk-sidebar-bg);
+}
+
+@media (max-width: 991.98px) {
+    #sidebar {
+        position: fixed;
+        z-index: 1040;
+        top: 0;
+        bottom: 0;
+        margin-left: -268px;
+        box-shadow: 0.5rem 0 1.5rem rgba(0, 0, 0, 0.25);
+    }
+
+    #sidebar.active {
+        margin-left: 0;
+    }
+}
+
+#content {
+    width: 100%;
+    padding: 0;
+    min-height: 100vh;
+}
+
+// Reafirma el color de marca sobre el .btn-primary de Bootstrap 4
+// (el CSS vendored de Bootstrap 4 ya lo pinta de #203855; esto es solo
+// para los botones "primary" dentro de los componentes nuevos de esta hoja).
+.stat-card ~ .btn-primary,
+.project-card .btn-primary {
+    background: var(--puk-maroon);
+    border-color: var(--puk-maroon);
+}
+
+.project-card .btn-primary:hover,
+.project-card .btn-primary:focus {
+    background: var(--puk-maroon-dark) !important;
+    border-color: var(--puk-maroon-dark) !important;
+}
+
+// ─── Componentes del Admin Principal ────────────────────────────────────────
+.admin-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 1.75rem;
+}
+
+.admin-page-header__title {
+    font-weight: 800;
+    margin-bottom: 0.15rem;
+}
+
+.admin-page-header__subtitle {
+    color: #6c757d;
+}
+
+// Bootstrap 4 (usado en el admin) no trae utilidades .gap-*
+.admin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.stats-grid,
+.proyectos-grid {
+    display: grid;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.proyectos-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: var(--bs-card-border-radius, 1rem);
+    box-shadow: 0 0.5rem 1.5rem rgba(20, 20, 40, 0.06);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-left: 4px solid var(--puk-maroon);
+}
+
+.stat-card__icon {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(106, 3, 16, 0.08);
+    color: var(--puk-maroon);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+}
+
+.stat-card__value {
+    font-size: 1.85rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #212529;
+}
+
+.stat-card__label {
+    color: #6c757d;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.project-card {
+    background: #fff;
+    border-radius: var(--bs-card-border-radius, 1rem);
+    box-shadow: 0 0.5rem 1.5rem rgba(20, 20, 40, 0.06);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.project-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 1rem 2rem rgba(20, 20, 40, 0.1);
+}
+
+.project-card__header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1.25rem 1.25rem 0.75rem;
+}
+
+.project-card__logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    object-fit: contain;
+    background: #f4f6f9;
+    padding: 0.35rem;
+    flex-shrink: 0;
+}
+
+.project-card__name {
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+}
+
+.project-card__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0 1.25rem 1rem;
+}
+
+.project-card__stats .badge {
+    background: rgba(106, 3, 16, 0.08);
+    color: var(--puk-maroon);
+    font-weight: 600;
+}
+
+.project-card__actions {
+    margin-top: auto;
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid #eef0f3;
+}
+
+// ─── Dark mode (paleta navy, coherente con el sidebar) ─────────────────────
+[data-theme="dark"] body {
+    background-color: #0d1b28;
+}
+
+[data-theme="dark"] #content {
+    background-color: #0d1b28 !important;
+    color: #cdd9e5;
+}
+
+[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
+[data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6,
+[data-theme="dark"] p, [data-theme="dark"] label, [data-theme="dark"] small,
+[data-theme="dark"] span:not(.badge) {
+    color: #cdd9e5;
+}
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .card-body,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .project-card {
+    background-color: #162d42 !important;
+    border-color: #254560 !important;
+    color: #cdd9e5;
+}
+
+[data-theme="dark"] .stat-card__value {
+    color: #cdd9e5;
+}
+
+[data-theme="dark"] .project-card__actions {
+    border-color: #254560;
+}
+
+[data-theme="dark"] .card-header,
+[data-theme="dark"] .card-footer {
+    background-color: #112236 !important;
+    border-color: #254560 !important;
+}
+
+[data-theme="dark"] .table {
+    color: #cdd9e5;
+}
+
+[data-theme="dark"] .table thead th,
+[data-theme="dark"] .table td,
+[data-theme="dark"] .table th {
+    border-color: #254560;
+}
+
+[data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(32, 56, 85, 0.35);
+}
+
+[data-theme="dark"] .table-hover tbody tr:hover {
+    background-color: rgba(32, 56, 85, 0.6);
+    color: #fff;
+}
+
+[data-theme="dark"] .bg-white,
+[data-theme="dark"] .bg-light {
+    background-color: #162d42 !important;
+}
+
+[data-theme="dark"] input:not([type="submit"]):not([type="button"]):not([type="checkbox"]),
+[data-theme="dark"] textarea,
+[data-theme="dark"] select,
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: #112236 !important;
+    color: #cdd9e5 !important;
+    border-color: #254560 !important;
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    background-color: #162d42;
+    color: #fff;
+    border-color: #4a90d9;
+    box-shadow: 0 0 0 0.2rem rgba(74, 144, 217, 0.25);
+}
+
+[data-theme="dark"] .alert-info { background-color: #0f2d3e; border-color: #1a4a62; color: #90c8e0; }
+[data-theme="dark"] .alert-success { background-color: #0d2e1c; border-color: #1a4a2e; color: #80c896; }
+[data-theme="dark"] .alert-warning { background-color: #2e2408; border-color: #4a3c12; color: #e0c060; }
+[data-theme="dark"] .alert-danger { background-color: #2e0e0e; border-color: #4a1818; color: #e08080; }
+
+[data-theme="dark"] .modal-content {
+    background-color: #162d42;
+    color: #cdd9e5;
+    border-color: #254560;
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer {
+    border-color: #254560;
+}
+
+[data-theme="dark"] .btn-outline-secondary {
+    color: #90b8d8;
+    border-color: #90b8d8;
+}
+
+[data-theme="dark"] a:not(.btn):not(.nav-link) {
+    color: #6ab2f5;
+}
+
+[data-theme="dark"] .text-muted { color: #7a9ab8 !important; }
+[data-theme="dark"] .text-dark:not(.badge) { color: #cdd9e5 !important; }
+
+[data-theme="dark"] .badge-light,
+[data-theme="dark"] .badge.text-dark {
+    background-color: #1c3a55 !important;
+    color: #cdd9e5 !important;
+    border-color: #2e5878 !important;
+}
+
+[data-theme="dark"] #darkModeToggle {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .category-item { background: #162d42 !important; border-color: #254560 !important; }
+[data-theme="dark"] .category-item:hover { background: #1c3a52 !important; border-color: #2e5878 !important; }
+[data-theme="dark"] .category-item.has-search-match { background: #1e3420 !important; border-color: #3a6040 !important; }
+[data-theme="dark"] .category-name { color: #cdd9e5 !important; }
+[data-theme="dark"] .category-slug { color: #7a9ab8 !important; }
+[data-theme="dark"] .category-parent { color: #7a9ab8 !important; }
+[data-theme="dark"] .category-order { background: #1e3a55 !important; color: #cdd9e5 !important; }
+[data-theme="dark"] .category-image-placeholder { background: #254560 !important; color: #7a9ab8 !important; }
+[data-theme="dark"] .expand-btn { color: #7a9ab8; }
+[data-theme="dark"] .expand-btn:hover { background: #254560 !important; color: #cdd9e5 !important; }
+[data-theme="dark"] .tree-line { background: #254560 !important; }
+[data-theme="dark"] .status-active { background: #0d3a1e !important; color: #80c896 !important; }
+[data-theme="dark"] .status-inactive { background: #3a1010 !important; color: #e08080 !important; }
+[data-theme="dark"] .no-results { color: #7a9ab8; }
+[data-theme="dark"] .category-tree ul { border-color: #254560; }
+[data-theme="dark"] .badge-light.text-muted {
+    background-color: #1c3a55 !important;
+    color: #7a9ab8 !important;
+    border-color: #254560 !important;
+}

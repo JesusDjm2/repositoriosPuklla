@@ -1,0 +1,26 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('kawsay_videos', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre')->unique();
+            $table->string('descripcion')->nullable();
+            $table->string('youtube')->nullable();
+            $table->string('drive')->nullable();
+            $table->foreignId('categoria_id')->constrained('kawsay_video_categorias');
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('kawsay_videos');
+    }
+};

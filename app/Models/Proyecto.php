@@ -1,0 +1,64 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Route;
+use Spatie\Permission\Models\Role;
+
+class Proyecto extends Model
+{
+    protected $fillable = [
+        'nombre',
+        'slug',
+        'logo',
+        'color',
+        'url_publica_name',
+        'descripcion',
+        'orden',
+        'activo',
+    ];
+
+    protected $casts = [
+        'activo' => 'boolean',
+    ];
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'proyecto_role');
+    }
+
+    public function scopeActivos(Builder $query): Builder
+    {
+        return $query->where('activo', true);
+    }
+
+    public function scopeOrdenados(Builder $query): Builder
+    {
+        return $query->orderBy('orden');
+    }
+
+    /** Consulta (no relación Eloquent) de los usuarios que administran este proyecto. */
+    public function usuariosQuery(): Builder
+    {
+        $roleIds = $this->roles()->pluck('roles.id');
+
+        return User::whereHas('roles', fn (Builder $q) => $q->whereIn('roles.id', $roleIds));
+    }
+
+    public function logoUrl(): string
+    {
+        return $this->logo ? asset('img/' . $this->logo) : asset('img/logoiesp.ico');
+    }
+
+    public function urlPublica(): ?string
+    {
+        if (! $this->url_publica_name || ! Route::has($this->url_publica_name)) {
+            return null;
+        }
+
+        return route($this->url_publica_name);
+    }
+}
