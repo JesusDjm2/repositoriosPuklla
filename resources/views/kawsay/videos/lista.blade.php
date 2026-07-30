@@ -1,13 +1,22 @@
 @extends('layouts.padre')
 @section('titulo', '- Kawsay')
+
+@section('estilos')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+@endsection
+
 @section('contenido')
-    <div class="fixed-image-container">
-        <div class="overlay"></div>
-        <div class="centered-content">
-            <h2>VIDEOS</h2>
-            <h1>Kawsay</h1>
-        </div>
-    </div>
+    @include('partials.lib-hero', [
+        'heroBg' => asset('img/fondo/sisi-fondo.png'),
+        'heroBgAlt' => 'Fondo Kawsay',
+        'heroEyebrow' => 'Kawsay',
+        'heroTitle' => 'Videos',
+        'heroMeta' => [
+            ['icon' => 'fa-video', 'text' => $videos->count() . ' ' . ($videos->count() === 1 ? 'video' : 'videos')],
+            ['icon' => 'fa-layer-group', 'text' => $categorias->count() . ' categorías'],
+        ],
+    ])
     <div class="container mt-4">
         <div class="row mt-4">
             <div class="col-lg-4 mt-4">

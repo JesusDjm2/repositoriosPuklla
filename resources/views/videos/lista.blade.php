@@ -1,14 +1,22 @@
 @extends('layouts.padre')
 @section('titulo', '- Lista de videos')
+
+@section('estilos')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+@endsection
+
 @section('contenido')
-    <div class="fixed-image-container">
-        <img src="{{ asset('img/FIlmadora-Puklla-Virtual-Fondo.webp') }}" alt="Fondo Pukllasunchis" loading="lazy">
-        <div class="overlay"></div>
-        <div class="centered-content">
-            <h2>VIDEOS</h2>
-            <h1>ESPP Pukllasunchis</h1>
-        </div>
-    </div>
+    @include('partials.lib-hero', [
+        'heroBg' => asset('img/FIlmadora-Puklla-Virtual-Fondo.webp'),
+        'heroBgAlt' => 'Fondo Pukllasunchis',
+        'heroEyebrow' => 'ESPP Pukllasunchis',
+        'heroTitle' => 'Videos',
+        'heroMeta' => [
+            ['icon' => 'fa-video', 'text' => $videos->count() . ' ' . ($videos->count() === 1 ? 'video' : 'videos')],
+            ['icon' => 'fa-layer-group', 'text' => $categorias->count() . ' secciones'],
+        ],
+    ])
     <div class="container mt-4">
         <div class="row mt-4">
             <div class="col-lg-4 mt-4">

@@ -2,15 +2,22 @@
 
 @section('titulo', '- Lista de canciones Pukllasunchis')
 
+@section('estilos')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+@endsection
+
 @section('contenido')
-    <div class="fixed-image-container">
-        <img src="{{ asset('img/fondo/Fondo-musica-andina-Puklla.webp') }}" alt="Fondo Pukllasunchis" loading="lazy">
-        <div class="overlay"></div>
-        <div class="centered-content">
-            <h2>CANCIONES</h2>
-            <h1>Radio Pukllasunchis</h1>
-        </div>
-    </div>
+    @include('partials.lib-hero', [
+        'heroBg' => asset('img/fondo/Fondo-musica-andina-Puklla.webp'),
+        'heroBgAlt' => 'Fondo Pukllasunchis',
+        'heroEyebrow' => 'Radio Pukllasunchis',
+        'heroTitle' => 'Canciones',
+        'heroMeta' => [
+            ['icon' => 'fa-music', 'text' => $canciones->count() . ' ' . ($canciones->count() === 1 ? 'canción' : 'canciones')],
+            ['icon' => 'fa-layer-group', 'text' => $categorias->count() . ' categorías'],
+        ],
+    ])
     <div class="container mt-4">
         <div class="row mt-4">
             <div class="col-lg-4 mt-4">

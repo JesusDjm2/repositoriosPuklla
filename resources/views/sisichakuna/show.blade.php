@@ -9,14 +9,19 @@
     $heroSubtitulo = $heroPorTipo[$tipo ?? ''] ?? 'Repositorio de Trabajos';
 @endphp
 @section('titulo', '- ' . $heroSubtitulo)
+
+@section('estilos')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+@endsection
+
 @section('contenido')
-<div class="fixed-image-container sisipedia-hero">
-    <div class="overlay"></div>
-    <div class="centered-content">
-        <h2>SISIPEDIA</h2>
-        <h1>{{ $heroSubtitulo }}</h1>
-    </div>
-</div>
+@include('partials.lib-hero', [
+    'heroBg' => asset('img/fondo/Fondo-sisipedia.png'),
+    'heroBgAlt' => 'Fondo Sisipedia',
+    'heroEyebrow' => 'Sisipedia',
+    'heroTitle' => $heroSubtitulo,
+])
 <div class="container py-2 py-md-3">
 
 {{-- ── Navegación por tipo de archivo ─────────────────────────── --}}

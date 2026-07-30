@@ -22,7 +22,7 @@
         ];
     } else {
         $sisiTipo = request()->routeIs('public.sisi') ? request()->query('tipo') : null;
-        $isSisipedia = request()->routeIs('public.sisi', 'public.categoria.sisi', 'sisipedia.categories.show', 'sisipedia.search')
+        $isSisipedia = request()->routeIs('index', 'public.sisi', 'public.categoria.sisi', 'sisipedia.categories.show', 'sisipedia.search')
             && ! in_array($sisiTipo, ['audio', 'imagen', 'video', 'pdf'], true);
         $isAudios = $sisiTipo === 'audio';
         $isImagenes = $sisiTipo === 'imagen';

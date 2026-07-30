@@ -1,13 +1,19 @@
 @extends('layouts.padre')
 @section('titulo', '- Detalle de registro')
+
+@section('estilos')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+@endsection
+
 @section('contenido')
-    <div class="fixed-image-container">
-        <div class="overlay"></div>
-        <div class="centered-content">
-            <h2>SISIPEDIA</h2>
-            <h1>{{ $category->display_name ?? 'Detalle del registro' }}</h1>
-        </div>
-    </div>
+    @include('partials.lib-hero', [
+        'heroBg' => asset('img/fondo/Fondo-sisipedia.png'),
+        'heroBgAlt' => 'Fondo Sisipedia',
+        'heroEyebrow' => 'Sisipedia',
+        'heroTitle' => $category->display_name ?? 'Detalle del registro',
+        'heroTitleSmall' => true,
+    ])
     <div class="container">
         <div class="row mt-2 mt-md-5">
             <div class="col-lg-12">

@@ -1,17 +1,22 @@
 @extends('layouts.padre')
 @section('titulo', '- Kawsay')
+
+@section('estilos')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+@endsection
+
 @section('contenido')
-    <div class="fixed-image-container">
-        <div class="overlay"></div>
-        <div class="centered-content">
-            <h2>LIBROS</h2>
-            <h1>'{{ $categoria->nombre }}'</h1>
-            <p class="mb-4 text-center">
-                {{ $categoria->libros->count() }}
-                {{ $categoria->libros->count() === 1 ? 'libro' : 'libros' }}
-            </p>
-        </div>
-    </div>
+    @include('partials.lib-hero', [
+        'heroBg' => asset('img/fondo/sisi-fondo.png'),
+        'heroBgAlt' => 'Fondo Kawsay',
+        'heroEyebrow' => 'Libros · Kawsay',
+        'heroTitle' => $categoria->nombre,
+        'heroTitleSmall' => true,
+        'heroMeta' => [
+            ['icon' => 'fa-book-open', 'text' => $categoria->libros->count() . ' ' . ($categoria->libros->count() === 1 ? 'libro' : 'libros')],
+        ],
+    ])
     <div class="container mt-4">
         <div class="row mt-4">
             <div class="col-lg-12">

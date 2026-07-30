@@ -94,7 +94,15 @@ class EnlacesController extends Controller
             'nombre' => $p->nombre,
             'logo' => $p->logo,
             'url' => $p->urlPublica(),
+            'descripcion' => $p->descripcion,
+            'color' => $p->color,
         ]);
+
+        // Los proyectos "próximamente" (sin ruta pública todavía) van siempre al
+        // final, sin importar su campo `orden` — por ser los últimos en crearse.
+        $conUrl = $activos->filter(fn (array $p) => $p['url'])->values();
+        $sinUrl = $activos->filter(fn (array $p) => ! $p['url'])->values();
+        $activos = $conUrl->concat($sinUrl)->values();
 
         $vacios = collect(range(1, max(0, 6 - $activos->count())))
             ->map(fn () => ['nombre' => null, 'logo' => null, 'url' => null]);

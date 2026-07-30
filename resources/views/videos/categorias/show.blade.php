@@ -1,14 +1,22 @@
 @extends('layouts.padre')
 @section('titulo', '- Biblioteca virtual')
+
+@section('estilos')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+@endsection
+
 @section('contenido')
-    <div class="fixed-image-container">
-        <img src="{{ asset('img/FIlmadora-Puklla-Virtual-Fondo.webp') }}" alt="Fondo Pukllasunchis" loading="lazy">
-        <div class="overlay"></div>
-        <div class="centered-content">
-            <h2>Videos</h2>
-            <h1>{{ $categoria->nombre }}</h1>
-        </div>
-    </div>
+    @include('partials.lib-hero', [
+        'heroBg' => asset('img/FIlmadora-Puklla-Virtual-Fondo.webp'),
+        'heroBgAlt' => 'Fondo Pukllasunchis',
+        'heroEyebrow' => 'Videos · ESPP Pukllasunchis',
+        'heroTitle' => $categoria->nombre,
+        'heroTitleSmall' => true,
+        'heroMeta' => [
+            ['icon' => 'fa-video', 'text' => $videos->count() . ' ' . ($videos->count() === 1 ? 'video' : 'videos')],
+        ],
+    ])
     <div class="container mt-4">
         <div class="row mt-4">
             <div class="col-lg-4 mt-4">
