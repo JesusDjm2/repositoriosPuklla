@@ -1,19 +1,16 @@
 @extends('layouts.app')
-@section('titulo', 'Inicio')
+@section('titulo', '- Panel Biblioteca')
 @section('contenido')
-    <div class="row">
-        <div class="col-lg-12">
-            <h4 class="text-center mb-4 mt-3">Página principal para Bibliotecario</h4>
-        </div>
-        <div class="col-lg-3 p-3">
-            <a href="{{ route('libros.index') }}">
-                <img src="{{ asset('img/Libros.webp') }}" width="100%" loading="lazy">
-            </a>
-        </div>       
-        <div class="col-lg-3 p-3">
-            <a href="{{route('admin.index')}}">
-                <img src="{{ asset('img/usuarios.webp') }}" width="100%" loading="lazy">
-            </a>
-        </div>
+
+    <x-hero-banner titulo="Panel de Biblioteca" subtitulo="Gestión del catálogo y del equipo bibliotecario"
+        icono="fa-book" />
+
+    <div class="modules-grid" data-animate-stagger>
+        <x-module-card href="{{ route('libros.index') }}" icono="fa-book"
+            titulo="Libros" descripcion="Catálogo de libros y publicaciones" />
+        <x-module-card href="{{ route('admin.index') }}" icono="fa-users"
+            titulo="Administradores" descripcion="Gestiona los usuarios con acceso a este panel"
+            :badge="$admins->count()" />
     </div>
+
 @endsection

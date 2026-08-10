@@ -26,7 +26,7 @@ Route::get('/', [EnlacesController::class, 'hub'])->name('hub');
 Route::get('/repositorio/sisipedia', [EnlacesController::class, 'index'])->name('index');
 Route::get('/eesppukllasunchis', [EnlacesController::class, 'eesp'])->name('eesppukllasunchis');
 Route::get('/kawsay', [EnlacesController::class, 'kawsay'])->name('kawsay');
-Auth::routes();
+Auth::routes(['register' => false]);
 /* Route::get('administrador', [EnlacesController::class, 'admin'])->name('administrador')->middleware('auth'); */
 Route::resource('administradores', AdminController::class)->names('admin')->middleware('auth');
 Route::get('admin/principal', [AdminController::class, 'principal'])
@@ -46,36 +46,36 @@ Route::get('Admini-Sisichakunay', [AdminController::class, 'sisicha'])->middlewa
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 //Biblioteca
-Route::resource('Secciones', SeccionController::class)->names('secciones')->middleware('auth');
-Route::resource('Categorias', CategoriaController::class)->names('categorias')->except('show')->middleware('auth');
+Route::resource('Secciones', SeccionController::class)->names('secciones')->middleware(['auth', 'role:admin|biblioteca']);
+Route::resource('Categorias', CategoriaController::class)->names('categorias')->except('show')->middleware(['auth', 'role:admin|biblioteca']);
 Route::get('Categorias/{Categoria}', [CategoriaController::class, 'show'])->name('categorias.show');
-Route::get('Categoria/{id}/', [CategoriaController::class, 'detallesCat'])->name('detallesCat')->middleware('auth');
-Route::resource('Libros', LibroController::class)->names('libros')->middleware('auth');
+Route::get('Categoria/{id}/', [CategoriaController::class, 'detallesCat'])->name('detallesCat')->middleware(['auth', 'role:admin|biblioteca']);
+Route::resource('Libros', LibroController::class)->names('libros')->middleware(['auth', 'role:admin|biblioteca']);
 
-Route::get('libros/create/{categoria?}', [LibroController::class, 'create'])->name('libros.create')->middleware('auth');
+Route::get('libros/create/{categoria?}', [LibroController::class, 'create'])->name('libros.create')->middleware(['auth', 'role:admin|biblioteca']);
 Route::get('Lista-de-Libros', [LibroController::class, 'libros'])->name('libros');
 
 //Videos
-Route::resource('Videos', VideoController::class)->names('videos');
-Route::resource('video-categorias', VideoCategoriaController::class)->names('videoscat')->except('show')->middleware('auth');
+Route::resource('Videos', VideoController::class)->names('videos')->middleware(['auth', 'role:admin|videos']);
+Route::resource('video-categorias', VideoCategoriaController::class)->names('videoscat')->except('show')->middleware(['auth', 'role:admin|videos']);
 Route::get('video-categorias/{video_categoria}', [VideoCategoriaController::class, 'show'])->name('videoscat.show');
 Route::get('videos-Puklla', [VideoCategoriaController::class, 'lista'])->name('videos');
 
 //Kawsay
-Route::resource('Kawsay-Categorias', KawsayCategoriaController::class)->names('kawsaycategorias')->except('show')->middleware('auth');
+Route::resource('Kawsay-Categorias', KawsayCategoriaController::class)->names('kawsaycategorias')->except('show')->middleware(['auth', 'role:admin|kawsay']);
 Route::get('Kawsay-Categorias/{categoria}', [KawsayCategoriaController::class, 'show'])->name('kawsaycategorias.show');
-Route::resource('Kawsay-Libros', KawsayLibroController::class)->names('kawsaylibros')->middleware('auth');
-Route::get('kawsay-libros/create/{categoria?}', [KawsayLibroController::class, 'create'])->name('kawsaylibros.create')->middleware('auth');
+Route::resource('Kawsay-Libros', KawsayLibroController::class)->names('kawsaylibros')->middleware(['auth', 'role:admin|kawsay']);
+Route::get('kawsay-libros/create/{categoria?}', [KawsayLibroController::class, 'create'])->name('kawsaylibros.create')->middleware(['auth', 'role:admin|kawsay']);
 Route::get('Lista-de-Libros-Kawsay', [KawsayLibroController::class, 'libros'])->name('kawsaylibros.lista');
 
-Route::resource('kawsay-video-categorias', KawsayVideoCategoriaController::class)->names('kawsayvideoscat')->except('show')->middleware('auth');
+Route::resource('kawsay-video-categorias', KawsayVideoCategoriaController::class)->names('kawsayvideoscat')->except('show')->middleware(['auth', 'role:admin|kawsay']);
 Route::get('kawsay-video-categorias/{video_categoria}', [KawsayVideoCategoriaController::class, 'show'])->name('kawsayvideoscat.show');
-Route::resource('Kawsay-Videos', KawsayVideoController::class)->names('kawsayvideos')->middleware('auth');
+Route::resource('Kawsay-Videos', KawsayVideoController::class)->names('kawsayvideos')->middleware(['auth', 'role:admin|kawsay']);
 Route::get('videos-Kawsay', [KawsayVideoCategoriaController::class, 'lista'])->name('kawsayvideos.lista');
 
 //Canciones
-Route::resource('Categorias-canciones', CancionesCategoriaController::class)->names('cancionescat')->middleware('auth');
-Route::resource('canciones', CancionesController::class)->names('canciones')->middleware('auth');
+Route::resource('Categorias-canciones', CancionesCategoriaController::class)->names('cancionescat')->middleware(['auth', 'role:admin|audios']);
+Route::resource('canciones', CancionesController::class)->names('canciones')->middleware(['auth', 'role:admin|audios']);
 Route::get('canciones-Puklla', [CancionesController::class, 'canciones'])->name('cancionesPuklla')->middleware('auth');
 Route::get('canciones/{cancion}/stream', [AudioStreamController::class, 'cancion'])->name('canciones.stream');
 
@@ -90,7 +90,7 @@ Route::middleware('auth')->group(function () {
 //Sisipedia
 Route::prefix('sisipedia')->name('sisipedia.')->group(function () {
     // Admin primero (rutas fijas como /create, /reorder deben resolverse antes que {category})
-    Route::middleware('auth')->group(function () {
+    Route::middleware(['auth', 'role:admin|sisicha'])->group(function () {
         Route::get('categories/export', [CategoryController::class, 'export'])
             ->name('categories.export');
         Route::resource('categories', CategoryController::class)->except(['show']);
@@ -107,7 +107,7 @@ Route::prefix('sisipedia')->name('sisipedia.')->group(function () {
     });
 
     // Aportaciones
-    Route::middleware('auth')->group(function () {
+    Route::middleware(['auth', 'role:admin|sisicha'])->group(function () {
         Route::get('aportaciones', [AportacionController::class, 'adminIndex'])
             ->name('aportaciones.index');
     });
@@ -166,16 +166,19 @@ Route::middleware(['auth', 'role:admin|biblioteca'])->prefix('biblioteca-fisica'
     Route::patch('prestamos/{prestamo}/devolver', [App\Http\Controllers\PrestamoController::class, 'devolver'])->name('prestamos.devolver');  
 });  
   
-Route::middleware(['auth'])->group(function () {  
-    Route::get('libros-importar', [App\Http\Controllers\LibroController::class, 'importForm'])->name('libros.import.form');  
-    Route::post('libros-importar', [App\Http\Controllers\LibroController::class, 'importProcess'])->name('libros.import.process');  
-    Route::get('videos-importar', [App\Http\Controllers\VideoController::class, 'importForm'])->name('videos.import.form');  
-    Route::post('videos-importar', [App\Http\Controllers\VideoController::class, 'importProcess'])->name('videos.import.process');  
-});  
+Route::middleware(['auth', 'role:admin|biblioteca'])->group(function () {
+    Route::get('libros-importar', [App\Http\Controllers\LibroController::class, 'importForm'])->name('libros.import.form');
+    Route::post('libros-importar', [App\Http\Controllers\LibroController::class, 'importProcess'])->name('libros.import.process');
+});
+
+Route::middleware(['auth', 'role:admin|videos'])->group(function () {
+    Route::get('videos-importar', [App\Http\Controllers\VideoController::class, 'importForm'])->name('videos.import.form');
+    Route::post('videos-importar', [App\Http\Controllers\VideoController::class, 'importProcess'])->name('videos.import.process');
+});
   
 Route::get('catalogo-fisico', [App\Http\Controllers\LibroFisicoController::class, 'catalogo'])->name('catalogo-fisico');  
-Route::get('api/codigo-fisico/sugerir', [App\Http\Controllers\LibroFisicoController::class, 'sugerirCodigo'])->name('libros-fisicos.sugerir-codigo')->middleware('auth'); 
+Route::get('api/codigo-fisico/sugerir', [App\Http\Controllers\LibroFisicoController::class, 'sugerirCodigo'])->name('libros-fisicos.sugerir-codigo')->middleware('auth');
 
-Auth::routes();
+Auth::routes(['register' => false]);
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

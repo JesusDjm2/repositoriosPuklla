@@ -23,10 +23,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&display=swap"
         rel="stylesheet">
+    @vite(['resources/js/app.js'])
 </head>
 
 <body class="hub-body">
     @yield('contenido')
+
+    @if (session('logout_success'))
+        <script>
+            window.__logoutMessage = @json(session('logout_success'));
+        </script>
+    @endif
 </body>
 
 </html>

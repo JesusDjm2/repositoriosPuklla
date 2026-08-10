@@ -2,13 +2,20 @@
 @section('titulo', '- Panel Principal')
 @section('contenido')
 
-    <x-page-header titulo="Panel de administración" subtitulo="Asociación Pukllasunchis">
+    @php
+        $hora = now()->hour;
+        $saludo = $hora < 12 ? 'Buenos días' : ($hora < 19 ? 'Buenas tardes' : 'Buenas noches');
+        $nombre = Auth::user()?->name ? explode(' ', trim(Auth::user()->name))[0] : null;
+    @endphp
+
+    <x-hero-banner :titulo="$saludo . ($nombre ? ', ' . $nombre : '')"
+        subtitulo="Aquí tienes un resumen de la Asociación Pukllasunchis." icono="fa-sun-o">
         <x-slot:actions>
             <a href="{{ route('proyectos.create') }}" class="btn btn-primary btn-sm">
                 <i class="fa fa-plus mr-1"></i> Nuevo proyecto
             </a>
         </x-slot:actions>
-    </x-page-header>
+    </x-hero-banner>
 
     <div class="stats-grid" data-animate-stagger>
         <x-stat-card icono="fa-sitemap" :valor="$totalProyectos" etiqueta="Proyectos activos" />

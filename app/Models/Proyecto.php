@@ -15,10 +15,21 @@ class Proyecto extends Model
         'slug',
         'logo',
         'color',
-        'url_publica_name',
         'descripcion',
         'orden',
         'activo',
+    ];
+
+    /**
+     * Nombre de la ruta de Laravel que lleva a la página pública de cada
+     * proyecto, por slug. No es un dato que el admin configure: cada entrada
+     * se añade acá cuando un desarrollador construye la página pública de un
+     * proyecto nuevo (igual que el ícono del menú en menu-admin.blade.php).
+     */
+    private const RUTAS_PUBLICAS = [
+        'eesp-pukllasunchis' => 'eesppukllasunchis',
+        'radio-pukllasunchis' => 'index',
+        'kawsay' => 'kawsay',
     ];
 
     protected $casts = [
@@ -55,10 +66,12 @@ class Proyecto extends Model
 
     public function urlPublica(): ?string
     {
-        if (! $this->url_publica_name || ! Route::has($this->url_publica_name)) {
+        $rutaNombre = self::RUTAS_PUBLICAS[$this->slug] ?? null;
+
+        if (! $rutaNombre || ! Route::has($rutaNombre)) {
             return null;
         }
 
-        return route($this->url_publica_name);
+        return route($rutaNombre);
     }
 }

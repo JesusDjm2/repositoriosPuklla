@@ -19,7 +19,6 @@ return new class extends Migration
             [
                 'nombre' => 'EESP Pukllasunchis',
                 'logo' => 'logo-iesp-pukllasunchis.png',
-                'url_publica_name' => 'eesppukllasunchis',
                 'orden' => 1,
                 'activo' => true,
             ]
@@ -34,7 +33,6 @@ return new class extends Migration
             [
                 'nombre' => 'Radio Pukllasunchis',
                 'logo' => 'logo-radio.png',
-                'url_publica_name' => 'index',
                 'orden' => 2,
                 'activo' => true,
             ]
@@ -46,7 +44,6 @@ return new class extends Migration
             [
                 'nombre' => 'Kawsay',
                 'logo' => 'kawsay.png',
-                'url_publica_name' => 'kawsay',
                 'orden' => 3,
                 'activo' => true,
             ]

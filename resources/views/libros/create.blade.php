@@ -1,65 +1,54 @@
 @extends('layouts.app')
-@section('titulo', 'Crear nuevo Libro')
+@section('titulo', '- Nuevo libro')
 @section('contenido')
-    <div class="row">
-        <div class="col-md-12">
-            <h3 class="text-info">Crear Nuevo Libro
-                <a href="{{ route('libros.index') }}" class="btn btn-danger btn-sm float-right">Volver</a>
-            </h3>
-            @if ($errors->any())
-                <div class="alert alert-danger">
-                    <ul>
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-        </div>
-        <div style="border-bottom: 1px dashed rgb(74, 113, 138); width: 100%;" class="mt-2"></div>
-    </div>
-    <div class="row">
-        <div class="col-lg-12">
+    <div data-animate-stagger>
+        <x-page-header titulo="Nuevo libro" subtitulo="Regístralo y marca sus categorías">
+            <x-slot:actions>
+                <a href="{{ route('libros.index') }}" class="btn btn-outline-secondary btn-sm">Volver</a>
+            </x-slot:actions>
+        </x-page-header>
+
+        <div class="admin-table-card p-4">
             <form action="{{ route('libros.store') }}" method="POST">
                 @csrf
-                <div class="row">
-                    <div class="col-lg-12 mt-3">
-                        <label for="nombre">Nombre:</label>
-                        <input type="text" name="nombre" id="nombre"
-                            class="form-control form-control-sm rounded-pill" value="{{ old('nombre') }}" required>
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <x-form-field name="nombre" label="Nombre" :value="old('nombre')" required />
                     </div>
-                    <div class="col-lg-6 mt-3">
-                        <label for="autor">Autor:</label>
-                        <input type="text" name="autor" id="autor"
-                            class="form-control form-control-sm rounded-pill" value="{{ old('autor') }}" required>
+                    <div class="col-md-6">
+                        <x-form-field name="autor" label="Autor" :value="old('autor')" required />
                     </div>
-                    <div class="col-lg-6 mt-3 mb-2">
-                        <label for="identificador">Identificador:</label>
-                        <input type="text" name="identificador" id="identificador"
-                            class="form-control form-control-sm rounded-pill" value="{{ old('identificador') }}" required>
+                    <div class="col-md-6">
+                        <x-form-field name="identificador" label="Identificador (Google Drive)"
+                            :value="old('identificador')" required />
                     </div>
                 </div>
-                <div class="row mt-3">
-                    <div class="col-lg-12">
-                        <h5>Secciones <small class="text-primary">>></small> Categorías:</h5>
-                    </div>
+
+                <h2 class="h6 font-weight-bold mt-2 mb-3">Secciones y categorías</h2>
+                <div class="row">
                     @foreach ($secciones as $seccion)
-                        <div class="col-lg-4 mb-2">
-                                <strong>{{ $seccion->nombre }}</strong>
-                                @foreach ($seccion->categorias as $categoria)
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="categorias[]"
-                                            id="categoria_{{ $categoria->id }}" value="{{ $categoria->id }}"
-                                            {{ (is_array(old('categorias')) && in_array($categoria->id, old('categorias'))) || (isset($categoriaSeleccionada) && in_array($categoria->id, $categoriaSeleccionada)) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="categoria_{{ $categoria->id }}">
-                                            {{ $categoria->nombre }}
-                                        </label>
-                                    </div>
-                                @endforeach
+                        <div class="col-md-4 mb-3">
+                            <div class="font-weight-bold mb-1">{{ $seccion->nombre }}</div>
+                            @foreach ($seccion->categorias as $categoria)
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="categorias[]"
+                                        id="categoria_{{ $categoria->id }}" value="{{ $categoria->id }}"
+                                        {{ (is_array(old('categorias')) && in_array($categoria->id, old('categorias'))) || (isset($categoriaSeleccionada) && in_array($categoria->id, $categoriaSeleccionada)) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="categoria_{{ $categoria->id }}">
+                                        {{ $categoria->nombre }}
+                                    </label>
+                                </div>
+                            @endforeach
                         </div>
                     @endforeach
                 </div>
-                <button type="submit" class="btn btn-sm btn-primary">Guardar</button>
+                @error('categorias')
+                    <div class="text-danger small mb-3">{{ $message }}</div>
+                @enderror
+
+                <button type="submit" class="btn btn-primary mt-2">
+                    <i class="fa fa-check mr-1"></i> Guardar
+                </button>
             </form>
         </div>
     </div>

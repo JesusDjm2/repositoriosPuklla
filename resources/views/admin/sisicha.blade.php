@@ -1,14 +1,12 @@
 @extends('layouts.app')
-@section('titulo', 'Inicio')
+@section('titulo', '- Panel Sisichakunay')
 @section('contenido')
-    <div class="row">
-        <div class="col-lg-12">
-            <h4 class="text-center mb-4 mt-3">Página principal para Sisichakunay</h4>
-        </div>
-        <div class="col-lg-3 p-3">
-            <a href="{{ route('sisipedia.categories.index') }}">
-                <img src="{{ asset('img/Sisichakuna.webp') }}" width="100%" loading="lazy">
-            </a>
-        </div>   
+
+    <x-hero-banner titulo="Panel Sisichakunay" subtitulo="Gestión de Sisipedia" icono="fa-th-list" />
+
+    <div class="modules-grid" data-animate-stagger>
+        <x-module-card href="{{ route('sisipedia.categories.index') }}" icono="fa-th-list"
+            titulo="Registros" descripcion="Categorías y contenidos de Sisipedia" />
     </div>
+
 @endsection

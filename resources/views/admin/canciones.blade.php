@@ -1,19 +1,16 @@
 @extends('layouts.app')
-@section('titulo', 'Inicio')
+@section('titulo', '- Panel Canciones')
 @section('contenido')
-    <div class="row">
-        <div class="col-lg-12">
-            <h4 class="text-center mb-4 mt-3">Página principal para Canciones</h4>
-        </div>
-        <div class="col-lg-3 p-3">
-            <a href="{{route('canciones.index')}}">
-                <img src="{{ asset('img/Canciones.webp') }}" width="100%" loading="lazy">
-            </a>
-        </div>     
-        <div class="col-lg-3 p-3">
-            <a href="{{route('admin.index')}}">
-                <img src="{{ asset('img/usuarios.webp') }}" width="100%" loading="lazy">
-            </a>
-        </div>
+
+    <x-hero-banner titulo="Panel de Canciones" subtitulo="Gestión del catálogo y del equipo de Canciones"
+        icono="fa-music" />
+
+    <div class="modules-grid" data-animate-stagger>
+        <x-module-card href="{{ route('canciones.index') }}" icono="fa-music"
+            titulo="Canciones" descripcion="Catálogo de canciones" />
+        <x-module-card href="{{ route('admin.index') }}" icono="fa-users"
+            titulo="Administradores" descripcion="Gestiona los usuarios con acceso a este panel"
+            :badge="$admins->count()" />
     </div>
+
 @endsection

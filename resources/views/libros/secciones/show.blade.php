@@ -1,26 +1,35 @@
 @extends('layouts.app')
-@section('titulo', 'Secciones')
+@section('titulo', '- ' . $seccion->nombre)
 @section('contenido')
-    <div class="row">
-        <div class="col-md-12 border-bottom">
-            <h3>Seccion: <span class="text-primary"> {{ $seccion->nombre }}</span>
-                <a href="{{ url()->previous() }}" class="btn btn-danger btn-sm float-right">Volver</a>
-            </h3>
-        </div>
-        <div class="col-lg-12 mt-4">
-            <h4>Categorias:</h4>
+    <div data-animate-stagger>
+        <x-page-header :titulo="$seccion->nombre" subtitulo="Categorías de esta sección">
+            <x-slot:actions>
+                <a href="{{ url()->previous() }}" class="btn btn-outline-secondary btn-sm">Volver</a>
+            </x-slot:actions>
+        </x-page-header>
+
+        <div class="admin-table-card">
             @if ($categorias->isEmpty())
-                <p>No hay categorías asociadas a esta sección.</p>
+                <div class="admin-empty-state">
+                    <i class="fa fa-th-large"></i>
+                    <p>No hay categorías asociadas a esta sección.</p>
+                </div>
             @else
-                <ul>
-                    @foreach ($categorias as $categoria)
-                        {{-- <li>{{ $categoria->nombre }}</li> --}}
-                        <li>
-                            {{ $categoria->nombre }}
-                           → <span>{{ $categoria->libros_count }} libros</span>
-                        </li>
-                    @endforeach
-                </ul>
+                <div class="table-responsive">
+                    <table class="table admin-table mb-0">
+                        <tbody>
+                            @foreach ($categorias as $categoria)
+                                <tr>
+                                    <td>
+                                        {{ $categoria->nombre }}
+                                        <span class="text-muted small">→ {{ $categoria->libros_count }}
+                                            {{ Str::plural('libro', $categoria->libros_count) }}</span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             @endif
         </div>
     </div>

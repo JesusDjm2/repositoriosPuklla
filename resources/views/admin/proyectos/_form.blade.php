@@ -15,6 +15,8 @@
         <label for="slug">Slug (identificador único):</label>
         <input id="slug" type="text" name="slug" class="form-control @error('slug') is-invalid @enderror"
             value="{{ old('slug', $proyecto->slug ?? '') }}" required>
+        <small class="form-text text-muted">Identifica este proyecto internamente en el código (íconos, contadores,
+            etc). Obligatorio y único.</small>
         @error('slug')
             <span class="invalid-feedback">{{ $message }}</span>
         @enderror
@@ -30,7 +32,7 @@
 </div>
 
 <div class="form-row">
-    <div class="form-group col-md-4">
+    <div class="form-group col-md-6">
         <label for="color">Color de marca:</label>
         <input id="color" type="color" name="color" class="form-control @error('color') is-invalid @enderror"
             value="{{ old('color', $proyecto->color ?? '#6a0310') }}">
@@ -38,17 +40,7 @@
             <span class="invalid-feedback">{{ $message }}</span>
         @enderror
     </div>
-    <div class="form-group col-md-4">
-        <label for="url_publica_name">Ruta pública (nombre de ruta Laravel):</label>
-        <input id="url_publica_name" type="text" name="url_publica_name"
-            class="form-control @error('url_publica_name') is-invalid @enderror"
-            value="{{ old('url_publica_name', $proyecto->url_publica_name ?? '') }}"
-            placeholder="ej. eesppukllasunchis">
-        @error('url_publica_name')
-            <span class="invalid-feedback">{{ $message }}</span>
-        @enderror
-    </div>
-    <div class="form-group col-md-4">
+    <div class="form-group col-md-6">
         <label for="orden">Orden:</label>
         <input id="orden" type="number" min="0" name="orden"
             class="form-control @error('orden') is-invalid @enderror"

@@ -72,7 +72,6 @@ class ProyectoController extends Controller
             'slug' => 'required|string|max:255|alpha_dash|unique:proyectos,slug' . ($ignoreId ? ",{$ignoreId}" : ''),
             'descripcion' => 'nullable|string',
             'color' => 'nullable|string|max:7',
-            'url_publica_name' => 'nullable|string|max:255',
             'orden' => 'nullable|integer|min:0',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'roles' => 'nullable|array',
@@ -84,7 +83,6 @@ class ProyectoController extends Controller
             'slug' => $request->input('slug'),
             'descripcion' => $request->input('descripcion'),
             'color' => $request->input('color'),
-            'url_publica_name' => $request->input('url_publica_name'),
             'orden' => (int) $request->input('orden', 0),
             'activo' => $request->boolean('activo'),
         ];

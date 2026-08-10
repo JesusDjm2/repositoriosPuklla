@@ -18,23 +18,6 @@
         </a>
     </div>
 
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show bv-alert" role="alert">
-            <i class="fa fa-check-circle mr-2"></i>{{ session('success') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Cerrar">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show bv-alert" role="alert">
-            <i class="fa fa-exclamation-circle mr-2"></i>{{ session('error') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Cerrar">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    @endif
-
     <form method="get" action="{{ route('biblioteca-fisica.libros.index') }}" class="bv-crud-toolbar">
         <div class="form-row align-items-end">
             <div class="form-group col-md-5 mb-2 mb-md-0">

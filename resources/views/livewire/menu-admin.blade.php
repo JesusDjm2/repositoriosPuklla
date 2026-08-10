@@ -1,71 +1,151 @@
 <nav id="sidebar">
-    <div class="custom-menu">
-        <button type="button" id="sidebarCollapse" class="btn btn-primary">
-            <i class="fa fa-bars"></i>
-            <span class="sr-only">Toggle Menu</span>
-        </button>
-    </div>
-    <div class="p-4 pt-5">
-        <h1>
-            @role('sisicha')
-                <a href="{{ route('sisipedia.categories.index') }}" class="logo">
-                    <img src="{{ asset('img/Asociacion-logo-blanco.png') }}" width="100%" alt="">
-                </a>
-            @else
-                <a href="{{ route('home') }}" class="logo">
-                    <img src="{{ asset('img/Asociacion-logo-blanco.png') }}" width="100%" alt="">
-                </a>
-            @endrole
-        </h1>
-        <ul class="list-unstyled components mb-5">
+    <div class="p-4">
+        <div class="sidebar-brand">
+            <h1>
+                @role('sisicha')
+                    <a href="{{ route('sisipedia.categories.index') }}" class="logo">
+                        <img src="{{ asset('img/Asociacion-logo-blanco.png') }}" width="100%" alt="">
+                    </a>
+                @else
+                    <a href="{{ route('home') }}" class="logo">
+                        <img src="{{ asset('img/Asociacion-logo-blanco.png') }}" width="100%" alt="">
+                    </a>
+                @endrole
+            </h1>
+        </div>
+        <ul class="list-unstyled components">
+            @php
+                // Qué pantallas tiene cada rol, tanto para el menú "Proyectos" del admin
+                // (ver MenuAdmin::render()) como para el menú propio de cada rol más abajo.
+                // El nombre/orden de cada proyecto y qué roles le pertenecen sí vienen de la
+                // tabla proyectos (admin/proyectos): crear un proyecto o mover un rol de uno
+                // a otro se refleja solo. Lo que NO puede salir de la base de datos es qué
+                // pantallas tiene cada rol (Libros, Categorías, ...) ni cómo se agrupan entre
+                // sí — cada una es código a mano de un controlador distinto, así que ese
+                // agrupamiento sigue viviendo aquí. Un rol puede tener 'items' (lista plana)
+                // o 'grupos' (subsecciones con nombre propio, cuando sus tablas se relacionan
+                // en más de un bloque temático, como Biblioteca digital/física).
+                $rolesMenu = [
+                    'biblioteca' => [
+                        'grupos' => [
+                            'Biblioteca digital' => [
+                                'icono' => 'fa-laptop',
+                                'items' => [
+                                    ['ruta' => 'secciones.index', 'label' => 'Secciones'],
+                                    ['ruta' => 'categorias.index', 'label' => 'Categorías'],
+                                    ['ruta' => 'libros.index', 'label' => 'Libros'],
+                                ],
+                            ],
+                            'Biblioteca física' => [
+                                'icono' => 'fa-archive',
+                                'items' => [
+                                    ['ruta' => 'biblioteca-fisica.categorias.index', 'label' => 'Categorías físicas'],
+                                    ['ruta' => 'biblioteca-fisica.libros.index', 'label' => 'Libros físicos'],
+                                    ['ruta' => 'biblioteca-fisica.prestamos.index', 'label' => 'Préstamos'],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'sisicha' => [
+                        'items' => [
+                            ['ruta' => 'sisipedia.categories.index', 'label' => 'Registros'],
+                            ['ruta' => 'sisipedia.aportaciones.index', 'label' => 'Aportaciones'],
+                        ],
+                    ],
+                    'audios' => [
+                        'items' => [
+                            ['ruta' => 'canciones.index', 'label' => 'Canciones'],
+                            ['ruta' => 'cancionescat.index', 'label' => 'Categorías de canciones'],
+                        ],
+                    ],
+                    'videos' => [
+                        'items' => [
+                            ['ruta' => 'videos.index', 'label' => 'Videos'],
+                            ['ruta' => 'videoscat.index', 'label' => 'Categorías de video'],
+                        ],
+                    ],
+                    'kawsay' => [
+                        'items' => [
+                            ['ruta' => 'kawsaylibros.index', 'label' => 'Libros'],
+                            ['ruta' => 'kawsaycategorias.index', 'label' => 'Categorías'],
+                            ['ruta' => 'kawsayvideos.index', 'label' => 'Videos'],
+                            ['ruta' => 'kawsayvideoscat.index', 'label' => 'Categorías de video'],
+                        ],
+                    ],
+                ];
+
+                // Convierte la definición de un rol ('items' plano o 'grupos' con nombre) en
+                // una lista uniforme de secciones [{titulo, icono, items}] que consume
+                // livewire.partials.menu-secciones. titulo=null → se listan sin sub-toggle.
+                $seccionesDesdeRol = function (array $definicionRol): array {
+                    if (isset($definicionRol['grupos'])) {
+                        return collect($definicionRol['grupos'])
+                            ->map(fn ($grupo, $nombreGrupo) => [
+                                'titulo' => $nombreGrupo,
+                                'icono' => $grupo['icono'] ?? null,
+                                'items' => $grupo['items'],
+                            ])
+                            ->values()
+                            ->all();
+                    }
+
+                    return [['titulo' => null, 'icono' => null, 'items' => $definicionRol['items'] ?? []]];
+                };
+            @endphp
             @role('admin')
+                @php
+                    // Ícono del proyecto en el menú. Un proyecto nuevo que no esté en este
+                    // mapa cae en el ícono genérico de abajo (no requiere código para existir
+                    // en el menú, solo para tener un ícono a medida).
+                    $proyectoIconos = [
+                        'eesp-pukllasunchis' => 'fa-book',
+                        'radio-pukllasunchis' => 'fa-broadcast-tower',
+                        'kawsay' => 'fa-leaf',
+                    ];
+                @endphp
                 <li class="{{ request()->routeIs('admin.principal') ? 'active' : '' }}">
                     <a href="{{ route('admin.principal') }}"><i class="fa fa-th-large"></i> Panel principal</a>
                 </li>
                 <li class="{{ request()->routeIs('proyectos.*') ? 'active' : '' }}">
                     <a href="{{ route('proyectos.index') }}"><i class="fa fa-sitemap"></i> Proyectos</a>
                 </li>
-                <li>
-                    <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i
-                            class="fa fa-book"></i> Biblioteca</a>
-                    <ul class="collapse list-unstyled" id="homeSubmenu">
-                        <li>
-                            <a href="{{ route('libros.index') }}"><span class="flecha-admin">→</span> Libros</a>
-                        </li>
-                        <li>
-                            <a href="{{ route('categorias.index') }}"><span class="flecha-admin">→</span> Categorias</a>
-                        </li>
-                        <li>
-                            <a href="{{ route('secciones.index') }}"><span class="flecha-admin">→</span> Secciones</a>
-                        </li>
 
-
-                    </ul>
-                </li>
-                <li>
-                    <a href="#canciones" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i
-                            class="fa fa-music"></i> Canciones</a>
-                    <ul class="collapse list-unstyled" id="canciones">
+                @if ($proyectos->isNotEmpty())
+                    <li class="sidebar-section-title">Proyectos</li>
+                    @foreach ($proyectos as $proyecto)
+                        @php
+                            // Se recorre $rolesMenu (no $proyecto->roles) para que el orden de
+                            // las secciones dentro de cada proyecto sea el que definimos arriba
+                            // y no el id interno del rol en la tabla roles.
+                            $seccionesProyecto = collect($rolesMenu)
+                                ->filter(fn ($definicion, $nombreRol) => $proyecto->roles->contains('name', $nombreRol))
+                                ->flatMap(fn ($definicion) => $seccionesDesdeRol($definicion))
+                                ->values();
+                            $idSubmenuProyecto = 'proyectoMenu' . $proyecto->id;
+                        @endphp
                         <li>
-                            <a href="{{ route('canciones.index') }}"><span class="flecha-admin">→</span> Canciones</a>
+                            @if ($seccionesProyecto->isEmpty())
+                                <a href="{{ route('proyectos.edit', $proyecto) }}">
+                                    <i class="fa {{ $proyectoIconos[$proyecto->slug] ?? 'fa-folder-open' }}"></i>
+                                    {{ $proyecto->nombre }}
+                                    <span class="menu-note">Sin configurar</span>
+                                </a>
+                            @else
+                                <a href="#{{ $idSubmenuProyecto }}" data-toggle="collapse" aria-expanded="false"
+                                    class="dropdown-toggle">
+                                    <i class="fa {{ $proyectoIconos[$proyecto->slug] ?? 'fa-folder-open' }}"></i>
+                                    {{ $proyecto->nombre }}
+                                </a>
+                                <ul class="collapse list-unstyled" id="{{ $idSubmenuProyecto }}">
+                                    @include('livewire.partials.menu-secciones', [
+                                        'secciones' => $seccionesProyecto,
+                                        'idPrefix' => $idSubmenuProyecto,
+                                    ])
+                                </ul>
+                            @endif
                         </li>
-                        <li>
-                            <a href="{{ route('cancionescat.index') }}"><span class="flecha-admin">→</span> Categorias</a>
-                        </li>
-                    </ul>
-                </li>
-                <li>
-                    <a href="#videos" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i
-                            class="fa fa-video-camera"></i> Videos</a>
-                    <ul class="collapse list-unstyled" id="videos">
-                        <li>
-                            <a href="{{ route('videos.index') }}"><span class="flecha-admin">→</span> Videos</a>
-                        </li>
-                        <li>
-                            <a href="{{ route('videoscat.index') }}"><span class="flecha-admin">→</span> Categorías</a>
-                        </li>
-                    </ul>
-                </li>
+                    @endforeach
+                @endif
             @endrole
             @role('sisicha')
                 <li class="{{ request()->routeIs('sisipedia.categories*') ? 'active' : '' }}">
@@ -74,26 +154,16 @@
                 <li class="{{ request()->routeIs('sisipedia.aportaciones*') ? 'active' : '' }}">
                     <a href="{{ route('sisipedia.aportaciones.index') }}"><i class="fa fa-inbox"></i> Aportaciones</a>
                 </li>
-                <li>
-                    <a href="{{ route('public.categoria.sisi') }}" target="_blank" rel="noopener">
-                        <i class="fa fa-globe"></i> Catálogo público
-                    </a>
-                </li>
             @endrole
             @role('biblioteca')
                 <li class="active">
                     <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i
                             class="fa fa-book"></i> Biblioteca</a>
                     <ul class="collapse list-unstyled" id="homeSubmenu">
-                        <li>
-                            <a href="{{ route('libros.index') }}"><span class="flecha-admin">→</span> Libros</a>
-                        </li>
-                        <li>
-                            <a href="{{ route('categorias.index') }}"><span class="flecha-admin">→</span> Categorias</a>
-                        </li>
-                        <li>
-                            <a href="{{ route('secciones.index') }}"><span class="flecha-admin">→</span> Secciones</a>
-                        </li>
+                        @include('livewire.partials.menu-secciones', [
+                            'secciones' => $seccionesDesdeRol($rolesMenu['biblioteca']),
+                            'idPrefix' => 'homeSubmenu',
+                        ])
                     </ul>
                 </li>
             @endrole
@@ -148,6 +218,7 @@
                 </li>
             @endrole
             @unlessrole('sisicha')
+            <li class="sidebar-section-title">Usuarios</li>
             <li>
                 <a href="#admins" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i
                         class="fa fa-building"></i> Usuarios</a>
@@ -176,27 +247,7 @@
                     transform: translateX(0);
                 }
             </style>
-            <li>
-                <a href="{{ route('index') }}"><i class="fa fa-home"></i> Volver al inicio</a>
-            </li>
         </ul>
-        <div class="mb-3">
-            <button id="darkModeToggle" class="btn btn-sm btn-outline-light w-100" type="button">
-                <i class="fa fa-moon-o" id="darkModeIcon"></i>
-                <span id="darkModeText"> Modo oscuro</span>
-            </button>
-        </div>
-
-        <div class="mb-5">
-            <a class="nav-link text-white text-center" href="{{ route('logout') }}"
-                onclick="event.preventDefault();
-                  document.getElementById('logout-form').submit();">
-                {{ Auth::user()->name }} - {{ __('Logout') }} <i class="fa fa-sign-out"></i>
-            </a>
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                @csrf
-            </form>
-        </div>
         <div class="footer">
             <p class="text-center">
                 Copyright

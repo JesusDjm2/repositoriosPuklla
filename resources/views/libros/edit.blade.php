@@ -1,50 +1,44 @@
 @extends('layouts.app')
-@section('titulo', 'Editar Libro')
+@section('titulo', '- Editar libro')
 @section('contenido')
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <h3>Editar Libro
-                <a href="{{ route('libros.index') }}" class="btn btn-danger btn-sm float-right">Volver</a>
-            </h3>
-            @if ($errors->any())
-                <div class="alert alert-danger">
-                    <ul>
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+    <div data-animate-stagger>
+        <x-page-header titulo="Editar libro" :subtitulo="$libro->nombre">
+            <x-slot:actions>
+                <a href="{{ route('libros.index') }}" class="btn btn-outline-secondary btn-sm">Volver</a>
+            </x-slot:actions>
+        </x-page-header>
+
+        <div class="admin-table-card p-4">
             <form action="{{ route('libros.update', $libro->id) }}" method="POST">
                 @csrf
                 @method('PUT')
-                <div class="form-group">
-                    <label for="nombre">Nombre:</label>
-                    <input type="text" name="nombre" id="nombre" class="form-control" value="{{ old('nombre', $libro->nombre) }}" required>
-                </div>
-                <div class="form-group">
-                    <label for="autor">Autor:</label>
-                    <input type="text" name="autor" id="autor" class="form-control" value="{{ old('autor', $libro->autor) }}" required>
-                </div>
-                <div class="form-group">
-                    <label for="identificador">Identificador:</label>
-                    <input type="text" name="identificador" id="identificador" class="form-control" value="{{ old('identificador', $libro->identificador) }}" required>
-                </div>
-                <div class="form-group">
-                    <label>Categorías:</label>
-                    <div class="d-flex flex-wrap">
+                <x-form-field name="nombre" label="Nombre" :value="old('nombre', $libro->nombre)" required />
+                <x-form-field name="autor" label="Autor" :value="old('autor', $libro->autor)" required />
+                <x-form-field name="identificador" label="Identificador (Google Drive)"
+                    :value="old('identificador', $libro->identificador)" required />
+
+                <div class="admin-form-field">
+                    <label>Categorías</label>
+                    <div class="d-flex flex-wrap" style="gap: .5rem 1.5rem;">
                         @foreach ($categorias as $categoria)
-                            <div class="form-check mr-3 mb-2">
-                                <input class="form-check-input" type="checkbox" name="categorias[]" id="categoria_{{ $categoria->id }}" value="{{ $categoria->id }}" 
-                                {{ (is_array(old('categorias')) && in_array($categoria->id, old('categorias'))) || (isset($libroCategorias) && in_array($categoria->id, $libroCategorias)) ? 'checked' : '' }}>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="categorias[]"
+                                    id="categoria_{{ $categoria->id }}" value="{{ $categoria->id }}"
+                                    {{ (is_array(old('categorias')) && in_array($categoria->id, old('categorias'))) || (isset($libroCategorias) && in_array($categoria->id, $libroCategorias)) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="categoria_{{ $categoria->id }}">
                                     {{ $categoria->nombre }}
                                 </label>
                             </div>
                         @endforeach
                     </div>
-                </div>                
-                <button type="submit" class="btn btn-sm btn-primary">Guardar</button>
+                    @error('categorias')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-2">
+                    <i class="fa fa-check mr-1"></i> Actualizar
+                </button>
             </form>
         </div>
     </div>
