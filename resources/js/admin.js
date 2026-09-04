@@ -32,9 +32,92 @@ document.addEventListener('DOMContentLoaded', () => {
     initCharts();
     showFlashNotifications();
     initDeleteConfirm();
+    initLogoutConfirm();
     initTableSearch();
     initSlugFields();
 });
+
+// Modal de confirmación propio del panel — mismo radio/sombra/tipografía que
+// el resto del sistema (module-card, hero-banner), en vez del look de
+// SweetAlert que no se puede retocar a fondo. Se usa para cualquier proceso
+// importante: cerrar sesión, eliminar un registro, etc. Devuelve una promesa
+// que resuelve a true/false según el botón que se presione.
+function pukllaConfirm({
+    icon = 'fa-exclamation-triangle',
+    title,
+    text = '',
+    confirmText = 'Confirmar',
+    cancelText = 'Cancelar',
+    danger = false,
+} = {}) {
+    return new Promise((resolve) => {
+        const backdrop = document.createElement('div');
+        backdrop.className = 'puklla-confirm-backdrop';
+        backdrop.innerHTML = `
+            <div class="puklla-confirm ${danger ? 'puklla-confirm--danger' : ''}" role="alertdialog" aria-modal="true" aria-labelledby="pukllaConfirmTitle">
+                <div class="puklla-confirm__icon"><i class="fa ${icon}"></i></div>
+                <div class="puklla-confirm__title" id="pukllaConfirmTitle"></div>
+                ${text ? '<div class="puklla-confirm__text"></div>' : ''}
+                <div class="puklla-confirm__actions">
+                    <button type="button" class="btn btn-sm btn-outline-secondary puklla-confirm__cancel"></button>
+                    <button type="button" class="btn btn-sm ${danger ? 'btn-danger' : 'btn-primary'} puklla-confirm__ok"></button>
+                </div>
+            </div>`;
+
+        // Texto vía textContent (no en el template de arriba) para no abrir la
+        // puerta a inyectar HTML desde un título/texto que en algún punto
+        // venga de datos del usuario (ej. nombre de un registro a eliminar).
+        backdrop.querySelector('.puklla-confirm__title').textContent = title;
+        if (text) backdrop.querySelector('.puklla-confirm__text').textContent = text;
+        backdrop.querySelector('.puklla-confirm__cancel').textContent = cancelText;
+        backdrop.querySelector('.puklla-confirm__ok').textContent = confirmText;
+
+        document.body.appendChild(backdrop);
+        requestAnimationFrame(() => backdrop.classList.add('is-open'));
+
+        const close = (result) => {
+            backdrop.classList.remove('is-open');
+            document.removeEventListener('keydown', onKeydown);
+            setTimeout(() => backdrop.remove(), 180);
+            resolve(result);
+        };
+        const onKeydown = (event) => {
+            if (event.key === 'Escape') close(false);
+        };
+
+        document.addEventListener('keydown', onKeydown);
+        backdrop.addEventListener('click', (event) => {
+            if (event.target === backdrop) close(false);
+        });
+        backdrop.querySelector('.puklla-confirm__cancel').addEventListener('click', () => close(false));
+        backdrop.querySelector('.puklla-confirm__ok').addEventListener('click', () => close(true));
+        backdrop.querySelector('.puklla-confirm__ok').focus();
+    });
+}
+
+// Confirmación antes de cerrar sesión: un clic accidental en el ícono del
+// topbar (o el enlace del menú público para el rol alumno) ya no saca a la
+// persona de la sesión sin avisar.
+function initLogoutConfirm() {
+    document.querySelectorAll('[data-logout-confirm]').forEach((link) => {
+        link.addEventListener('click', async (event) => {
+            event.preventDefault();
+
+            const ok = await pukllaConfirm({
+                icon: 'fa-sign-out',
+                title: '¿Cerrar sesión?',
+                text: 'Vas a salir del panel y tendrás que volver a ingresar tus credenciales.',
+                confirmText: 'Cerrar sesión',
+                cancelText: 'Cancelar',
+                danger: true,
+            });
+
+            if (ok) {
+                document.getElementById('logout-form')?.submit();
+            }
+        });
+    });
+}
 
 // Lee el data-island que layouts/app.blade.php escribe con session('success')
 // / session('error') y los muestra como SweetAlert. Con esto, ninguna vista
@@ -175,10 +258,11 @@ function initCharts() {
 }
 
 // Único punto de confirmación de "eliminar" del panel: cualquier
-// <form data-confirm-delete="..."> (ver x-data-table.actions) pasa por acá
-// en vez de que cada vista dibuje su propio modal de Bootstrap + script.
+// <form data-confirm-delete="..."> (ver x-data-table.actions, y los CRUD de
+// Kawsay) pasa por acá en vez de que cada vista dibuje su propio modal o
+// dependa del confirm() nativo del navegador.
 function initDeleteConfirm() {
-    document.addEventListener('submit', (event) => {
+    document.addEventListener('submit', async (event) => {
         const form = event.target;
         if (!(form instanceof HTMLFormElement) || !form.matches('[data-confirm-delete]')) {
             return;
@@ -186,21 +270,18 @@ function initDeleteConfirm() {
 
         event.preventDefault();
 
-        const accent = getComputedStyle(document.documentElement).getPropertyValue('--puk-maroon').trim() || '#ae0c21';
-
-        Swal.fire({
-            icon: 'warning',
+        const ok = await pukllaConfirm({
+            icon: 'fa-trash',
             title: form.dataset.confirmDelete || '¿Eliminar este registro?',
             text: form.dataset.confirmDeleteText || 'Esta acción no se puede deshacer.',
-            showCancelButton: true,
-            confirmButtonText: 'Eliminar',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: accent,
-        }).then((result) => {
-            if (result.isConfirmed) {
-                form.submit();
-            }
+            confirmText: 'Eliminar',
+            cancelText: 'Cancelar',
+            danger: true,
         });
+
+        if (ok) {
+            form.submit();
+        }
     });
 }
 

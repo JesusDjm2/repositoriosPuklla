@@ -1,7 +1,8 @@
-@extends('layouts.padre')
-@section('titulo', '- Página de Inicio')
+@extends('layouts.hub')
+@section('titulo', '- Resultados de búsqueda')
 @section('contenido')
     @php
+        $CAP = 5;
         $hl = function (?string $text, string $q): string {
             $text = (string) ($text ?? '');
             if ($text === '' || $q === '') {
@@ -18,22 +19,25 @@
             return $out;
         };
     @endphp
-    <div class="fixed-image-container">
-        <div class="overlay"></div>
-        <div class="centered-content px-3">
-            <h2 class="mb-2 buscador-reveal">EESP Pukllasunchis</h2>
-            <h1 class="h3 mb-3 buscador-reveal">
+
+    {{-- ═══ Encabezado plano: logo de vuelta al inicio, sin foto de fondo ═══ --}}
+    <div class="buscador-topbar">
+        <div class="buscador-topbar-inner">
+            <a href="{{ route('hub') }}" class="buscador-topbar-logo-link" aria-label="Volver a la página de inicio">
+                <img src="{{ asset('img/Asociacion-logo-rojo.png') }}" alt="Asociación Pukllasunchis"
+                    class="buscador-topbar-logo">
+            </a>
+
+            <h1 class="buscador-topbar-title buscador-reveal">
                 {{ $hasResults ? 'Resultados para' : 'Sin resultados para' }}
-                <span class="text-white opacity-75">“{{ $query }}”</span>
+                <span class="buscador-topbar-query">“{{ $query }}”</span>
             </h1>
+
             @if ($hasResults)
                 @php
                     $resultados = [];
                     if ($sisipediaCount > 0) {
-                        $resultados[] =
-                            $sisipediaCount .
-                            ' ' .
-                            ($sisipediaCount === 1 ? 'registro Sisipedia' : 'registros Sisipedia');
+                        $resultados[] = $sisipediaCount . ' ' . ($sisipediaCount === 1 ? 'registro Sisipedia' : 'registros Sisipedia');
                     }
                     if ($videosCount > 0) {
                         $resultados[] = $videosCount . ' ' . ($videosCount === 1 ? 'video' : 'videos');
@@ -42,24 +46,56 @@
                         $resultados[] = $librosCount . ' ' . ($librosCount === 1 ? 'texto' : 'textos');
                     }
                     if ($kawsayLibrosCount > 0) {
-                        $resultados[] =
-                            $kawsayLibrosCount . ' ' . ($kawsayLibrosCount === 1 ? 'texto Kawsay' : 'textos Kawsay');
+                        $resultados[] = $kawsayLibrosCount . ' ' . ($kawsayLibrosCount === 1 ? 'texto Kawsay' : 'textos Kawsay');
                     }
                     if ($kawsayVideosCount > 0) {
-                        $resultados[] =
-                            $kawsayVideosCount . ' ' . ($kawsayVideosCount === 1 ? 'video Kawsay' : 'videos Kawsay');
+                        $resultados[] = $kawsayVideosCount . ' ' . ($kawsayVideosCount === 1 ? 'video Kawsay' : 'videos Kawsay');
                     }
                     if ($aportacionesCount > 0) {
-                        $resultados[] =
-                            $aportacionesCount . ' ' . ($aportacionesCount === 1 ? 'aportación' : 'aportaciones');
+                        $resultados[] = $aportacionesCount . ' ' . ($aportacionesCount === 1 ? 'aportación' : 'aportaciones');
                     }
                     if ($cancionesCount > 0) {
                         $resultados[] = $cancionesCount . ' ' . ($cancionesCount === 1 ? 'canción' : 'canciones');
                     }
+
+                    $proyectosActivos = [];
+                    if ($sisipediaCount > 0) {
+                        $proyectosActivos['resultados-sisipedia'] = $proyectosPorSlug['radio-pukllasunchis'] ?? 'Radio Pukllasunchis';
+                    }
+                    if ($videosCount > 0) {
+                        $proyectosActivos['resultados-videos'] = $proyectosPorSlug['eesp-pukllasunchis'] ?? 'EESP Pukllasunchis';
+                    }
+                    if ($librosCount > 0) {
+                        $proyectosActivos['resultados-biblioteca'] = $proyectosPorSlug['eesp-pukllasunchis'] ?? 'EESP Pukllasunchis';
+                    }
+                    if ($kawsayLibrosCount > 0) {
+                        $proyectosActivos['resultados-kawsay-libros'] = $proyectosPorSlug['kawsay'] ?? 'Kawsay';
+                    }
+                    if ($kawsayVideosCount > 0) {
+                        $proyectosActivos['resultados-kawsay-videos'] = $proyectosPorSlug['kawsay'] ?? 'Kawsay';
+                    }
+                    if ($aportacionesCount > 0) {
+                        $proyectosActivos['resultados-aportaciones'] = $proyectosPorSlug['radio-pukllasunchis'] ?? 'Radio Pukllasunchis';
+                    }
+                    if ($cancionesCount > 0) {
+                        $proyectosActivos['resultados-canciones'] = $proyectosPorSlug['radio-pukllasunchis'] ?? 'Radio Pukllasunchis';
+                    }
+                    // Un proyecto puede tener varias secciones; nos quedamos con la
+                    // primera (array_unique conserva la primera clave por valor).
+                    $proyectosUnicos = array_unique($proyectosActivos);
                 @endphp
-                <p class="mb-0 mt-2 small buscador-reveal">
+                <p class="buscador-topbar-summary buscador-reveal">
                     Se encontraron: {{ implode(' · ', $resultados) }}
                 </p>
+                @if (count($proyectosUnicos) > 1)
+                    <p class="buscador-topbar-proyectos buscador-reveal">
+                        En
+                        @foreach ($proyectosUnicos as $targetId => $nombreProyecto)
+                            <a href="#{{ $targetId }}" class="buscador-proyecto-link"
+                                data-target="{{ $targetId }}">{{ $nombreProyecto }}</a>{{ ! $loop->last ? ' · ' : '' }}
+                        @endforeach
+                    </p>
+                @endif
             @endif
 
             <form action="{{ route('busqueda') }}" method="GET" role="search"
@@ -79,553 +115,558 @@
         </div>
     </div>
 
-    <div class="container mt-4 {{ $hasResults ? 'mb-5' : 'mb-0' }} contenedorContenido">
+    <div class="container mt-4 {{ $hasResults ? 'mb-5' : 'mb-0' }}" id="buscadorResultados">
 
-        <div class="row mb-2 g-4">
-
-            {{-- ── Sisipedia (registro + archivos adjuntos) ─────────────── --}}
-            @if ($sisipediaHits->isNotEmpty())
-                <div class="col-12 buscador-reveal">
-                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-                        <span class="badge rounded-pill" style="background:#6a0310;color:#fff;">{{ $sisipediaCount }}</span>
-                        <h3 class="h5 mb-0 fw-bold">Registros Sisipedia</h3>
-                        <span class="badge buscador-badge-proyecto">{{ $proyectosPorSlug['radio-pukllasunchis'] ?? 'Radio Pukllasunchis' }}</span>
-                    </div>
-                    <p class="text-muted small mb-3">Coincidencias en título, descripción y archivos adjuntos.</p>
+        {{-- ── Sisipedia ─────────────────────────────────────────────── --}}
+        @if ($sisipediaHits->isNotEmpty())
+            @php
+                $sisipediaVisibles = $sisipediaHits->take($CAP);
+                $sisipediaRestantes = $sisipediaCount - $sisipediaVisibles->count();
+            @endphp
+            <section class="buscador-section buscador-reveal" id="resultados-sisipedia">
+                <div class="buscador-section-header">
+                    <span class="badge rounded-pill" style="background:#6a0310;color:#fff;">{{ $sisipediaCount }}</span>
+                    <h2 class="buscador-section-title">Registros Sisipedia</h2>
+                    <a href="{{ $enlacesGrupos['sisipedia'] }}" class="badge buscador-badge-proyecto">
+                        {{ $proyectosPorSlug['radio-pukllasunchis'] ?? 'Radio Pukllasunchis' }}
+                        <i class="fa fa-arrow-right"></i>
+                    </a>
                 </div>
-                @foreach ($sisipediaHits as $hit)
-                    @php
-                        $reg = $hit['category'];
-                        $path = [];
-                        $cur = $reg;
-                        while ($cur) {
-                            array_unshift($path, $cur->display_name);
-                            $cur = $cur->parent ?? null;
-                        }
-                    @endphp
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card h-100 border-0 shadow-sm sisipedia-hit-card position-relative d-flex flex-column">
-                            <div class="card-body p-3 d-flex flex-column flex-grow-1">
-                                <div class="d-flex align-items-start gap-2 mb-2">
-                                    @if ($reg->image)
-                                        <img src="{{ asset($reg->image) }}" class="rounded-circle flex-shrink-0"
-                                            width="40" height="40" style="object-fit:cover;" alt="">
-                                    @else
-                                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0"
-                                            style="width:40px;height:40px;min-width:40px;background:rgba(106,3,16,.1);color:#6a0310;">
-                                            <i class="fa fa-folder-open"></i>
-                                        </div>
-                                    @endif
-                                    <div class="min-w-0 flex-grow-1">
-                                        <h6 class="mb-1 text-dark fw-semibold text-break">
-                                            <a href="{{ route('sisipedia.categories.show', $reg) }}"
-                                                class="text-decoration-none text-dark">
-                                                {!! $hl($reg->display_name, $query) !!}
-                                            </a>
-                                        </h6>
-                                        @if (count($path) > 1)
-                                            @php
-                                                $parentPath = array_slice($path, 0, -1);
-                                            @endphp
-                                            <div class="buscador-topic-path">
-                                                <span class="buscador-topic-crumbs">
-                                                    <i class="fa fa-sitemap"></i>
-                                                    @foreach ($parentPath as $index => $parent)
-                                                        <span class="buscador-topic-crumb">{{ $parent }}</span>
-                                                        @if ($index < count($parentPath) - 1)
-                                                            <i class="fa fa-angle-right buscador-topic-sep"></i>
-                                                        @endif
-                                                    @endforeach
-                                                </span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-
-                                @if ($reg->description)
-                                    @php
-                                        $cleanDescription = \App\Models\sisipedia\Category::stripLegacyOntologyPrefix(
-                                            $reg->description,
-                                        );
-                                    @endphp
-                                    <p class="buscador-detalle mb-3">{!! $hl(Str::limit($cleanDescription, 360), $query) !!}</p>
-                                @endif
-
-                                @php $regFiles = $reg->files ?? collect(); @endphp
-                                <div class="d-flex flex-wrap gap-1 pt-1 border-top border-light mb-3">
-                                    @if ($regFiles->where('tipo', 'pdf')->isNotEmpty())
-                                        <span class="badge rounded-pill bg-danger text-white" style="font-size:.6rem;">
-                                            <i class="fa fa-file-pdf me-1"></i>PDF
-                                        </span>
-                                    @endif
-                                    @if ($regFiles->where('tipo', 'doc')->isNotEmpty())
-                                        <span class="badge rounded-pill bg-secondary text-white" style="font-size:.6rem;">
-                                            <i class="fa fa-file-word me-1"></i>Doc
-                                        </span>
-                                    @endif
-                                    @if ($regFiles->where('tipo', 'audio')->isNotEmpty())
-                                        <span class="badge rounded-pill bg-success text-white" style="font-size:.6rem;">
-                                            <i class="fa fa-music me-1"></i>Audio
-                                        </span>
-                                    @endif
-                                    @if ($regFiles->where('tipo', 'video')->isNotEmpty())
-                                        <span class="badge rounded-pill bg-primary text-white" style="font-size:.6rem;">
-                                            <i class="fa fa-video me-1"></i>Video
-                                        </span>
-                                    @endif
-                                </div>
-                                <a href="{{ route('sisipedia.categories.show', $reg) }}"
-                                    class="btn btn-sm buscador-btn-ver mt-auto">
-                                    Ver detalles
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            @endif
-
-            {{-- ── Videos institucionales ───────────────────────────────── --}}
-            @if ($videosScored->isNotEmpty())
-                <div class="col-12 mt-5 pt-4 border-top buscador-reveal">
-                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-                        <span class="badge bg-danger text-white rounded-pill">{{ $videosCount }}</span>
-                        <h3 class="h5 mb-0 fw-bold">Videos</h3>
-                        <span class="badge buscador-badge-proyecto">{{ $proyectosPorSlug['radio-pukllasunchis'] ?? 'Radio Pukllasunchis' }}</span>
-                        <span class="badge rounded-pill bg-secondary text-white small fw-normal">Nombre o
-                            descripción del video</span>
-                    </div>
+                <div class="buscador-row-list">
+                    @foreach ($sisipediaVisibles as $hit)
+                        @php
+                            $reg = $hit['category'];
+                            $path = [];
+                            $cur = $reg;
+                            while ($cur) {
+                                array_unshift($path, $cur->display_name);
+                                $cur = $cur->parent ?? null;
+                            }
+                            $metaTexto = null;
+                            if ($reg->description) {
+                                $cleanDescription = \App\Models\sisipedia\Category::stripLegacyOntologyPrefix($reg->description);
+                                $metaTexto = $hl(Str::limit($cleanDescription, 90), $query);
+                            } elseif (count($path) > 1) {
+                                $metaTexto = e(implode(' › ', array_slice($path, 0, -1)));
+                            }
+                        @endphp
+                        @include('partials.buscador-row', [
+                            'icon' => 'fa-sitemap',
+                            'iconColor' => '#6a0310',
+                            'href' => route('sisipedia.categories.show', $reg),
+                            'title' => $hl($reg->display_name, $query),
+                            'meta' => $metaTexto,
+                        ])
+                    @endforeach
                 </div>
-                @foreach ($videosScored as $row)
-                    @php
-                        $video = $row['model'];
-                        $sim = $row['similarity'];
-                        $vDir = $row['match_direct'] ?? false;
-                    @endphp
-                    <div class="col-lg-4">
-                        <div class="card border-0 shadow-sm h-100 video-hit-card d-flex flex-column">
-                            @if ($video->youtube)
-                                <div class="video-thumbnail position-relative flex-shrink-0 rounded-top overflow-hidden"
-                                    style="width:100%;height:200px;">
-                                    <img loading="lazy"
-                                        src="https://img.youtube.com/vi/{{ $video->youtube }}/hqdefault.jpg" alt=""
-                                        class="w-100 h-100 object-fit-cover">
-                                    <a href="https://www.youtube.com/watch?v={{ $video->youtube }}" target="_blank"
-                                        rel="noopener" class="position-absolute top-50 start-50 translate-middle">
-                                        <i class="fa-brands fa-youtube" style="color:red;font-size:56px;"></i>
-                                    </a>
-                                </div>
-                            @elseif($video->drive)
-                                <div class="ratio ratio-16x9 flex-shrink-0 bg-dark rounded-top overflow-hidden">
-                                    <iframe loading="lazy"
-                                        src="https://drive.google.com/file/d/{{ $video->drive }}/preview" class="border-0"
-                                        allowfullscreen title="Video"></iframe>
-                                </div>
-                                <div class="px-3 pt-2 d-flex flex-wrap gap-2 border-bottom bg-light">
-                                    <a href="https://drive.google.com/file/d/{{ $video->drive }}/view" target="_blank"
-                                        rel="noopener" class="btn btn-sm btn-outline-primary py-0">
-                                        <i class="fa fa-external-link-alt me-1"></i>Drive
-                                    </a>
-                                    <a href="https://drive.google.com/uc?export=download&id={{ $video->drive }}"
-                                        class="btn btn-sm btn-outline-secondary py-0" rel="nofollow">
-                                        <i class="fa fa-download me-1"></i>Descargar
-                                    </a>
-                                </div>
-                            @endif
-                            <div class="card-body p-3 flex-grow-1 d-flex flex-column">
-                                <h6 class="mb-2 text-dark fw-semibold text-break">{!! $hl($video->nombre, $query) !!}</h6>
-                                @if ($video->descripcion)
-                                    <p class="buscador-detalle mb-0">{!! $hl(Str::limit($video->descripcion, 320), $query) !!}</p>
-                                @else
-                                    <p class="text-muted small fst-italic mb-0">Sin descripción.</p>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            @endif
+                @include('partials.buscador-vermas', [
+                    'restantes' => $sisipediaRestantes,
+                    'href' => $enlacesGrupos['sisipedia'],
+                    'label' => $proyectosPorSlug['radio-pukllasunchis'] ?? 'Radio Pukllasunchis',
+                ])
+            </section>
+        @endif
 
-            {{-- ── Biblioteca (libros) ─────────────────────────────────────── --}}
-            @if ($libros->isNotEmpty())
-                <div class="col-12 mt-5 pt-4 border-top buscador-reveal">
-                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-                        <span class="badge bg-success text-white rounded-pill">{{ $librosCount }}</span>
-                        <h3 class="h5 mb-0 fw-bold">Biblioteca</h3>
-                        <span class="badge buscador-badge-proyecto">{{ $proyectosPorSlug['eesp-pukllasunchis'] ?? 'EESP Pukllasunchis' }}</span>
-                        <span class="badge rounded-pill bg-secondary text-white small fw-normal">
-                            Textos — título o autor
-                        </span>
-                    </div>
+        {{-- ── Videos institucionales (Escuela) ─────────────────────────── --}}
+        @if ($videosScored->isNotEmpty())
+            @php
+                $videosVisibles = $videosScored->take($CAP);
+                $videosRestantes = $videosCount - $videosVisibles->count();
+            @endphp
+            <section class="buscador-section buscador-reveal" id="resultados-videos">
+                <div class="buscador-section-header">
+                    <span class="badge bg-danger text-white rounded-pill">{{ $videosCount }}</span>
+                    <h2 class="buscador-section-title">Videos</h2>
+                    <a href="{{ $enlacesGrupos['videos'] }}" class="badge buscador-badge-proyecto">
+                        {{ $proyectosPorSlug['eesp-pukllasunchis'] ?? 'EESP Pukllasunchis' }}
+                        <i class="fa fa-arrow-right"></i>
+                    </a>
                 </div>
-                @foreach ($libros as $libro)
-                    <div class="col-lg-3 mb-4 cardLibros" data-nombre="{{ $libro->nombre }}"
-                        data-autor="{{ $libro->autor }}">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
-                                <h5 class="text-center mb-2">{{ $libro->nombre }}</h5>
-                                <p class="text-center text-muted small mb-3"><i
-                                        class="fa fa-user me-1"></i>{{ $libro->autor }}
-                                </p>
-                                @php
-                                    $idDocumento = $libro->identificador;
-                                    $urlVistaPrevia = "https://drive.google.com/thumbnail?id={$idDocumento}&sz=w1000";
-                                @endphp
-                                <div class="contenedorLibro">
-                                    <div class="contenedorImagen">
-                                        <img class="vistaPrevia" src="{{ $urlVistaPrevia }}" alt=""
-                                            loading="lazy">
-                                        <div class="overlay">
-                                            <a href="https://drive.google.com/file/d/{{ $libro->identificador }}/preview"
-                                                target="_blank" rel="noopener">
-                                                <button type="button" class="btnAbrirPDF">Abrir PDF</button>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            @endif
-
-            {{-- ── Kawsay (libros) ──────────────────────────────────────────── --}}
-            @if ($kawsayLibros->isNotEmpty())
-                <div class="col-12 mt-5 pt-4 border-top buscador-reveal">
-                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-                        <span class="badge bg-success text-white rounded-pill">{{ $kawsayLibrosCount }}</span>
-                        <h3 class="h5 mb-0 fw-bold">Kawsay — Libros</h3>
-                        <span class="badge buscador-badge-proyecto">{{ $proyectosPorSlug['kawsay'] ?? 'Kawsay' }}</span>
-                        <span class="badge rounded-pill bg-secondary text-white small fw-normal">
-                            Textos — título o autor
-                        </span>
-                    </div>
+                <div class="buscador-row-list">
+                    @foreach ($videosVisibles as $row)
+                        @php
+                            $video = $row['model'];
+                            $vhref = $video->youtube
+                                ? 'https://www.youtube.com/watch?v=' . $video->youtube
+                                : ($video->drive ? 'https://drive.google.com/file/d/' . $video->drive . '/view' : null);
+                        @endphp
+                        @include('partials.buscador-row', [
+                            'icon' => 'fa-video',
+                            'iconColor' => '#dc3545',
+                            'href' => $vhref,
+                            'external' => true,
+                            'title' => $hl($video->nombre, $query),
+                            'meta' => $video->descripcion ? $hl(Str::limit($video->descripcion, 90), $query) : null,
+                        ])
+                    @endforeach
                 </div>
-                @foreach ($kawsayLibros as $libro)
-                    <div class="col-lg-3 mb-4 cardLibros" data-nombre="{{ $libro->nombre }}"
-                        data-autor="{{ $libro->autor }}">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
-                                <h5 class="text-center mb-2">{{ $libro->nombre }}</h5>
-                                <p class="text-center text-muted small mb-3"><i
-                                        class="fa fa-user me-1"></i>{{ $libro->autor }}
-                                </p>
-                                @php
-                                    $idDocumento = $libro->identificador;
-                                    $urlVistaPrevia = "https://drive.google.com/thumbnail?id={$idDocumento}&sz=w1000";
-                                @endphp
-                                <div class="contenedorLibro">
-                                    <div class="contenedorImagen">
-                                        <img class="vistaPrevia" src="{{ $urlVistaPrevia }}" alt=""
-                                            loading="lazy">
-                                        <div class="overlay">
-                                            <a href="https://drive.google.com/file/d/{{ $libro->identificador }}/preview"
-                                                target="_blank" rel="noopener">
-                                                <button type="button" class="btnAbrirPDF">Abrir PDF</button>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            @endif
+                @include('partials.buscador-vermas', [
+                    'restantes' => $videosRestantes,
+                    'href' => $enlacesGrupos['videos'],
+                    'label' => $proyectosPorSlug['eesp-pukllasunchis'] ?? 'EESP Pukllasunchis',
+                ])
+            </section>
+        @endif
 
-            {{-- ── Kawsay (videos) ─────────────────────────────────────────── --}}
-            @if ($kawsayVideosScored->isNotEmpty())
-                <div class="col-12 mt-5 pt-4 border-top buscador-reveal">
-                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-                        <span class="badge bg-danger text-white rounded-pill">{{ $kawsayVideosCount }}</span>
-                        <h3 class="h5 mb-0 fw-bold">Kawsay — Videos</h3>
-                        <span class="badge buscador-badge-proyecto">{{ $proyectosPorSlug['kawsay'] ?? 'Kawsay' }}</span>
-                        <span class="badge rounded-pill bg-secondary text-white small fw-normal">Nombre o
-                            descripción del video</span>
-                    </div>
+        {{-- ── Biblioteca (libros, Escuela) ─────────────────────────────── --}}
+        @if ($libros->isNotEmpty())
+            @php
+                $librosVisibles = $libros->take($CAP);
+                $librosRestantes = $librosCount - $librosVisibles->count();
+            @endphp
+            <section class="buscador-section buscador-reveal" id="resultados-biblioteca">
+                <div class="buscador-section-header">
+                    <span class="badge bg-success text-white rounded-pill">{{ $librosCount }}</span>
+                    <h2 class="buscador-section-title">Biblioteca</h2>
+                    <a href="{{ $enlacesGrupos['libros'] }}" class="badge buscador-badge-proyecto">
+                        {{ $proyectosPorSlug['eesp-pukllasunchis'] ?? 'EESP Pukllasunchis' }}
+                        <i class="fa fa-arrow-right"></i>
+                    </a>
                 </div>
-                @foreach ($kawsayVideosScored as $row)
-                    @php
-                        $video = $row['model'];
-                    @endphp
-                    <div class="col-lg-4">
-                        <div class="card border-0 shadow-sm h-100 video-hit-card d-flex flex-column">
-                            @if ($video->youtube)
-                                <div class="video-thumbnail position-relative flex-shrink-0 rounded-top overflow-hidden"
-                                    style="width:100%;height:200px;">
-                                    <img loading="lazy"
-                                        src="https://img.youtube.com/vi/{{ $video->youtube }}/hqdefault.jpg" alt=""
-                                        class="w-100 h-100 object-fit-cover">
-                                    <a href="https://www.youtube.com/watch?v={{ $video->youtube }}" target="_blank"
-                                        rel="noopener" class="position-absolute top-50 start-50 translate-middle">
-                                        <i class="fa-brands fa-youtube" style="color:red;font-size:56px;"></i>
-                                    </a>
-                                </div>
-                            @elseif($video->drive)
-                                <div class="ratio ratio-16x9 flex-shrink-0 bg-dark rounded-top overflow-hidden">
-                                    <iframe loading="lazy"
-                                        src="https://drive.google.com/file/d/{{ $video->drive }}/preview" class="border-0"
-                                        allowfullscreen title="Video"></iframe>
-                                </div>
-                                <div class="px-3 pt-2 d-flex flex-wrap gap-2 border-bottom bg-light">
-                                    <a href="https://drive.google.com/file/d/{{ $video->drive }}/view" target="_blank"
-                                        rel="noopener" class="btn btn-sm btn-outline-primary py-0">
-                                        <i class="fa fa-external-link-alt me-1"></i>Drive
-                                    </a>
-                                    <a href="https://drive.google.com/uc?export=download&id={{ $video->drive }}"
-                                        class="btn btn-sm btn-outline-secondary py-0" rel="nofollow">
-                                        <i class="fa fa-download me-1"></i>Descargar
-                                    </a>
-                                </div>
-                            @endif
-                            <div class="card-body p-3 flex-grow-1 d-flex flex-column">
-                                <h6 class="mb-2 text-dark fw-semibold text-break">{!! $hl($video->nombre, $query) !!}</h6>
-                                @if ($video->descripcion)
-                                    <p class="buscador-detalle mb-0">{!! $hl(Str::limit($video->descripcion, 320), $query) !!}</p>
-                                @else
-                                    <p class="text-muted small fst-italic mb-0">Sin descripción.</p>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            @endif
-
-            {{-- ── Aportaciones ──────────────────────────────────────────── --}}
-            @if ($aportaciones->isNotEmpty())
-                @php
-                    $rolColors = [
-                        'Equipo Puklla' => '#6f42c1',
-                        'Docente' => '#0d6efd',
-                        'Líder' => '#198754',
-                        'Niño/Estudiante' => '#fd7e14',
-                    ];
-                    $rolIcons = [
-                        'Equipo Puklla' => 'fa-users',
-                        'Docente' => 'fa-graduation-cap',
-                        'Líder' => 'fa-star',
-                        'Niño/Estudiante' => 'fa-child',
-                    ];
-                @endphp
-                <div class="col-12 mt-5 pt-4 border-top buscador-reveal">
-                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-                        <span class="badge bg-warning text-dark rounded-pill">{{ $aportacionesCount }}</span>
-                        <h3 class="h5 mb-0 fw-bold">Aportaciones</h3>
-                        <span class="badge buscador-badge-proyecto">{{ $proyectosPorSlug['radio-pukllasunchis'] ?? 'Radio Pukllasunchis' }}</span>
-                        <span class="badge rounded-pill bg-secondary text-white small fw-normal">Texto de la
-                            aportación</span>
-                    </div>
+                <div class="buscador-row-list">
+                    @foreach ($librosVisibles as $libro)
+                        @include('partials.buscador-row', [
+                            'icon' => 'fa-book',
+                            'iconColor' => '#198754',
+                            'href' => 'https://drive.google.com/file/d/' . $libro->identificador . '/preview',
+                            'external' => true,
+                            'title' => $hl($libro->nombre, $query),
+                            'meta' => $libro->autor ? $hl($libro->autor, $query) : null,
+                        ])
+                    @endforeach
                 </div>
-                @foreach ($aportaciones as $ap)
-                    @php
-                        $color = $rolColors[$ap->rol_nombre] ?? '#6c757d';
-                        $icon = $rolIcons[$ap->rol_nombre] ?? 'fa-user';
-                        $catPath = [];
-                        $cur = $ap->category;
-                        while ($cur) {
-                            array_unshift($catPath, $cur->display_name);
-                            $cur = $cur->parent ?? null;
-                        }
-                    @endphp
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card h-100 border-0 shadow-sm d-flex flex-column">
-                            <div class="card-body p-3 d-flex flex-column flex-grow-1">
-                                <div class="d-flex align-items-start gap-2 mb-2">
-                                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 text-white"
-                                        style="width:40px;height:40px;min-width:40px;background:{{ $color }};">
-                                        <i class="fa {{ $icon }}"></i>
-                                    </div>
-                                    <div class="min-w-0">
-                                        <h6 class="mb-0 text-dark fw-semibold text-break">{!! $hl($ap->nombre_ol, $query) !!}</h6>
-                                        <span class="badge rounded-pill text-white mt-1"
-                                            style="background:{{ $color }};font-size:.65rem;">
-                                            {{ \App\Models\sisipedia\Aportacion::etiquetaRol($ap->rol_nombre) }}
-                                        </span>
-                                    </div>
-                                </div>
-                                @if ($ap->category)
-                                    <div class="mb-2">
-                                        <a href="{{ route('sisipedia.categories.show', $ap->category) }}"
-                                            class="btn btn-sm buscador-btn-ver w-100 mb-1">
-                                            Ver detalles
-                                        </a>
-                                        <div class="buscador-topic-path">
-                                            <span class="buscador-topic-label"><i class="fa fa-sitemap"></i>Tema</span>
-                                            <span class="buscador-topic-crumbs">
-                                                @foreach ($catPath as $index => $parent)
-                                                    <span class="buscador-topic-crumb">{{ $parent }}</span>
-                                                    @if ($index < count($catPath) - 1)
-                                                        <i class="fa fa-angle-right buscador-topic-sep"></i>
-                                                    @endif
-                                                @endforeach
-                                            </span>
-                                        </div>
-                                    </div>
-                                @endif
-                                <div class="d-flex flex-wrap gap-1 mb-2">
-                                    @if ($ap->institucion)
-                                        <span class="badge bg-secondary text-white" style="font-size:.65rem;">
-                                            <i class="fa fa-building me-1"></i>{!! $hl($ap->institucion, $query) !!}
-                                        </span>
-                                    @endif
-                                    @if ($ap->ubicacion)
-                                        <span class="badge bg-secondary text-white" style="font-size:.65rem;">
-                                            <i class="fa fa-map-marker me-1"></i>{!! $hl($ap->ubicacion, $query) !!}
-                                        </span>
-                                    @endif
-                                </div>
-                                @if ($ap->detalle)
-                                    <p class="buscador-detalle mb-2">{!! $hl(Str::limit($ap->detalle, 320), $query) !!}</p>
-                                @endif
+                @include('partials.buscador-vermas', [
+                    'restantes' => $librosRestantes,
+                    'href' => $enlacesGrupos['libros'],
+                    'label' => $proyectosPorSlug['eesp-pukllasunchis'] ?? 'EESP Pukllasunchis',
+                ])
+            </section>
+        @endif
 
-                                @if ($ap->video)
-                                    <div class="ratio ratio-16x9 mb-2 rounded overflow-hidden bg-dark border">
-                                        <iframe loading="lazy"
-                                            src="{{ \App\Services\GoogleDriveService::getPreviewUrl($ap->video) }}"
-                                            class="border-0" allowfullscreen
-                                            title="Video — {{ $ap->nombre_ol }}"></iframe>
-                                    </div>
-                                    <div class="d-flex flex-wrap gap-2 mb-2">
-                                        <a href="{{ \App\Services\GoogleDriveService::getUrl($ap->video) }}"
-                                            target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">
-                                            <i class="fa fa-external-link-alt me-1"></i>Abrir en Drive
-                                        </a>
-                                        <a href="https://drive.google.com/uc?export=download&id={{ $ap->video }}"
-                                            class="btn btn-sm btn-outline-secondary" rel="nofollow">
-                                            <i class="fa fa-download me-1"></i>Descargar
-                                        </a>
-                                    </div>
-                                @endif
-
-                                @if ($ap->audio)
-                                    <div class="mb-2">
-                                        @include('partials.audio-player', [
-                                            'src' => route('sisipedia.audio.aportacion-directa.stream', $ap),
-                                            'title' => 'Audio — ' . $ap->nombre_ol,
-                                            'driveUrl' => \App\Services\GoogleDriveService::getUrl($ap->audio),
-                                        ])
-                                    </div>
-                                @endif
-
-                                @if ($ap->pdf || $ap->doc)
-                                    <div class="d-flex flex-wrap gap-2 mt-auto pt-2 border-top border-light">
-                                        @if ($ap->pdf)
-                                            <a href="{{ \App\Services\GoogleDriveService::getUrl($ap->pdf) }}"
-                                                target="_blank" rel="noopener" class="btn btn-sm btn-danger text-white">
-                                                <i class="fa fa-file-pdf-o me-1"></i>Ver PDF
-                                            </a>
-                                            <a href="https://drive.google.com/uc?export=download&id={{ $ap->pdf }}"
-                                                class="btn btn-sm btn-outline-danger" rel="nofollow">
-                                                <i class="fa fa-download"></i>
-                                            </a>
-                                        @endif
-                                        @if ($ap->doc)
-                                            <a href="{{ \App\Services\GoogleDriveService::getUrl($ap->doc) }}"
-                                                target="_blank" rel="noopener" class="btn btn-sm btn-primary text-white">
-                                                <i class="fa fa-file-word-o me-1"></i>Ver Word
-                                            </a>
-                                            <a href="https://drive.google.com/uc?export=download&id={{ $ap->doc }}"
-                                                class="btn btn-sm btn-outline-primary" rel="nofollow">
-                                                <i class="fa fa-download"></i>
-                                            </a>
-                                        @endif
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            @endif
-
-            {{-- ── Canciones ──────────────────────────────────────────────── --}}
-            @if ($canciones->isNotEmpty())
-                <div class="col-12 mt-5 pt-4 border-top buscador-reveal">
-                    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-                        <span class="badge rounded-pill bg-dark text-white">{{ $cancionesCount }}</span>
-                        <h3 class="h5 mb-0 fw-bold">Canciones</h3>
-                        <span class="badge buscador-badge-proyecto">{{ $proyectosPorSlug['radio-pukllasunchis'] ?? 'Radio Pukllasunchis' }}</span>
-                        <span class="badge rounded-pill bg-secondary text-white small fw-normal">Nombre o
-                            autor</span>
-                    </div>
+        {{-- ── Kawsay — Libros ───────────────────────────────────────────── --}}
+        @if ($kawsayLibros->isNotEmpty())
+            @php
+                $kawsayLibrosVisibles = $kawsayLibros->take($CAP);
+                $kawsayLibrosRestantes = $kawsayLibrosCount - $kawsayLibrosVisibles->count();
+            @endphp
+            <section class="buscador-section buscador-reveal" id="resultados-kawsay-libros">
+                <div class="buscador-section-header">
+                    <span class="badge bg-success text-white rounded-pill">{{ $kawsayLibrosCount }}</span>
+                    <h2 class="buscador-section-title">Kawsay — Libros</h2>
+                    <a href="{{ $enlacesGrupos['kawsayLibros'] }}" class="badge buscador-badge-proyecto">
+                        {{ $proyectosPorSlug['kawsay'] ?? 'Kawsay' }}
+                        <i class="fa fa-arrow-right"></i>
+                    </a>
                 </div>
-                @foreach ($canciones as $cancion)
-                    @if ($cancion->youtube)
-                        <div class="col-lg-4 mb-4">
-                            <div class="card border-0 shadow-sm h-100">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-7">
-                                            <h5 class="card-title">{{ $cancion->nombre }}</h5>
-                                            <p class="card-text mb-2 text-muted small">{{ $cancion->autor }}</p>
-                                        </div>
-                                        <div class="col-5 d-flex align-items-center justify-content-center">
-                                            <img src="{{ asset('img/min/Youtube-Logo.webp') }}" loading="lazy"
-                                                width="110" alt="">
-                                        </div>
-                                    </div>
-                                    <div class="video-thumbnail position-relative" style="width:100%;height:220px;">
-                                        <img loading="lazy"
-                                            src="https://img.youtube.com/vi/{{ $cancion->youtube }}/hqdefault.jpg"
-                                            alt="" class="w-100 h-100 object-fit-cover">
-                                        <a href="https://www.youtube.com/watch?v={{ $cancion->youtube }}" target="_blank"
-                                            rel="noopener" class="position-absolute top-50 start-50 translate-middle">
-                                            <i class="fa-brands fa-youtube" style="color:red;font-size:60px;"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @elseif($cancion->drive)
-                        <div class="col-lg-4 mb-4">
-                            <div class="card border-0 shadow-sm h-100">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-7">
-                                            <h5 class="card-title">{{ $cancion->nombre }}</h5>
-                                            <p class="card-text mb-2 text-muted small">{{ $cancion->autor }}</p>
-                                        </div>
-                                        <div class="col-5 d-flex align-items-center justify-content-center">
-                                            <img src="{{ asset('img/min/google-drive-min.webp') }}" width="88"
-                                                alt="">
-                                        </div>
-                                    </div>
-                                    <div class="drive d-flex justify-content-center align-items-center rounded-2 overflow-hidden"
-                                        style="height:135px;background:url('{{ asset('img/min/FONDO-DRIVE.webp') }}');background-size:cover;">
-                                        <iframe src="https://drive.google.com/file/d/{{ $cancion->drive }}/preview"
-                                            loading="lazy" allowfullscreen width="100%" height="80"
-                                            title="Audio"></iframe>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @elseif($cancion->spotify)
-                        <div class="col-lg-4 mb-4">
-                            <iframe style="border-radius:12px" loading="lazy"
-                                src="https://open.spotify.com/embed/track/{{ $cancion->spotify }}" width="100%"
-                                height="302" title="Spotify"></iframe>
-                        </div>
-                    @endif
-                @endforeach
-            @endif
-        </div>
+                <div class="buscador-row-list">
+                    @foreach ($kawsayLibrosVisibles as $libro)
+                        @include('partials.buscador-row', [
+                            'icon' => 'fa-book',
+                            'iconColor' => '#198754',
+                            'href' => 'https://drive.google.com/file/d/' . $libro->identificador . '/preview',
+                            'external' => true,
+                            'title' => $hl($libro->nombre, $query),
+                            'meta' => $libro->autor ? $hl($libro->autor, $query) : null,
+                        ])
+                    @endforeach
+                </div>
+                @include('partials.buscador-vermas', [
+                    'restantes' => $kawsayLibrosRestantes,
+                    'href' => $enlacesGrupos['kawsayLibros'],
+                    'label' => $proyectosPorSlug['kawsay'] ?? 'Kawsay',
+                ])
+            </section>
+        @endif
+
+        {{-- ── Kawsay — Videos ───────────────────────────────────────────── --}}
+        @if ($kawsayVideosScored->isNotEmpty())
+            @php
+                $kawsayVideosVisibles = $kawsayVideosScored->take($CAP);
+                $kawsayVideosRestantes = $kawsayVideosCount - $kawsayVideosVisibles->count();
+            @endphp
+            <section class="buscador-section buscador-reveal" id="resultados-kawsay-videos">
+                <div class="buscador-section-header">
+                    <span class="badge bg-danger text-white rounded-pill">{{ $kawsayVideosCount }}</span>
+                    <h2 class="buscador-section-title">Kawsay — Videos</h2>
+                    <a href="{{ $enlacesGrupos['kawsayVideos'] }}" class="badge buscador-badge-proyecto">
+                        {{ $proyectosPorSlug['kawsay'] ?? 'Kawsay' }}
+                        <i class="fa fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="buscador-row-list">
+                    @foreach ($kawsayVideosVisibles as $row)
+                        @php
+                            $video = $row['model'];
+                            $vhref = $video->youtube
+                                ? 'https://www.youtube.com/watch?v=' . $video->youtube
+                                : ($video->drive ? 'https://drive.google.com/file/d/' . $video->drive . '/view' : null);
+                        @endphp
+                        @include('partials.buscador-row', [
+                            'icon' => 'fa-video',
+                            'iconColor' => '#dc3545',
+                            'href' => $vhref,
+                            'external' => true,
+                            'title' => $hl($video->nombre, $query),
+                            'meta' => $video->descripcion ? $hl(Str::limit($video->descripcion, 90), $query) : null,
+                        ])
+                    @endforeach
+                </div>
+                @include('partials.buscador-vermas', [
+                    'restantes' => $kawsayVideosRestantes,
+                    'href' => $enlacesGrupos['kawsayVideos'],
+                    'label' => $proyectosPorSlug['kawsay'] ?? 'Kawsay',
+                ])
+            </section>
+        @endif
+
+        {{-- ── Aportaciones ──────────────────────────────────────────────── --}}
+        @if ($aportaciones->isNotEmpty())
+            @php
+                $rolColors = [
+                    'Equipo Puklla' => '#6f42c1',
+                    'Docente' => '#0d6efd',
+                    'Líder' => '#198754',
+                    'Niño/Estudiante' => '#fd7e14',
+                ];
+                $rolIcons = [
+                    'Equipo Puklla' => 'fa-users',
+                    'Docente' => 'fa-graduation-cap',
+                    'Líder' => 'fa-star',
+                    'Niño/Estudiante' => 'fa-child',
+                ];
+                $aportacionesVisibles = $aportaciones->take($CAP);
+                $aportacionesRestantes = $aportacionesCount - $aportacionesVisibles->count();
+            @endphp
+            <section class="buscador-section buscador-reveal" id="resultados-aportaciones">
+                <div class="buscador-section-header">
+                    <span class="badge bg-warning text-dark rounded-pill">{{ $aportacionesCount }}</span>
+                    <h2 class="buscador-section-title">Aportaciones</h2>
+                    <a href="{{ $enlacesGrupos['aportaciones'] }}" class="badge buscador-badge-proyecto">
+                        {{ $proyectosPorSlug['radio-pukllasunchis'] ?? 'Radio Pukllasunchis' }}
+                        <i class="fa fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="buscador-row-list">
+                    @foreach ($aportacionesVisibles as $ap)
+                        @php
+                            $catPath = [];
+                            $cur = $ap->category;
+                            while ($cur) {
+                                array_unshift($catPath, $cur->display_name);
+                                $cur = $cur->parent ?? null;
+                            }
+                            $metaTexto = $ap->detalle
+                                ? $hl(Str::limit($ap->detalle, 90), $query)
+                                : (count($catPath) ? e(implode(' › ', $catPath)) : null);
+                        @endphp
+                        @include('partials.buscador-row', [
+                            'icon' => $rolIcons[$ap->rol_nombre] ?? 'fa-user',
+                            'iconColor' => $rolColors[$ap->rol_nombre] ?? '#6c757d',
+                            'href' => $ap->category ? route('sisipedia.categories.show', $ap->category) : null,
+                            'title' => $hl($ap->nombre_ol, $query),
+                            'meta' => $metaTexto,
+                        ])
+                    @endforeach
+                </div>
+                @include('partials.buscador-vermas', [
+                    'restantes' => $aportacionesRestantes,
+                    'href' => $enlacesGrupos['aportaciones'],
+                    'label' => $proyectosPorSlug['radio-pukllasunchis'] ?? 'Radio Pukllasunchis',
+                ])
+            </section>
+        @endif
+
+        {{-- ── Canciones ──────────────────────────────────────────────────── --}}
+        @if ($canciones->isNotEmpty())
+            @php
+                $cancionesVisibles = $canciones->take($CAP);
+                $cancionesRestantes = $cancionesCount - $cancionesVisibles->count();
+            @endphp
+            <section class="buscador-section buscador-reveal" id="resultados-canciones">
+                <div class="buscador-section-header">
+                    <span class="badge rounded-pill bg-dark text-white">{{ $cancionesCount }}</span>
+                    <h2 class="buscador-section-title">Canciones</h2>
+                    <a href="{{ $enlacesGrupos['canciones'] }}" class="badge buscador-badge-proyecto">
+                        {{ $proyectosPorSlug['radio-pukllasunchis'] ?? 'Radio Pukllasunchis' }}
+                        <i class="fa fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="buscador-row-list">
+                    @foreach ($cancionesVisibles as $cancion)
+                        @php
+                            $chref = null;
+                            if ($cancion->youtube) {
+                                $chref = 'https://www.youtube.com/watch?v=' . $cancion->youtube;
+                            } elseif ($cancion->drive) {
+                                $chref = 'https://drive.google.com/file/d/' . $cancion->drive . '/view';
+                            } elseif ($cancion->spotify) {
+                                $chref = 'https://open.spotify.com/track/' . $cancion->spotify;
+                            }
+                        @endphp
+                        @include('partials.buscador-row', [
+                            'icon' => 'fa-music',
+                            'iconColor' => '#212529',
+                            'href' => $chref,
+                            'external' => true,
+                            'title' => $hl($cancion->nombre, $query),
+                            'meta' => $cancion->autor ? $hl($cancion->autor, $query) : null,
+                        ])
+                    @endforeach
+                </div>
+                @include('partials.buscador-vermas', [
+                    'restantes' => $cancionesRestantes,
+                    'href' => $enlacesGrupos['canciones'],
+                    'label' => $proyectosPorSlug['radio-pukllasunchis'] ?? 'Radio Pukllasunchis',
+                ])
+            </section>
+        @endif
     </div>
 
     <style>
-        /* Etiqueta "a qué proyecto pertenece" cada grupo de resultados */
+        /* ── Encabezado plano (sin foto de fondo) ── */
+        .buscador-topbar {
+            background: #f7f4ef;
+            border-bottom: 1px solid rgba(106, 3, 16, .08);
+            padding: 2.25rem 1.25rem 1.75rem;
+            text-align: center;
+        }
+
+        .buscador-topbar-inner {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .buscador-topbar-logo-link {
+            display: inline-block;
+        }
+
+        .buscador-topbar-logo {
+            width: 130px;
+            max-width: 45vw;
+        }
+
+        .buscador-topbar-title {
+            font-family: "EB Garamond", Garamond, "Times New Roman", serif;
+            font-weight: 700;
+            color: #2a2520;
+            font-size: clamp(1.35rem, 3.2vw, 1.85rem);
+            margin: 1rem 0 .35rem;
+        }
+
+        .buscador-topbar-query {
+            color: #6a0310;
+        }
+
+        .buscador-topbar-summary {
+            color: #8a8278;
+            font-size: .88rem;
+            margin: 0;
+        }
+
+        .buscador-topbar-proyectos {
+            color: #8a8278;
+            font-size: .82rem;
+            margin: .3rem 0 0;
+        }
+
+        .buscador-proyecto-link {
+            color: #6a0310;
+            font-weight: 600;
+            text-decoration: underline;
+            text-decoration-color: rgba(106, 3, 16, .35);
+            text-underline-offset: 2px;
+            transition: text-decoration-color .2s ease;
+        }
+
+        .buscador-proyecto-link:hover {
+            text-decoration-color: rgba(106, 3, 16, .8);
+        }
+
+        /* ── Secciones compactas ── */
+        .buscador-section {
+            margin-top: 2.25rem;
+        }
+
+        .buscador-section:first-child {
+            margin-top: 2rem;
+        }
+
+        .buscador-section-header {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .5rem;
+            margin-bottom: .65rem;
+        }
+
+        .buscador-section-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin: 0;
+            color: #2a2520;
+        }
+
+        /* Breve resalte al llegar a una sección desde la línea de proyectos */
+        .buscador-section.is-highlighted {
+            animation: buscador-section-flash 1.1s ease-out;
+            border-radius: .75rem;
+        }
+
+        @keyframes buscador-section-flash {
+            0% {
+                box-shadow: inset 0 0 0 2px rgba(106, 3, 16, 0);
+            }
+
+            25% {
+                box-shadow: inset 0 0 0 2px rgba(106, 3, 16, .25);
+            }
+
+            100% {
+                box-shadow: inset 0 0 0 2px rgba(106, 3, 16, 0);
+            }
+        }
+
+        /* Etiqueta "a qué proyecto pertenece" cada sección: link discreto a la
+           vista propia de ese proyecto, en el color de marca. */
         .buscador-badge-proyecto {
-            background: rgba(200, 142, 65, .16);
-            color: #8a5a1e;
-            border: 1px solid rgba(200, 142, 65, .35);
+            background: rgba(106, 3, 16, .07);
+            color: #6a0310;
+            border: 1px solid rgba(106, 3, 16, .22);
             font-weight: 600;
             font-size: .68rem;
             letter-spacing: .02em;
             padding: .3rem .65rem;
             border-radius: 999px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            transition: background .2s ease, color .2s ease, border-color .2s ease;
         }
 
-        .sisipedia-hit-card {
-            transition: box-shadow .2s ease;
+        .buscador-badge-proyecto i {
+            font-size: .62rem;
+            opacity: .75;
+            transition: transform .2s ease;
         }
 
-        .sisipedia-hit-card:hover {
-            box-shadow: 0 .5rem 1.25rem rgba(106, 3, 16, .1) !important;
+        .buscador-badge-proyecto:hover {
+            background: #6a0310;
+            color: #fff;
+            border-color: #6a0310;
+            text-decoration: none;
+        }
+
+        .buscador-badge-proyecto:hover i {
+            transform: translateX(2px);
+        }
+
+        /* Fila compacta de resultado */
+        .buscador-row-list {
+            display: flex;
+            flex-direction: column;
+            gap: .4rem;
+        }
+
+        .buscador-row {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .55rem .8rem;
+            border-radius: .6rem;
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, .06);
+            text-decoration: none;
+            color: inherit;
+            transition: background .15s ease, border-color .15s ease, transform .15s ease;
+        }
+
+        .buscador-row:hover {
+            background: rgba(106, 3, 16, .04);
+            border-color: rgba(106, 3, 16, .18);
+            text-decoration: none;
+            color: inherit;
+            transform: translateX(2px);
+        }
+
+        .buscador-row--nolink {
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .buscador-row-icon {
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: color-mix(in srgb, var(--row-icon-color, #6a0310) 12%, white);
+            color: var(--row-icon-color, #6a0310);
+            font-size: .78rem;
+        }
+
+        .buscador-row-body {
+            min-width: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: .05rem;
+        }
+
+        .buscador-row-title {
+            font-weight: 600;
+            font-size: .86rem;
+            color: #2a2520;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .buscador-row-meta {
+            font-size: .74rem;
+            color: #8a8278;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .buscador-row-arrow {
+            flex-shrink: 0;
+            font-size: .66rem;
+            color: #b8a898;
+            transition: transform .15s ease;
+        }
+
+        .buscador-row:hover .buscador-row-arrow {
+            transform: translateX(3px);
+            color: #6a0310;
+        }
+
+        .buscador-vermas {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .78rem;
+            font-weight: 600;
+            color: #6a0310;
+            text-decoration: none;
+            padding: .5rem 0 0;
+        }
+
+        .buscador-vermas:hover {
+            text-decoration: underline;
+            color: #6a0310;
+        }
+
+        .buscador-vermas i {
+            font-size: .65rem;
+            transition: transform .15s ease;
+        }
+
+        .buscador-vermas:hover i {
+            transform: translateX(3px);
         }
 
         /* Resaltado de coincidencia */
@@ -638,161 +679,33 @@
             font-style: normal;
         }
 
-        /* Botón Ver detalles: efecto "Collision" (dos círculos que entran desde
-               los costados y chocan al centro, inundando el botón de color) adaptado
-               a nuestro tamaño de botón y a la paleta de marca (sin colores random). */
-        .buscador-btn-ver {
-            position: relative;
-            z-index: 0;
-            overflow: hidden;
-            background: transparent;
-            color: #6a0310 !important;
-            border: 1px solid rgba(106, 3, 16, .35);
-            font-weight: 500;
-            letter-spacing: .01em;
-            transition: color .3s ease, border-color .3s ease;
-        }
-
-        .buscador-btn-ver::before,
-        .buscador-btn-ver::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            width: 20px;
-            height: 20px;
-            background-color: #6a0310;
-            border-radius: 50%;
-            z-index: -1;
-            transition: left .3s ease, right .3s ease, width .3s ease, height .3s ease;
-        }
-
-        .buscador-btn-ver::before {
-            left: -20px;
-            transform: translate(-50%, -50%);
-        }
-
-        .buscador-btn-ver::after {
-            right: -20px;
-            transform: translate(50%, -50%);
-        }
-
-        .buscador-btn-ver:hover {
-            color: #fff !important;
-            border-color: #6a0310;
-        }
-
-        .buscador-btn-ver:hover::before {
-            animation: buscador-collision-left .5s ease-out both;
-        }
-
-        .buscador-btn-ver:hover::after {
-            animation: buscador-collision-right .5s ease-out both;
-        }
-
-        @keyframes buscador-collision-left {
-            0% {
-                left: -20px;
-                width: 20px;
-                height: 20px;
+        @media (max-width: 575.98px) {
+            .buscador-topbar {
+                padding: 1.75rem 1rem 1.4rem;
             }
 
-            60% {
-                left: 50%;
-                width: 20px;
-                height: 20px;
+            .buscador-row-title,
+            .buscador-row-meta {
+                white-space: normal;
             }
-
-            100% {
-                left: 50%;
-                width: 500px;
-                height: 500px;
-            }
-        }
-
-        @keyframes buscador-collision-right {
-            0% {
-                right: -20px;
-                width: 20px;
-                height: 20px;
-            }
-
-            60% {
-                right: 50%;
-                width: 20px;
-                height: 20px;
-            }
-
-            100% {
-                right: 50%;
-                width: 500px;
-                height: 500px;
-            }
-        }
-
-        /* Detalle legible en tarjetas */
-        .buscador-detalle {
-            font-size: 0.9rem;
-            line-height: 1.55;
-            color: #495057;
-            word-break: break-word;
-        }
-
-        /* Ruta temática (a qué categoría/tema pertenece el resultado): la pista más
-               importante para alguien que busca un tema de investigación, así que va
-               legible y con jerarquía visual clara, no como texto gris minúsculo. */
-        .buscador-topic-path {
-            display: flex;
-            align-items: baseline;
-            flex-wrap: wrap;
-            gap: .35rem;
-            margin-top: .35rem;
-        }
-
-        .buscador-topic-label {
-            flex-shrink: 0;
-            font-size: .62rem;
-            font-weight: 700;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            color: #6a0310;
-        }
-
-        .buscador-topic-label i {
-            margin-right: .25rem;
-        }
-
-        .buscador-topic-crumbs {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: .3rem;
-            font-size: .8rem;
-            color: #495057;
-            line-height: 1.4;
-            word-break: break-word;
-        }
-
-        .buscador-topic-crumb {
-            font-weight: 500;
-        }
-
-        .buscador-topic-sep {
-            font-size: .6rem;
-            color: #c88e41;
-        }
-
-        .video-hit-card {
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            border-top: 3px solid rgba(220, 53, 69, 0.4);
         }
     </style>
 
     <script>
         (function() {
-            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            function revealFallback() {
+                document.querySelectorAll('.buscador-reveal').forEach(function(el) {
+                    el.style.opacity = 1;
+                });
+            }
 
             function animate() {
-                if (typeof gsap === 'undefined') return;
+                if (typeof gsap === 'undefined') {
+                    revealFallback();
+                    return;
+                }
                 gsap.from('.buscador-reveal', {
                     opacity: 0,
                     y: 16,
@@ -800,16 +713,47 @@
                     stagger: 0.08,
                     ease: 'power2.out'
                 });
+                gsap.from('.buscador-section', {
+                    opacity: 0,
+                    y: 14,
+                    duration: 0.4,
+                    stagger: 0.06,
+                    delay: 0.15,
+                    ease: 'power2.out'
+                });
             }
 
-            if (typeof gsap !== 'undefined') {
+            if (reduceMotion) {
+                revealFallback();
+            } else if (typeof gsap !== 'undefined') {
                 animate();
             } else {
                 var script = document.createElement('script');
                 script.src = 'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js';
                 script.onload = animate;
+                script.onerror = revealFallback;
                 document.head.appendChild(script);
             }
+
+            // ── Link sutil "En: [proyecto]": scroll suave + breve resalte ──
+            // (esta vista no tiene nav fijo, así que solo un pequeño respiro)
+            document.querySelectorAll('.buscador-proyecto-link').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    var target = document.getElementById(link.getAttribute('data-target'));
+                    if (!target) return;
+                    e.preventDefault();
+
+                    var y = target.getBoundingClientRect().top + window.pageYOffset - 20;
+                    window.scrollTo({
+                        top: Math.max(y, 0),
+                        behavior: reduceMotion ? 'auto' : 'smooth'
+                    });
+
+                    target.classList.remove('is-highlighted');
+                    void target.offsetWidth; // reinicia la animación CSS si ya se había mostrado
+                    target.classList.add('is-highlighted');
+                });
+            });
         })();
     </script>
 @endsection

@@ -10,20 +10,19 @@
 
     <x-hero-banner :titulo="$saludo . ($nombre ? ', ' . $nombre : '')"
         subtitulo="Aquí tienes un resumen de la Asociación Pukllasunchis." icono="fa-sun-o">
+        <x-slot:stats>
+            <x-hero-stat icono="fa-sitemap" :valor="$totalProyectos" etiqueta="Proyectos activos" />
+            <x-hero-stat icono="fa-users" :valor="$totalUsuarios" etiqueta="Usuarios registrados" />
+            <x-hero-stat icono="fa-database"
+                :valor="collect($conteos)->flatMap(fn ($c) => $c->values())->sum()"
+                etiqueta="Registros totales" />
+        </x-slot:stats>
         <x-slot:actions>
             <a href="{{ route('proyectos.create') }}" class="btn btn-primary btn-sm">
                 <i class="fa fa-plus mr-1"></i> Nuevo proyecto
             </a>
         </x-slot:actions>
     </x-hero-banner>
-
-    <div class="stats-grid" data-animate-stagger>
-        <x-stat-card icono="fa-sitemap" :valor="$totalProyectos" etiqueta="Proyectos activos" />
-        <x-stat-card icono="fa-users" :valor="$totalUsuarios" etiqueta="Usuarios registrados" />
-        <x-stat-card icono="fa-database"
-            :valor="collect($conteos)->flatMap(fn ($c) => $c->values())->sum()"
-            etiqueta="Registros totales" />
-    </div>
 
     <h2 class="h5 font-weight-bold mb-3">Proyectos de la Asociación</h2>
     <div class="proyectos-grid" data-animate-stagger>

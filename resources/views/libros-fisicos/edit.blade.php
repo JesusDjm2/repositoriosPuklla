@@ -56,7 +56,7 @@
                 </div>
 
                 <div class="form-row">
-                    <div class="form-group col-md-6">
+                    <div class="form-group col-md-5">
                         <label class="bv-form-label" for="nombre">
                             Nombre del libro <span class="text-danger">*</span>
                         </label>
@@ -69,7 +69,7 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="form-group col-md-6">
+                    <div class="form-group col-md-4">
                         <label class="bv-form-label" for="autor">
                             Autor <span class="text-danger">*</span>
                         </label>
@@ -82,10 +82,7 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group col-md-5">
+                    <div class="form-group col-md-3">
                         <label class="bv-form-label" for="editorial">
                             Editorial
                         </label>
@@ -97,7 +94,10 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="form-group col-md-3">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-2">
                         <label class="bv-form-label" for="numero_paginas">
                             N.° de páginas
                         </label>
@@ -110,7 +110,7 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="form-group col-md-4">
+                    <div class="form-group col-md-3">
                         <label class="bv-form-label" for="cantidad_ejemplares">
                             Cantidad de ejemplares <span class="text-danger">*</span>
                         </label>
@@ -128,10 +128,7 @@
                             </small>
                         @endif
                     </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group col-md-4">
+                    <div class="form-group col-md-2">
                         <label class="bv-form-label" for="anio_publicacion">
                             Año de publicación <span class="text-danger">*</span>
                         </label>
@@ -143,7 +140,7 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="form-group col-md-8">
+                    <div class="form-group col-md-5">
                         <label class="bv-form-label" for="codigo">
                             Código único <span class="text-danger">*</span>
                             <small class="text-muted font-weight-normal">(identificador en estantería)</small>
@@ -158,29 +155,65 @@
                 </div>
             </div>
 
-            {{-- Sección 2: categorías --}}
+            {{-- Sección 2: clasificación --}}
             <div class="bv-form-card" id="bvCardCats">
                 <div class="bv-form-section-title">
-                    <i class="fa fa-tags mr-1"></i>Categorías <span class="text-danger">*</span>
-                    <small class="text-muted font-weight-normal ml-1">(puede elegir varias)</small>
+                    <i class="fa fa-tags mr-1"></i>Clasificación
                 </div>
 
-                <div class="bv-cat-pills">
-                    @foreach ($categoriasFisicas as $cat)
-                        <div class="bv-cat-pill">
-                            <input type="checkbox" name="categorias_fisicas[]"
-                                id="catfis_{{ $cat->id }}" value="{{ $cat->id }}"
-                                {{ in_array($cat->id, $catsSeleccionadas) ? 'checked' : '' }}>
-                            <label for="catfis_{{ $cat->id }}">{{ $cat->nombre }}</label>
+                <div class="form-row">
+                    <div class="form-group col-md-5 mb-md-0">
+                        <label class="bv-form-label">
+                            Categoría Dewey <span class="text-danger">*</span>
+                            <small class="text-muted font-weight-normal">(puede elegir varias)</small>
+                        </label>
+                        <div class="bv-cat-pills">
+                            @foreach ($categoriasFisicas as $cat)
+                                <div class="bv-cat-pill">
+                                    <input type="checkbox" name="categorias_fisicas[]"
+                                        id="catfis_{{ $cat->id }}" value="{{ $cat->id }}"
+                                        {{ in_array($cat->id, $catsSeleccionadas) ? 'checked' : '' }}>
+                                    <label for="catfis_{{ $cat->id }}">{{ $cat->nombre }}</label>
+                                </div>
+                            @endforeach
                         </div>
-                    @endforeach
-                </div>
-
-                @error('categorias_fisicas')
-                    <div class="text-danger small mt-1">
-                        <i class="fa fa-exclamation-circle mr-1"></i>{{ $message }}
+                        @error('categorias_fisicas')
+                            <div class="text-danger small mt-1">
+                                <i class="fa fa-exclamation-circle mr-1"></i>{{ $message }}
+                            </div>
+                        @enderror
                     </div>
-                @enderror
+                    <div class="form-group col-md-4">
+                        <label class="bv-form-label" for="tipo_material">
+                            Tipo de material <span class="text-danger">*</span>
+                        </label>
+                        <select name="tipo_material" id="tipo_material"
+                            class="form-control form-control-sm @error('tipo_material') is-invalid @enderror" required>
+                            <option value="">Seleccionar…</option>
+                            @foreach (\App\Models\CategoriaFisica::TIPOS_MATERIAL as $valor => $etiqueta)
+                                <option value="{{ $valor }}" @selected(old('tipo_material', $libro->tipo_material) === $valor)>{{ $etiqueta }}</option>
+                            @endforeach
+                        </select>
+                        @error('tipo_material')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="form-group col-md-3 mb-0">
+                        <label class="bv-form-label" for="ubicacion">
+                            Ubicación <span class="text-danger">*</span>
+                        </label>
+                        <select name="ubicacion" id="ubicacion"
+                            class="form-control form-control-sm @error('ubicacion') is-invalid @enderror" required>
+                            <option value="">Seleccionar…</option>
+                            @foreach (\App\Models\LibroFisico::UBICACIONES as $valor => $etiqueta)
+                                <option value="{{ $valor }}" @selected(old('ubicacion', $libro->ubicacion) === $valor)>{{ $etiqueta }}</option>
+                            @endforeach
+                        </select>
+                        @error('ubicacion')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
             </div>
 
             <div class="bv-form-actions">

@@ -20,13 +20,17 @@
                 // El nombre/orden de cada proyecto y qué roles le pertenecen sí vienen de la
                 // tabla proyectos (admin/proyectos): crear un proyecto o mover un rol de uno
                 // a otro se refleja solo. Lo que NO puede salir de la base de datos es qué
-                // pantallas tiene cada rol (Libros, Categorías, ...) ni cómo se agrupan entre
-                // sí — cada una es código a mano de un controlador distinto, así que ese
+                // pantallas tiene cada rol (Libros, Categorías, ...), cómo se agrupan entre
+                // sí, ni el "panel" (mini-dashboard con estadísticas) al que ese rol aterriza
+                // — cada uno es código a mano de un controlador/vista distinta, así que ese
                 // agrupamiento sigue viviendo aquí. Un rol puede tener 'items' (lista plana)
                 // o 'grupos' (subsecciones con nombre propio, cuando sus tablas se relacionan
                 // en más de un bloque temático, como Biblioteca digital/física).
                 $rolesMenu = [
                     'biblioteca' => [
+                        'label' => 'Biblioteca',
+                        'icono' => 'fa-book',
+                        'panel' => ['ruta' => 'bibliotecario', 'label' => 'Panel de Biblioteca'],
                         'grupos' => [
                             'Biblioteca digital' => [
                                 'icono' => 'fa-laptop',
@@ -47,25 +51,40 @@
                         ],
                     ],
                     'sisicha' => [
+                        'label' => 'Sisichakunay',
+                        'icono' => 'fa-th-list',
+                        'panel' => ['ruta' => 'adminSisicha', 'label' => 'Panel Sisichakunay'],
                         'items' => [
                             ['ruta' => 'sisipedia.categories.index', 'label' => 'Registros'],
                             ['ruta' => 'sisipedia.aportaciones.index', 'label' => 'Aportaciones'],
                         ],
                     ],
                     'audios' => [
+                        'label' => 'Canciones',
+                        'icono' => 'fa-music',
+                        'panel' => ['ruta' => 'adminCanciones', 'label' => 'Panel de Canciones'],
                         'items' => [
                             ['ruta' => 'canciones.index', 'label' => 'Canciones'],
                             ['ruta' => 'cancionescat.index', 'label' => 'Categorías de canciones'],
                         ],
                     ],
                     'videos' => [
+                        'label' => 'Videos',
+                        'icono' => 'fa-video-camera',
+                        'panel' => ['ruta' => 'adminVideos', 'label' => 'Panel de Videos'],
                         'items' => [
                             ['ruta' => 'videos.index', 'label' => 'Videos'],
                             ['ruta' => 'videoscat.index', 'label' => 'Categorías de video'],
                         ],
                     ],
                     'kawsay' => [
+                        'label' => 'Kawsay',
+                        'icono' => 'fa-leaf',
+                        'panel' => ['ruta' => 'adminKawsay', 'label' => 'Panel Kawsay'],
                         'items' => [
+                            ['ruta' => 'kawsayareas.index', 'label' => 'Áreas'],
+                            ['ruta' => 'kawsaytemas.index', 'label' => 'Temas'],
+                            ['ruta' => 'kawsayarchivos.index', 'label' => 'Archivos'],
                             ['ruta' => 'kawsaylibros.index', 'label' => 'Libros'],
                             ['ruta' => 'kawsaycategorias.index', 'label' => 'Categorías'],
                             ['ruta' => 'kawsayvideos.index', 'label' => 'Videos'],
@@ -102,6 +121,15 @@
                         'radio-pukllasunchis' => 'fa-broadcast-tower',
                         'kawsay' => 'fa-leaf',
                     ];
+
+                    // Proyectos con más de un rol (p. ej. Radio Pukllasunchis) que ya
+                    // tienen una vista propia con pestañas (ver admin/radio.blade.php)
+                    // en vez de tener que repartirse en un desplegable de N enlaces.
+                    // Un proyecto multi-rol que no esté aquí cae en el enlace directo
+                    // al primer panel (ver más abajo) — nunca en un submenú.
+                    $proyectoPanelCombinado = [
+                        'radio-pukllasunchis' => ['ruta' => 'adminRadio'],
+                    ];
                 @endphp
                 <li class="{{ request()->routeIs('admin.principal') ? 'active' : '' }}">
                     <a href="{{ route('admin.principal') }}"><i class="fa fa-th-large"></i> Panel principal</a>
@@ -114,139 +142,107 @@
                     <li class="sidebar-section-title">Proyectos</li>
                     @foreach ($proyectos as $proyecto)
                         @php
-                            // Se recorre $rolesMenu (no $proyecto->roles) para que el orden de
-                            // las secciones dentro de cada proyecto sea el que definimos arriba
-                            // y no el id interno del rol en la tabla roles.
-                            $seccionesProyecto = collect($rolesMenu)
+                            // Un proyecto puede agrupar más de un rol — p. ej. Radio
+                            // Pukllasunchis junta videos + audios + sisicha en un solo
+                            // registro de la tabla proyectos — y cada rol con panel propio
+                            // aporta su pantalla. Con 1 solo panel el link va directo (su
+                            // panel ya lista sus pantallas); con más de uno, es un
+                            // desplegable con un link por panel, para no perder acceso a
+                            // ninguno (antes de quedarse con uno solo vía first(), acá
+                            // vivía el bug: Radio Pukllasunchis mostraba solo Sisichakunay
+                            // y escondía Canciones y Videos del sidebar).
+                            $definicionesProyecto = collect($rolesMenu)
                                 ->filter(fn ($definicion, $nombreRol) => $proyecto->roles->contains('name', $nombreRol))
-                                ->flatMap(fn ($definicion) => $seccionesDesdeRol($definicion))
+                                ->filter(fn ($definicion) => isset($definicion['panel']) && \Illuminate\Support\Facades\Route::has($definicion['panel']['ruta']))
                                 ->values();
-                            $idSubmenuProyecto = 'proyectoMenu' . $proyecto->id;
+                            $combinado = $proyectoPanelCombinado[$proyecto->slug] ?? null;
+                            $combinado = $combinado && \Illuminate\Support\Facades\Route::has($combinado['ruta']) ? $combinado : null;
+                            $rutasProyecto = $definicionesProyecto
+                                ->flatMap(fn ($definicion) => collect($seccionesDesdeRol($definicion))
+                                    ->flatMap(fn ($seccion) => collect($seccion['items'])->pluck('ruta'))
+                                    ->push($definicion['panel']['ruta']))
+                                ->push($combinado['ruta'] ?? null)
+                                ->filter()
+                                ->all();
                         @endphp
-                        <li>
-                            @if ($seccionesProyecto->isEmpty())
+                        <li class="{{ $rutasProyecto && request()->routeIs(...$rutasProyecto) ? 'active' : '' }}">
+                            @if ($definicionesProyecto->isEmpty())
                                 <a href="{{ route('proyectos.edit', $proyecto) }}">
                                     <i class="fa {{ $proyectoIconos[$proyecto->slug] ?? 'fa-folder-open' }}"></i>
                                     {{ $proyecto->nombre }}
                                     <span class="menu-note">Sin configurar</span>
                                 </a>
+                            @elseif ($definicionesProyecto->count() === 1)
+                                <a href="{{ route($definicionesProyecto->first()['panel']['ruta']) }}">
+                                    <i class="fa {{ $proyectoIconos[$proyecto->slug] ?? ($definicionesProyecto->first()['icono'] ?? 'fa-folder-open') }}"></i>
+                                    {{ $proyecto->nombre }}
+                                </a>
                             @else
-                                <a href="#{{ $idSubmenuProyecto }}" data-toggle="collapse" aria-expanded="false"
-                                    class="dropdown-toggle">
+                                {{-- Más de un rol, sin desplegable: si hay un panel combinado
+                                     con pestañas para este proyecto se enlaza ahí directo; si
+                                     no, al primer panel disponible (nunca a un submenú). --}}
+                                <a href="{{ route($combinado['ruta'] ?? $definicionesProyecto->first()['panel']['ruta']) }}">
                                     <i class="fa {{ $proyectoIconos[$proyecto->slug] ?? 'fa-folder-open' }}"></i>
                                     {{ $proyecto->nombre }}
                                 </a>
-                                <ul class="collapse list-unstyled" id="{{ $idSubmenuProyecto }}">
-                                    @include('livewire.partials.menu-secciones', [
-                                        'secciones' => $seccionesProyecto,
-                                        'idPrefix' => $idSubmenuProyecto,
-                                    ])
-                                </ul>
                             @endif
                         </li>
                     @endforeach
                 @endif
-            @endrole
-            @role('sisicha')
-                <li class="{{ request()->routeIs('sisipedia.categories*') ? 'active' : '' }}">
-                    <a href="{{ route('sisipedia.categories.index') }}"><i class="fa fa-th-list"></i> Registros</a>
-                </li>
-                <li class="{{ request()->routeIs('sisipedia.aportaciones*') ? 'active' : '' }}">
-                    <a href="{{ route('sisipedia.aportaciones.index') }}"><i class="fa fa-inbox"></i> Aportaciones</a>
-                </li>
-            @endrole
-            @role('biblioteca')
-                <li class="active">
-                    <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i
-                            class="fa fa-book"></i> Biblioteca</a>
-                    <ul class="collapse list-unstyled" id="homeSubmenu">
-                        @include('livewire.partials.menu-secciones', [
-                            'secciones' => $seccionesDesdeRol($rolesMenu['biblioteca']),
-                            'idPrefix' => 'homeSubmenu',
-                        ])
-                    </ul>
-                </li>
-            @endrole
-            @role('kawsay')
-                <li>
-                    <a href="#kawsaySubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i
-                            class="fa fa-leaf"></i> Kawsay</a>
-                    <ul class="collapse list-unstyled" id="kawsaySubmenu">
-                        <li>
-                            <a href="{{ route('kawsaylibros.index') }}"><span class="flecha-admin">→</span> Libros</a>
-                        </li>
-                        <li>
-                            <a href="{{ route('kawsaycategorias.index') }}"><span class="flecha-admin">→</span> Categorías</a>
-                        </li>
-                        <li>
-                            <a href="{{ route('kawsayvideos.index') }}"><span class="flecha-admin">→</span> Videos</a>
-                        </li>
-                        <li>
-                            <a href="{{ route('kawsayvideoscat.index') }}"><span class="flecha-admin">→</span> Categorías de video</a>
-                        </li>
-                    </ul>
-                </li>
-            @endrole
-            @role('videos')
-                <li>
-                    <a href="#videos" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i
-                            class="fa fa-video-camera"></i> Videos</a>
-                    <ul class="collapse list-unstyled" id="videos">
-                        <li>
-                            <a href="{{ route('videos.index') }}"><span class="flecha-admin">→</span> Videos</a>
-                        </li>
-                        <li>
-                            <a href="{{ route('videoscat.index') }}"><span class="flecha-admin">→</span> Categorías</a>
-                        </li>
-                    </ul>
-                </li>
-            @endrole
-            @role('audios')
-                <li>
-                    <a href="#canciones" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i
-                            class="fa fa-music"></i> Canciones</a>
-                    <ul class="collapse list-unstyled" id="canciones">
-                        <li>
-                            <a href="{{ route('canciones.index') }}"><span class="flecha-admin">→</span> Canciones</a>
-                        </li>
-                        <li>
-                            <a href="{{ route('cancionescat.index') }}"><span class="flecha-admin">→</span>
-                                Categorias</a>
-                        </li>
 
-                    </ul>
+                <li class="sidebar-section-title">Usuarios</li>
+                <li class="{{ request()->routeIs('admin.index', 'alumnos') ? 'active' : '' }}">
+                    <a href="{{ route('admin.index') }}"><i class="fa fa-building"></i> Usuarios</a>
                 </li>
-            @endrole
-            @unlessrole('sisicha')
-            <li class="sidebar-section-title">Usuarios</li>
-            <li>
-                <a href="#admins" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i
-                        class="fa fa-building"></i> Usuarios</a>
-                <ul class="collapse list-unstyled" id="admins">
-                    <li>
-                        <a href="{{ route('admin.index') }}"><span class="flecha-admin">→</span> Administradores</a>
-                    </li>
-                    <li>
-                        <a href="{{ route('alumnos') }}"><span class="flecha-admin">→</span> Alumnos</a>
-                    </li>
-                </ul>
-            </li>
-            @endunlessrole
-            <style>
-                .flecha-admin {
-                    opacity: 0;
-                    transform: translateX(-20px);
-                    transition: opacity 0.5s ease, transform 0.5s ease;
-                    display: inline-block;
-                    /* Asegúrate de que el span sea un elemento en línea en bloque */
-                }
 
-                /* Al hacer hover sobre el enlace, el span aparece con un fade in y se traslada a su posición original */
-                a:hover .flecha-admin {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-            </style>
+                <li class="sidebar-section-title">Sistema</li>
+                <li class="{{ request()->routeIs('backups.*') ? 'active' : '' }}">
+                    <a href="{{ route('backups.index') }}"><i class="fa fa-database"></i> Backups</a>
+                </li>
+            @else
+                {{-- Cualquier rol que no sea admin: mismo patrón que arriba, a partir de
+                     la misma definición de $rolesMenu — sin duplicar nada por rol. El
+                     panel de cada rol (ver admin/bibliotecario.blade.php y hermanos) ya
+                     lista sus pantallas como module-cards (agrupadas en tabs cuando el
+                     rol tiene más de un grupo, p. ej. Biblioteca digital/física), así que
+                     el link va directo ahí en vez de repetir esa jerarquía en el sidebar. --}}
+                @foreach ($rolesMenu as $nombreRol => $definicion)
+                    @role($nombreRol)
+                        @php
+                            $idMenuRol = 'rolMenu' . $nombreRol;
+                            $rutaPanelRol = $definicion['panel']['ruta'] ?? null;
+                            $rutaPanelRol = $rutaPanelRol && \Illuminate\Support\Facades\Route::has($rutaPanelRol)
+                                ? $rutaPanelRol
+                                : null;
+                            $rutasRol = collect($seccionesDesdeRol($definicion))
+                                ->flatMap(fn ($seccion) => collect($seccion['items'])->pluck('ruta'))
+                                ->push($rutaPanelRol)
+                                ->filter()
+                                ->all();
+                        @endphp
+                        <li class="{{ $rutasRol && request()->routeIs(...$rutasRol) ? 'active' : '' }}">
+                            @if ($rutaPanelRol)
+                                <a href="{{ route($rutaPanelRol) }}">
+                                    <i class="fa {{ $definicion['icono'] }}"></i> {{ $definicion['panel']['label'] }}
+                                </a>
+                            @else
+                                {{-- Sin panel configurado: se listan sus secciones directo para
+                                     no dejar al rol sin acceso a sus pantallas. --}}
+                                <a href="#{{ $idMenuRol }}" data-toggle="collapse" aria-expanded="false"
+                                    class="dropdown-toggle">
+                                    <i class="fa {{ $definicion['icono'] }}"></i> {{ $definicion['label'] }}
+                                </a>
+                                <ul class="collapse list-unstyled" id="{{ $idMenuRol }}">
+                                    @include('livewire.partials.menu-secciones', [
+                                        'secciones' => $seccionesDesdeRol($definicion),
+                                        'idPrefix' => $idMenuRol,
+                                    ])
+                                </ul>
+                            @endif
+                        </li>
+                    @endrole
+                @endforeach
+            @endrole
         </ul>
         <div class="footer">
             <p class="text-center">

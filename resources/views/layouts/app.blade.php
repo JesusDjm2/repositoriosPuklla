@@ -46,6 +46,10 @@
          colapsables) hasta que se rediseñen en fase 2. --}}
     @vite(['resources/sass/admin.scss', 'resources/js/admin.js'])
 
+    {{-- Antes no existía este stack: las vistas ya usaban @push('styles') (ej.
+         Select2 en prestamos/*) pero nunca se imprimía en ningún lado. --}}
+    @stack('styles')
+
     <!-- Dark mode: init before render to avoid flash -->
     <script>
         (function () {
@@ -90,7 +94,7 @@
                             <div class="admin-topbar__avatar">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
                             <span class="admin-topbar__username d-none d-md-inline">{{ Auth::user()->name }}</span>
                             <a href="{{ route('logout') }}" class="admin-topbar__logout" title="Cerrar sesión"
-                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                data-logout-confirm>
                                 <i class="fa fa-sign-out"></i>
                             </a>
                             <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">

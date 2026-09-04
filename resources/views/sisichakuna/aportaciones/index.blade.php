@@ -236,13 +236,10 @@
                             @if($ap->institucion)
                                 <div><i class="fa fa-building text-muted mr-1"></i>{{ $ap->institucion }}</div>
                             @endif
-                            @if($ap->lugar_trabajo)
-                                <div><i class="fa fa-briefcase text-muted mr-1"></i>{{ $ap->lugar_trabajo }}</div>
-                            @endif
                             @if($ap->ubicacion)
                                 <div><i class="fa fa-map-marker text-muted mr-1"></i>{{ $ap->ubicacion }}</div>
                             @endif
-                            @if(!$ap->institucion && !$ap->lugar_trabajo && !$ap->ubicacion)
+                            @if(!$ap->institucion && !$ap->ubicacion)
                                 <span class="text-muted">—</span>
                             @endif
                         </td>
@@ -301,7 +298,6 @@
                                     data-rol="{{ $ap->rol_nombre }}"
                                     data-titulo="{{ e($ap->titulo ?? '') }}"
                                     data-institucion="{{ e($ap->institucion ?? '') }}"
-                                    data-lugar-trabajo="{{ e($ap->lugar_trabajo ?? '') }}"
                                     data-ubicacion="{{ e($ap->ubicacion ?? '') }}"
                                     data-detalle="{{ e($ap->detalle ?? '') }}"
                                     data-category-id="{{ $ap->category_id ?? '' }}"
@@ -383,24 +379,17 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label class="font-weight-bold small text-dark d-block mb-1">Título</label>
                         <input type="text" name="titulo" id="editTitulo"
                                class="form-control" maxlength="255">
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label class="font-weight-bold small text-dark d-block mb-1">Institución</label>
                         <input type="text" name="institucion" id="editInstitucion"
                                class="form-control" maxlength="255">
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="font-weight-bold small text-dark d-block mb-1">Lugar de trabajo</label>
-                        <input type="text" name="lugar_trabajo" id="editLugarTrabajo"
-                               class="form-control" maxlength="255">
-                    </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label class="font-weight-bold small text-dark d-block mb-1">Ubicación</label>
                         <input type="text" name="ubicacion" id="editUbicacion"
                                class="form-control" maxlength="255">
@@ -534,7 +523,6 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('editNombreOl').value    = btn.getAttribute('data-nombre') || '';
             document.getElementById('editTitulo').value      = btn.getAttribute('data-titulo') || '';
             document.getElementById('editInstitucion').value = btn.getAttribute('data-institucion') || '';
-            document.getElementById('editLugarTrabajo').value = btn.getAttribute('data-lugar-trabajo') || '';
             document.getElementById('editUbicacion').value   = btn.getAttribute('data-ubicacion') || '';
             var detalleContent = btn.getAttribute('data-detalle') || '';
 

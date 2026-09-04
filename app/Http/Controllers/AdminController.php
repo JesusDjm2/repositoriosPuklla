@@ -26,7 +26,10 @@ class AdminController extends Controller
         $admins = User::whereDoesntHave('roles', function ($query) {
             $query->where('name', 'alumno');
         })->get();
-        return view('auth.admins.index', compact('admins'));
+        $alumnos = User::whereHas('roles', function ($query) {
+            $query->where('name', 'alumno');
+        })->get();
+        return view('auth.admins.index', compact('admins', 'alumnos'));
     }
     public function alumnos()
     {
@@ -35,40 +38,51 @@ class AdminController extends Controller
         })->get();
         return view('auth.admins.alumnos', compact('admins'));
     }
-    public function bibliotecario()
+    public function bibliotecario(ProyectoEstadisticasService $stats)
     {
         $admins = User::whereHas('roles', function ($query) {
             $query->where('name', 'biblioteca');
         })->get();
-        return view('admin.bibliotecario', compact('admins'));
+        $conteos = $stats->paraRol('biblioteca');
+        return view('admin.bibliotecario', compact('admins', 'conteos'));
     }
-    public function kawsay()
+    public function kawsay(ProyectoEstadisticasService $stats)
     {
-        $admins = User::whereHas('roles', function ($query) {
-            $query->where('name', 'kawsay');
-        })->get();
-        return view('admin.kawsay', compact('admins'));
+        $conteos = $stats->paraRol('kawsay');
+        return view('admin.kawsay', compact('conteos'));
     }
-    public function videos()
+    public function videos(ProyectoEstadisticasService $stats)
     {
         $admins = User::whereHas('roles', function ($query) {
             $query->where('name', 'videos');
         })->get();
-        return view('admin.videos', compact('admins'));
+        $conteos = $stats->paraRol('videos');
+        return view('admin.videos', compact('admins', 'conteos'));
     }
-    public function canciones()
+    public function canciones(ProyectoEstadisticasService $stats)
     {
         $admins = User::whereHas('roles', function ($query) {
             $query->where('name', 'audios');
         })->get();
-        return view('admin.canciones', compact('admins'));
+        $conteos = $stats->paraRol('audios');
+        return view('admin.canciones', compact('admins', 'conteos'));
     }
-    public function sisicha()
+    public function sisicha(ProyectoEstadisticasService $stats)
     {
         $admins = User::whereHas('roles', function ($query) {
             $query->where('name', 'sisicha');
         })->get();
-        return view('admin.sisicha', compact('admins'));
+        $conteos = $stats->paraRol('sisicha');
+        return view('admin.sisicha', compact('admins', 'conteos'));
+    }
+    /** Panel combinado del admin general para Radio Pukllasunchis (sisicha + audios + videos). */
+    public function radio(ProyectoEstadisticasService $stats)
+    {
+        $admins = User::whereHas('roles', function ($query) {
+            $query->whereIn('name', ['sisicha', 'audios', 'videos']);
+        })->get();
+        $conteos = $stats->paraProyecto('radio-pukllasunchis');
+        return view('admin.radio', compact('admins', 'conteos'));
     }
     public function create()
     {

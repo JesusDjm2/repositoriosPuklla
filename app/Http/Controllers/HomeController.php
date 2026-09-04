@@ -21,14 +21,32 @@ class HomeController extends Controller
      */
     public function index()
     {
-        if (auth()->user()->hasRole('sisicha')) {
-            return redirect()->route('sisipedia.categories.index');
-        }
-
+        // Admin completo manda sobre cualquier otro rol que también tenga.
         if (auth()->user()->hasRole('admin')) {
             return redirect()->route('admin.principal');
         }
 
+        if (auth()->user()->hasRole('sisicha')) {
+            return redirect()->route('sisipedia.categories.index');
+        }
+
+        if (auth()->user()->hasRole('biblioteca')) {
+            return redirect()->route('bibliotecario');
+        }
+
+        if (auth()->user()->hasRole('videos')) {
+            return redirect()->route('adminVideos');
+        }
+
+        if (auth()->user()->hasRole('audios')) {
+            return redirect()->route('adminCanciones');
+        }
+
+        if (auth()->user()->hasRole('kawsay')) {
+            return redirect()->route('adminKawsay');
+        }
+
+        // Sin panel propio (ej. alumno): pantalla de bienvenida genérica.
         return view('home');
     }
 }

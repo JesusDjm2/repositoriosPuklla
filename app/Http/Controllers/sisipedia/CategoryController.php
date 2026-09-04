@@ -107,9 +107,9 @@ class CategoryController extends Controller
 
     public function create()
     {
-        $parents = $this->buildFlatList();
+        $parentTree = $this->buildParentTree();
 
-        return view('sisichakuna.categorias.create', compact('parents'));
+        return view('sisichakuna.categorias.create', compact('parentTree'));
     }
 
     public function store(Request $request)
@@ -129,6 +129,9 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:categories,slug',
             'description' => 'nullable|string',
+            'fecha' => 'nullable|date',
+            'idioma' => 'nullable|in:'.implode(',', array_keys(Category::IDIOMAS)),
+            'localidad' => 'nullable|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'archivos' => 'nullable|array',
             'archivos.*' => [
@@ -370,9 +373,9 @@ class CategoryController extends Controller
 
     public function edit(Category $category)
     {
-        $parents = $this->buildFlatList(exclude: $category->id);
+        $parentTree = $this->buildParentTree(exclude: $category->id);
 
-        return view('sisichakuna.categorias.edit', compact('category', 'parents'));
+        return view('sisichakuna.categorias.edit', compact('category', 'parentTree'));
     }
 
     public function update(Request $request, Category $category)
@@ -392,6 +395,9 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:categories,slug,'.$category->id,
             'description' => 'nullable|string',
+            'fecha' => 'nullable|date',
+            'idioma' => 'nullable|in:'.implode(',', array_keys(Category::IDIOMAS)),
+            'localidad' => 'nullable|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'archivos' => 'nullable|array',
             'archivos.*' => [
@@ -626,6 +632,33 @@ class CategoryController extends Controller
         $walk(null, 0);
 
         return $flat;
+    }
+
+    /**
+     * Árbol anidado (no aplanado) para el selector de categoría padre — permite
+     * desglosar de a un nivel por vez en vez de escanear un <select> larguísimo.
+     * $exclude quita esa categoría Y toda su rama (no se puede mover un registro
+     * dentro de sí mismo ni de uno de sus propios hijos).
+     *
+     * @return \Illuminate\Support\Collection<int, Category>
+     */
+    private function buildParentTree(?int $exclude = null): \Illuminate\Support\Collection
+    {
+        $byParent = Category::orderBy('order')->get()->groupBy('parent_id');
+
+        $build = function ($parentId, $depth) use (&$build, $byParent, $exclude) {
+            return $byParent->get($parentId, collect())
+                ->filter(fn (Category $cat) => $cat->id !== $exclude)
+                ->map(function (Category $cat) use ($build, $depth) {
+                    $cat->depth = $depth;
+                    $cat->setRelation('children', $build($cat->id, $depth + 1));
+
+                    return $cat;
+                })
+                ->values();
+        };
+
+        return $build(null, 0);
     }
 
     // -------------------------------------------------------

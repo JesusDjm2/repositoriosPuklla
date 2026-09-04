@@ -1,3 +1,19 @@
+# ── Increase upload limits and give Drive streaming (audio/video) room to
+#    finish — el default de PHP (30s) corta a la mitad cualquier stream que
+#    tarde más en transmitirse. ──────────────────────────────────────────
+<IfModule mod_php.c>
+    php_value upload_max_filesize 200M
+    php_value post_max_size       200M
+    php_value max_execution_time  300
+    php_value max_input_time      300
+</IfModule>
+<IfModule mod_php8.c>
+    php_value upload_max_filesize 200M
+    php_value post_max_size       200M
+    php_value max_execution_time  300
+    php_value max_input_time      300
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

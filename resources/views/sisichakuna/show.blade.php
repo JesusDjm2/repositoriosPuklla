@@ -7,6 +7,17 @@
         'pdf' => 'Documentos PDF',
     ];
     $heroSubtitulo = $heroPorTipo[$tipo ?? ''] ?? 'Repositorio de Trabajos';
+
+    // Una foto de fondo distinta por sección (carpeta img/hormigas/), en vez de
+    // compartir todas la misma Fondo-sisipedia.png genérica.
+    $heroBgPorTipo = [
+        '' => 'Sisipedia-01.jpeg',
+        'audio' => 'Sisipedia-02.jpeg',
+        'pdf' => 'Sisipedia-03.jpeg',
+        'imagen' => 'Sisipedia-05.jpeg',
+        'video' => 'Sisipedia-06.jpeg',
+    ];
+    $heroBg = asset('img/hormigas/' . ($heroBgPorTipo[$tipo ?? ''] ?? $heroBgPorTipo['']));
 @endphp
 @section('titulo', '- ' . $heroSubtitulo)
 
@@ -17,15 +28,18 @@
 
 @section('contenido')
 @include('partials.lib-hero', [
-    'heroBg' => asset('img/fondo/Fondo-sisipedia.png'),
+    'heroBg' => $heroBg,
     'heroBgAlt' => 'Fondo Sisipedia',
     'heroEyebrow' => 'Sisipedia',
     'heroTitle' => $heroSubtitulo,
+    'heroFormatButtons' => true,
 ])
 <div class="container py-2 py-md-3">
 
-{{-- ── Navegación por tipo de archivo ─────────────────────────── --}}
-@if(request()->routeIs('public.sisi'))
+{{-- ── Navegación por tipo de archivo ───────────────────────────
+     Solo en el árbol (sin ?tipo): en las galerías por tipo esto mismo ya
+     vive en el hero (heroFormatButtons), repetirlo acá era redundante. ── --}}
+@if(request()->routeIs('public.sisi') && !isset($tipo))
 @php
     $acCounts = $archivoCounts ?? [];
 @endphp
@@ -380,6 +394,7 @@
                             'src' => route('sisipedia.audio.stream', $archivo),
                             'title' => $archivo->nombre_original ?? 'Audio sin nombre',
                             'driveUrl' => \App\Services\GoogleDriveService::getUrl($archivo->drive_id),
+                            'downloadUrl' => \App\Services\GoogleDriveService::getEmbedUrl($archivo->drive_id),
                         ])
                     </div>
                 </div>
@@ -470,6 +485,8 @@
                 $lastName    = !empty($pathParts) ? end($pathParts) : null;
                 $ancestorPath = count($pathParts) > 1 ? implode(' › ', array_slice($pathParts, 0, -1)) : null;
                 $previewUrl  = \App\Services\GoogleDriveService::getPreviewUrl($archivo->drive_id);
+                $driveUrl    = \App\Services\GoogleDriveService::getUrl($archivo->drive_id);
+                $downloadUrl = \App\Services\GoogleDriveService::getEmbedUrl($archivo->drive_id);
                 $thumbUrl    = \App\Services\GoogleDriveService::getThumbnailUrl($archivo->drive_id, 400);
             @endphp
             <div class="col-12 col-sm-6 col-md-4 col-lg-3 media-item">
@@ -487,10 +504,12 @@
                         <span class="position-absolute top-0 end-0 m-2 badge bg-info" style="font-size:.65rem;z-index:2;">
                             <i class="fa fa-image me-1"></i>Imagen
                         </span>
-                        {{-- Botón vista previa --}}
-                        <button class="sisipedia-image-preview-btn position-absolute top-50 start-50 translate-middle btn btn-light rounded-circle shadow"
+                        {{-- Botón vista previa (popup compartido, ver partials/home-preview-modal) --}}
+                        <button class="sisipedia-open-preview-modal position-absolute top-50 start-50 translate-middle btn btn-light rounded-circle shadow"
                                 data-preview="{{ $previewUrl }}"
                                 data-nombre="{{ $archivo->nombre_original ?? 'Imagen' }}"
+                                data-drive="{{ $driveUrl }}"
+                                data-download="{{ $downloadUrl }}"
                                 style="width:48px;height:48px;z-index:2;opacity:.9;">
                             <i class="fa fa-expand text-dark"></i>
                         </button>
@@ -523,27 +542,6 @@
             @endforeach
         </div>
 
-        {{-- Modal para previsualizar imagen --}}
-        <div class="modal fade" id="sisipediaImageModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-xl modal-dialog-centered">
-                <div class="modal-content border-0 rounded-4 overflow-hidden">
-                    <div class="modal-header border-0 pb-0">
-                        <h6 class="modal-title text-truncate" id="sisipediaImageModalLabel">
-                            <i class="fa fa-image text-info me-1"></i>
-                            <span id="sisipediaImageModalName"></span>
-                        </h6>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                    </div>
-                    <div class="modal-body p-0">
-                        <iframe id="sisipediaImageModalIframe"
-                                src=""
-                                class="w-100 border-0"
-                                style="min-height:70vh;"
-                                allowfullscreen></iframe>
-                    </div>
-                </div>
-            </div>
-        </div>
         @endif
 
         {{-- ════ PDF (CategoryFile de sisicha) ══════════════════ --}}
@@ -558,6 +556,8 @@
                 $lastName    = !empty($pathParts) ? end($pathParts) : null;
                 $ancestorPath = count($pathParts) > 1 ? implode(' › ', array_slice($pathParts, 0, -1)) : null;
                 $driveUrl    = \App\Services\GoogleDriveService::getUrl($archivo->drive_id);
+                $previewUrl  = \App\Services\GoogleDriveService::getPreviewUrl($archivo->drive_id);
+                $downloadUrl = \App\Services\GoogleDriveService::getEmbedUrl($archivo->drive_id);
             @endphp
             <div class="col-12 col-sm-6 col-md-4 col-lg-3 media-item">
                 <div class="card border-0 shadow-sm rounded-3 h-100 sisipedia-pdf-card">
@@ -591,10 +591,20 @@
                             @endif
                         </div>
 
-                        <a href="{{ $driveUrl }}" target="_blank" rel="noopener"
-                           class="btn btn-sm btn-outline-danger w-100">
-                            <i class="fa fa-external-link-alt me-1"></i>Abrir / Descargar
-                        </a>
+                        <div class="d-flex gap-2">
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger flex-grow-1 sisipedia-open-preview-modal"
+                                    data-preview="{{ $previewUrl }}"
+                                    data-nombre="{{ $archivo->nombre_original ?? 'PDF' }}"
+                                    data-drive="{{ $driveUrl }}"
+                                    data-download="{{ $downloadUrl }}">
+                                <i class="fa fa-eye me-1"></i>Vista previa
+                            </button>
+                            <a href="{{ $downloadUrl }}" class="btn btn-sm btn-danger flex-shrink-0"
+                               title="Descargar" aria-label="Descargar {{ $archivo->nombre_original ?? 'PDF' }}">
+                                <i class="fa fa-download"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -628,6 +638,8 @@
 @endif
 {{-- /container --}}
 </div>
+
+@include('partials.home-preview-modal')
 
 {{-- ══════════════════════════════════════════════════════════
      ESTILOS
@@ -739,12 +751,12 @@
 
 /* ── Image cards ──────────────────────────────────────────── */
 .sisipedia-image-thumb-wrap { border-radius: .5rem .5rem 0 0; overflow: hidden; }
-.sisipedia-image-preview-btn {
+.sisipedia-image-thumb-wrap .sisipedia-open-preview-modal {
     transition: transform .18s, opacity .18s, box-shadow .18s;
     border: none;
     opacity: 0 !important;
 }
-.sisipedia-image-thumb-wrap:hover .sisipedia-image-preview-btn {
+.sisipedia-image-thumb-wrap:hover .sisipedia-open-preview-modal {
     opacity: .92 !important;
     transform: translate(-50%, -50%) scale(1.08);
     box-shadow: 0 6px 20px rgba(0,0,0,.25) !important;
@@ -900,29 +912,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // ── Vista previa de imagen ───────────────────────────
-    (function() {
-        var modal = document.getElementById('sisipediaImageModal');
-        if (!modal) return;
-        var iframe = document.getElementById('sisipediaImageModalIframe');
-        var nameSpan = document.getElementById('sisipediaImageModalName');
-
-        document.querySelectorAll('.sisipedia-image-preview-btn').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var previewUrl = this.getAttribute('data-preview');
-                var nombre = this.getAttribute('data-nombre') || 'Imagen';
-                if (iframe) iframe.src = previewUrl;
-                if (nameSpan) nameSpan.textContent = nombre;
-                var bsModal = new bootstrap.Modal(modal);
-                bsModal.show();
-            });
-        });
-
-        // Limpiar iframe al cerrar modal
-        modal.addEventListener('hidden.bs.modal', function () {
-            if (iframe) iframe.src = '';
-        });
-    })();
 
     @else
     // ── Entrada del árbol de categorías ──────────────────

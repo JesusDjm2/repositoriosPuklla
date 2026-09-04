@@ -23,7 +23,6 @@ class Aportacion extends Model
         'nombre_ol',
         'titulo',
         'institucion',
-        'lugar_trabajo',
         'ubicacion',
         'detalle',
         'imagen',

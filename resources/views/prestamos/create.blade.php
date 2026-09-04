@@ -1,15 +1,6 @@
 @extends('layouts.app')
 @section('titulo', 'Nuevo préstamo')
 
-@push('styles')
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
-<style>
-    .select2-container .select2-selection--single { height: calc(1.5em + .5rem + 2px); }
-    .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 1.9; padding-left: .5rem; }
-    .select2-container--default .select2-selection--single .select2-selection__arrow { height: calc(1.5em + .5rem + 2px); }
-</style>
-@endpush
-
 @section('contenido')
     @include('partials.biblioteca-fisica-crud-header', ['active' => 'prestamos'])
     @include('partials.admin-breadcrumb', [
@@ -53,77 +44,26 @@
 
             <div class="bv-form-card" id="bvCardLibro">
                 <div class="bv-form-section-title">
-                    <i class="fa fa-book mr-1"></i>Libro
+                    <i class="fa fa-book mr-1"></i>Libros a prestar
                 </div>
 
-                <div class="form-group mb-0">
-                    <label class="bv-form-label" for="libro_fisico_id">
-                        Libro físico <span class="text-danger">*</span>
+                <div id="librosSeleccionadosList" class="mb-2"></div>
+
+                <div id="libroSeleccionError" class="text-danger small mb-2" style="display:none;">
+                    <i class="fa fa-exclamation-circle mr-1"></i>Elige al menos un libro para prestar.
+                </div>
+
+                <div class="form-group mb-0" style="position:relative;">
+                    <label class="bv-form-label" for="libroBuscar">
+                        Buscar libro <span class="text-danger">*</span>
                     </label>
-                    <select name="libro_fisico_id" id="libro_fisico_id"
-                        class="form-control @error('libro_fisico_id') is-invalid @enderror" style="width:100%" required>
-                        <option value=""></option>
-                        @if ($libroSeleccionado)
-                            <option value="{{ $libroSeleccionado->id }}" selected>
-                                {{ $libroSeleccionado->nombre }} — {{ $libroSeleccionado->autor }}
-                                ({{ $libroSeleccionado->ejemplares_disponibles }} disp.)
-                            </option>
-                        @endif
-                    </select>
-                    @error('libro_fisico_id')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                </div>
-            </div>
+                    <input type="text" id="libroBuscar" class="form-control form-control-sm" autocomplete="off"
+                        placeholder="Busca por título, autor o código…">
 
-            <div class="bv-form-card" id="bvCardDetalle" style="{{ $libroSeleccionado ? '' : 'display:none;' }}">
-                <div class="bv-form-section-title">
-                    <i class="fa fa-circle-info mr-1"></i>Detalle del libro
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-2">
-                        <div class="small text-muted">Nombre</div>
-                        <div class="font-weight-bold" id="det-nombre">{{ $libroSeleccionado->nombre ?? '' }}</div>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <div class="small text-muted">Autor</div>
-                        <div id="det-autor">{{ $libroSeleccionado->autor ?? '' }}</div>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <div class="small text-muted">Editorial</div>
-                        <div id="det-editorial">{{ $libroSeleccionado->editorial ?? '—' }}</div>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <div class="small text-muted">Año</div>
-                        <div id="det-anio">{{ $libroSeleccionado->anio_publicacion ?? '—' }}</div>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <div class="small text-muted">Páginas</div>
-                        <div id="det-paginas">{{ $libroSeleccionado?->numero_paginas ? $libroSeleccionado->numero_paginas.' p.' : '—' }}</div>
-                    </div>
-                    <div class="col-md-4 mb-2">
-                        <div class="small text-muted">Código</div>
-                        <div><code id="det-codigo">{{ $libroSeleccionado->codigo ?? '—' }}</code></div>
-                    </div>
-                    <div class="col-md-4 mb-2">
-                        <div class="small text-muted">Ejemplares</div>
-                        <div id="det-ejemplares">{{ $libroSeleccionado->cantidad_ejemplares ?? '—' }}</div>
-                    </div>
-                    <div class="col-md-4 mb-2">
-                        <div class="small text-muted">Disponibles</div>
-                        <div id="det-disponibles">{{ $libroSeleccionado->ejemplares_disponibles ?? '—' }}</div>
-                    </div>
-                    <div class="col-12">
-                        <div class="small text-muted mb-1">Sección / Categoría</div>
-                        <div id="det-categorias">
-                            @forelse ($libroSeleccionado->categoriasFisicas ?? [] as $cat)
-                                <span class="badge mr-1 mb-1" style="background: {{ \App\Models\CategoriaFisica::colorForCodigo($cat->codigo) }}; color:#fff;">
-                                    {{ $cat->nombre }}
-                                </span>
-                            @empty
-                                <span class="text-muted">Sin categoría</span>
-                            @endforelse
-                        </div>
+                    <div class="bv-libro-results" id="libroResultadosWrap" style="display:none;">
+                        <table class="table table-sm mb-0">
+                            <tbody id="libroResultadosBody"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -141,7 +81,7 @@
                         <input type="text" name="nombre_prestatario" id="nombre_prestatario"
                             class="form-control form-control-sm @error('nombre_prestatario') is-invalid @enderror"
                             value="{{ old('nombre_prestatario') }}" required maxlength="255"
-                            placeholder="Ej: Ana Quispe Mamani" autofocus>
+                            placeholder="Ej: Ana Quispe Mamani">
                         @error('nombre_prestatario')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -230,83 +170,167 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js" defer></script>
 <script>
-    gsap.from(['#bvCardLibro', '#bvCardPrestatario', '#bvCardFechas'], {
-        opacity: 0, y: 22, duration: 0.42, stagger: 0.1, ease: 'power2.out'
-    });
-
-    // El evento "load" garantiza que jQuery y select2.min.js (ambos con defer)
-    // ya terminaron de ejecutarse, sin depender del orden exacto entre scripts defer.
-    window.addEventListener('load', function () {
-        $('#libro_fisico_id').select2({
-            width: '100%',
-            language: {
-                inputTooShort: function () { return 'Escribe al menos 2 letras…'; },
-                searching: function () { return 'Buscando…'; },
-                noResults: function () { return 'Sin resultados'; },
-                loadingMore: function () { return 'Cargando más resultados…'; },
-            },
-            placeholder: 'Busca por título, autor o código…',
-            minimumInputLength: 2,
-            ajax: {
-                // El jQuery local de este panel es un build sin el módulo $.ajax,
-                // así que se reemplaza el transporte por fetch() nativo.
-                transport: function (params, success, failure) {
-                    var url = '{{ route("biblioteca-fisica.libros.buscar-ajax") }}'
-                        + '?q=' + encodeURIComponent(params.data.q || '')
-                        + '&page=' + (params.data.page || 1);
-                    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                        .then(function (r) { return r.json(); })
-                        .then(success)
-                        .catch(failure);
-                },
-                delay: 300,
-                data: function (params) {
-                    return { q: params.term, page: params.page || 1 };
-                },
-                processResults: function (data) {
-                    return data;
-                }
-            }
+    window.bvLibrosPreseleccionados = @json($librosSeleccionados);
+</script>
+<script>
+    (function () {
+        gsap.from(['#bvCardLibro', '#bvCardPrestatario', '#bvCardFechas'], {
+            opacity: 0, y: 22, duration: 0.42, stagger: 0.1, ease: 'power2.out'
         });
 
-        function pintarDetalleLibro(data) {
-            var $card = $('#bvCardDetalle');
-            if (!data || !data.id) {
-                $card.hide();
-                return;
-            }
-            $('#det-nombre').text(data.nombre || '');
-            $('#det-autor').text(data.autor || '');
-            $('#det-editorial').text(data.editorial || '—');
-            $('#det-anio').text(data.anio_publicacion || '—');
-            $('#det-paginas').text(data.numero_paginas ? (data.numero_paginas + ' p.') : '—');
-            $('#det-codigo').text(data.codigo || '—');
-            $('#det-ejemplares').text(data.cantidad_ejemplares != null ? data.cantidad_ejemplares : '—');
-            $('#det-disponibles').text(data.ejemplares_disponibles != null ? data.ejemplares_disponibles : '—');
+        var librosElegidos = {}; // id (string) -> datos del libro
 
-            var $cats = $('#det-categorias').empty();
-            if (data.categorias && data.categorias.length) {
-                data.categorias.forEach(function (c) {
-                    $('<span class="badge mr-1 mb-1"></span>')
-                        .css({ background: c.color, color: '#fff' })
-                        .text(c.nombre)
-                        .appendTo($cats);
-                });
-            } else {
-                $('<span class="text-muted"></span>').text('Sin categoría').appendTo($cats);
-            }
+        var $lista = document.getElementById('librosSeleccionadosList');
+        var $error = document.getElementById('libroSeleccionError');
+        var $buscar = document.getElementById('libroBuscar');
+        var $resultadosWrap = document.getElementById('libroResultadosWrap');
+        var $resultadosBody = document.getElementById('libroResultadosBody');
+        var $form = document.getElementById('prestamoForm');
 
-            $card.show();
+        function esc(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
         }
 
-        $('#libro_fisico_id').on('select2:select', function (e) {
-            pintarDetalleLibro(e.params.data);
+        function badge(color, texto) {
+            return '<span class="bv-s2-result-badge" style="background:' + esc(color) + '">' + esc(texto) + '</span>';
+        }
+
+        // Reutilizada tanto para pintar una fila de resultados como un chip elegido.
+        function construirDetalle(libro) {
+            var meta = '';
+            if (libro.codigo) meta += '<code>' + esc(libro.codigo) + '</code>';
+            (libro.categorias || []).forEach(function (c) {
+                meta += badge(c.color, c.nombre);
+            });
+            if (libro.tipo_material) meta += badge(libro.tipo_material.color, libro.tipo_material.nombre);
+            if (libro.ubicacion) meta += '<span class="bv-s2-result-badge" style="background:#6c757d;">' + esc(libro.ubicacion) + '</span>';
+
+            var disp = libro.ejemplares_disponibles != null ? libro.ejemplares_disponibles : 0;
+            var dispClass = disp > 0 ? 'bv-s2-result-disp--ok' : 'bv-s2-result-disp--no';
+            meta += '<span class="bv-s2-result-disp ' + dispClass + '">' + disp + ' disp.</span>';
+
+            return '<div class="bv-s2-result bv-s2-result--detalle">' +
+                '<div class="bv-s2-result-title">' + esc(libro.nombre) + ' — ' + esc(libro.autor) + '</div>' +
+                '<div class="bv-s2-result-meta">' + meta + '</div>' +
+                '</div>';
+        }
+
+        function actualizarErrorVisibilidad() {
+            var hay = Object.keys(librosElegidos).length > 0;
+            $error.style.display = hay ? 'none' : $error.dataset.forzado === '1' ? 'block' : 'none';
+        }
+
+        function pintarChips() {
+            $lista.innerHTML = '';
+            Object.keys(librosElegidos).forEach(function (id) {
+                var libro = librosElegidos[id];
+                var $chip = document.createElement('div');
+                $chip.className = 'bv-libro-chip mb-2';
+                $chip.dataset.id = id;
+                $chip.innerHTML =
+                    '<input type="hidden" name="libro_fisico_id[]" value="' + esc(id) + '">' +
+                    construirDetalle(libro) +
+                    '<button type="button" class="btn btn-sm btn-outline-danger btn-quitar-libro" data-id="' + esc(id) + '" title="Quitar">' +
+                    '<i class="fa fa-times"></i></button>';
+                $lista.appendChild($chip);
+            });
+            actualizarErrorVisibilidad();
+        }
+
+        function elegirLibro(libro) {
+            var id = String(libro.id);
+            if (librosElegidos[id]) return;
+            if (!libro.ejemplares_disponibles || libro.ejemplares_disponibles < 1) return;
+            librosElegidos[id] = libro;
+            pintarChips();
+            $buscar.value = '';
+            ocultarResultados();
+            $buscar.focus();
+        }
+
+        $lista.addEventListener('click', function (e) {
+            var btn = e.target.closest('.btn-quitar-libro');
+            if (!btn) return;
+            delete librosElegidos[btn.dataset.id];
+            pintarChips();
         });
-        $('#libro_fisico_id').on('select2:clear select2:unselect', function () {
-            pintarDetalleLibro(null);
+
+        function ocultarResultados() {
+            $resultadosWrap.style.display = 'none';
+            $resultadosBody.innerHTML = '';
+        }
+
+        function pintarResultados(libros) {
+            $resultadosBody.innerHTML = '';
+            var visibles = libros.filter(function (l) { return !librosElegidos[String(l.id)]; });
+
+            if (!visibles.length) {
+                $resultadosBody.innerHTML = '<tr><td class="text-muted small py-2">Sin resultados.</td></tr>';
+                $resultadosWrap.style.display = 'block';
+                return;
+            }
+
+            visibles.forEach(function (libro) {
+                var disponible = libro.ejemplares_disponibles > 0;
+                var $tr = document.createElement('tr');
+                $tr.className = 'bv-libro-row' + (disponible ? '' : ' bv-libro-row--disabled');
+                $tr.tabIndex = disponible ? 0 : -1;
+                $tr.innerHTML = '<td>' + construirDetalle(libro) + '</td>';
+                if (disponible) {
+                    $tr.addEventListener('click', function () { elegirLibro(libro); });
+                    $tr.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter') elegirLibro(libro);
+                    });
+                }
+                $resultadosBody.appendChild($tr);
+            });
+
+            $resultadosWrap.style.display = 'block';
+        }
+
+        var buscarTimer;
+        $buscar.addEventListener('input', function () {
+            clearTimeout(buscarTimer);
+            var termino = $buscar.value.trim();
+            if (termino.length < 2) {
+                ocultarResultados();
+                return;
+            }
+            buscarTimer = setTimeout(function () {
+                fetch('{{ route("biblioteca-fisica.libros.buscar-ajax") }}?q=' + encodeURIComponent(termino),
+                    { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) { pintarResultados(data.results || []); })
+                    .catch(function () { ocultarResultados(); });
+            }, 300);
         });
-    });
+
+        $buscar.addEventListener('focus', function () {
+            if ($resultadosBody.children.length) $resultadosWrap.style.display = 'block';
+        });
+
+        document.addEventListener('click', function (e) {
+            var dentro = e.target.closest('#libroBuscar') || e.target.closest('#libroResultadosWrap');
+            if (!dentro) ocultarResultados();
+        });
+
+        $form.addEventListener('submit', function (e) {
+            if (Object.keys(librosElegidos).length === 0) {
+                e.preventDefault();
+                $error.dataset.forzado = '1';
+                $error.style.display = 'block';
+                $buscar.focus();
+            }
+        });
+
+        // Repuebla la selección tras un error de validación.
+        (window.bvLibrosPreseleccionados || []).forEach(function (libro) {
+            librosElegidos[String(libro.id)] = libro;
+        });
+        pintarChips();
+    })();
 </script>
 @endpush

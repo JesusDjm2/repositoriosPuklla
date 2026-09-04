@@ -18,13 +18,20 @@
     - $heroTitleSmall (bool, opcional)  usa el tamaño reducido (para nombres de categoría/registro)
     - $heroMeta       (array, opcional) [['icon' => 'fa-book-open', 'text' => '12 textos'], ...]
     - $heroCta        (array|null, opcional) ['href' => ..., 'icon' => ..., 'label' => ...]
+    - $heroFormatButtons (bool, opcional) buscador + accesos por formato (Audios/PDF/
+                          Imágenes/Videos) + link al árbol completo, igual que en el
+                          hero de /repositorio/sisipedia (welcome.blade.php). Uso
+                          exclusivo de las vistas públicas de Sisipedia — no activar
+                          en el resto de proyectos (Biblioteca/Kawsay/Radio-canciones)
+                          que también usan este parcial.
 --}}
 @php
     $heroTitleSmall = $heroTitleSmall ?? false;
     $heroMeta = $heroMeta ?? [];
     $heroCta = $heroCta ?? null;
+    $heroFormatButtons = $heroFormatButtons ?? false;
 @endphp
-<div class="lib-hero">
+<div class="lib-hero {{ $heroFormatButtons ? 'lib-hero--formats' : '' }}">
     <img src="{{ $heroBg }}" alt="{{ $heroBgAlt }}" class="lib-hero__bg" loading="eager">
     <div class="lib-hero__overlay"></div>
     <div class="lib-hero__content">
@@ -37,6 +44,45 @@
                     <span><i class="fa {{ $item['icon'] }}"></i> {{ $item['text'] }}</span>
                 @endforeach
             </div>
+        @endif
+        @if ($heroFormatButtons)
+            <form action="{{ route('busqueda') }}" method="GET" class="sisipedia-hero-search mx-auto mt-3">
+                <div class="input-group shadow">
+                    <span class="input-group-text bg-white">
+                        <i class="fa fa-search"></i>
+                    </span>
+                    <input type="search" name="query" class="form-control"
+                        placeholder="Busca un tema: plantas medicinales, fiestas, tejido..." value="{{ request('query') }}"
+                        minlength="3" maxlength="120" autocomplete="off" required>
+                    <button class="btn fw-semibold px-4 text-white" type="submit">
+                        Buscar
+                    </button>
+                </div>
+            </form>
+
+            <p class="sisipedia-hero-formats-label">O explora por formato</p>
+            <div class="sisipedia-hero-formats">
+                <a href="{{ route('public.sisi', ['tipo' => 'audio']) }}"
+                    class="sisipedia-hero-format-btn sisipedia-hero-format-btn--audio">
+                    <i class="fa fa-music"></i>Audios
+                </a>
+                <a href="{{ route('public.sisi', ['tipo' => 'pdf']) }}"
+                    class="sisipedia-hero-format-btn sisipedia-hero-format-btn--pdf">
+                    <i class="fa fa-file-pdf"></i>PDF
+                </a>
+                <a href="{{ route('public.sisi', ['tipo' => 'imagen']) }}"
+                    class="sisipedia-hero-format-btn sisipedia-hero-format-btn--imagen">
+                    <i class="fa fa-image"></i>Imágenes
+                </a>
+                <a href="{{ route('public.sisi', ['tipo' => 'video']) }}"
+                    class="sisipedia-hero-format-btn sisipedia-hero-format-btn--video">
+                    <i class="fa fa-video"></i>Videos
+                </a>
+            </div>
+
+            <a href="{{ route('public.sisi') }}" class="sisipedia-hero-explore-link">
+                <i class="fa fa-sitemap me-1"></i>Ver el árbol completo de registros
+            </a>
         @endif
         @if ($heroCta)
             <div class="mt-3">

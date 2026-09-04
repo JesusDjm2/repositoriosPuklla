@@ -35,6 +35,8 @@
     <div class="project-card__actions">
         @if ($panelRoute && \Illuminate\Support\Facades\Route::has($panelRoute))
             <a href="{{ route($panelRoute) }}" class="btn btn-sm btn-primary">Ver panel</a>
+        @else
+            <span class="text-muted small">Aún no tiene vista de gestión implementada</span>
         @endif
         @role('admin')
             <a href="{{ route('proyectos.edit', $proyecto) }}" class="btn btn-sm btn-outline-secondary">Editar</a>

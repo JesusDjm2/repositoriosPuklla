@@ -10,10 +10,16 @@ class Category extends Model
 {
     use HasFactory;
 
+    /** Idiomas válidos para el campo `idioma` (mismo orden que en los formularios). */
+    public const IDIOMAS = ['quechua' => 'Quechua', 'espanol' => 'Español', 'ingles' => 'Inglés'];
+
     protected $fillable = [
         'name',
         'slug',
         'description',
+        'fecha',
+        'idioma',
+        'localidad',
         'image',
         'parent_id',
         'order',
@@ -23,6 +29,7 @@ class Category extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'order' => 'integer',
+        'fecha' => 'date',
     ];
 
     protected static function boot()

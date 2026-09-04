@@ -51,13 +51,22 @@ class GoogleDriveService
     /**
      * Sube un archivo a la carpeta correspondiente en Drive (resumable upload por chunks).
      * Devuelve el file ID de Drive.
+     *
+     * @param string|null $grupo Carpetas propias de un proyecto (ver config('google-drive.grupos')),
+     *                           en vez de las carpetas globales por tipo. Null = comportamiento actual.
      */
-    public function upload(UploadedFile $file, string $type, string $fileName): string
+    public function upload(UploadedFile $file, string $type, string $fileName, ?string $grupo = null): string
     {
-        $folderId = $this->folderIds[$type] ?? null;
-        // Word usa la carpeta PDF; si en producción faltaba la clave «doc», caía sin parents → My Drive de la SA → 403 quota.
-        if (empty($folderId) && $type === 'doc') {
-            $folderId = $this->folderIds['pdf'] ?? null;
+        $folderIds = $grupo ? config("google-drive.grupos.{$grupo}", []) : $this->folderIds;
+        $folderId = $folderIds[$type] ?? null;
+        if (empty($folderId)) {
+            // Un grupo (ej. 'kawsay') suele tener una sola carpeta compartida para
+            // todos los formatos: cualquier tipo sin clave propia cae a su 'pdf'.
+            // Fuera de un grupo, el único caso conocido es Word → carpeta PDF (si en
+            // producción faltaba la clave «doc», caía sin parents → My Drive de la SA → 403 quota).
+            if ($grupo || $type === 'doc') {
+                $folderId = $folderIds['pdf'] ?? null;
+            }
         }
         $mimeType = $file->getMimeType() ?? 'application/octet-stream';
 

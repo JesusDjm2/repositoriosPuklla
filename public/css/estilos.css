@@ -308,7 +308,7 @@ body.is-radio {
   font-family: "EB Garamond", system-ui, -apple-system;
 }
 .fixed-image-container .centered-content h1 {
-  font-size: 52px;
+  font-size: clamp(1.9rem, 1.3rem + 2.2vw, 2.75rem);
 }
 .fixed-image-container .centered-content h2 {
   position: relative;
@@ -339,7 +339,7 @@ body.is-radio {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.85), transparent);
 }
 .sisipedia-hero .centered-content h1 {
-  font-size: clamp(1.8rem, 1rem + 4vw, 3.25rem);
+  font-size: clamp(1.7rem, 1rem + 2.6vw, 2.6rem);
   font-weight: 600;
   margin-top: 0.5rem;
   text-shadow: 0 3px 16px rgba(0, 0, 0, 0.4);
@@ -542,13 +542,21 @@ body.is-radio {
   color: #fff;
 }
 
-@media (max-width: 575.98px) {
+@media (max-width: 767.98px) {
+  .sisipedia-hero-formats-label {
+    font-size: .68rem;
+    margin: 1.1rem 0 .55rem;
+  }
   .sisipedia-hero-formats {
-    gap: .5rem;
+    gap: .4rem;
   }
   .sisipedia-hero-format-btn {
-    padding: .5rem .9rem;
-    font-size: .82rem;
+    gap: .35rem;
+    padding: .38rem .75rem;
+    font-size: .72rem;
+  }
+  .sisipedia-hero-format-btn i {
+    font-size: .78rem;
   }
 }
 
@@ -1018,6 +1026,18 @@ body.is-radio {
   font-size: 18px;
 }
 
+/* Título + "Ver más": antes el link vivía dentro del mismo <h2> que el
+   título, así que en mobile (donde el título ya ocupa 2 líneas) el link
+   seguía envolviendo debajo y la rayita decorativa (::before, pegada al
+   fondo de TODO el h2) terminaba bajo el link en vez de bajo el título. */
+.sisipedia-latest-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+}
+
 .normalSize {
   display: block;
 }
@@ -1401,10 +1421,18 @@ body.is-radio {
 .lib-hero {
   position: relative;
   width: 100%;
-  height: calc(clamp(300px, 52vh, 65vh) + var(--puklla-nav-h));
+  min-height: calc(clamp(300px, 52vh, 65vh) + var(--puklla-nav-h));
   margin-top: calc(var(--puklla-nav-h) * -1);
   overflow: hidden;
   background: #1a1612;
+}
+/* Variante con buscador + botones de formato (ver lib-hero.blade.php,
+   prop heroFormatButtons): esa caja mete bastante más contenido que un
+   simple eyebrow+título, así que necesita más alto — si no, en celulares
+   (donde clamp() cae en su piso de 300px) el bloque centrado terminaba
+   empujando el título hacia arriba, encima del logo/menú. */
+.lib-hero--formats {
+  min-height: calc(clamp(380px, 60vh, 520px) + var(--puklla-nav-h));
 }
 .lib-hero__bg {
   position: absolute;
@@ -1430,6 +1458,9 @@ body.is-radio {
   color: #fff;
   text-align: center;
   padding: clamp(1rem, 4vw, 2rem);
+  /* Piso de seguridad: pase lo que pase con el centrado, el contenido nunca
+     puede empezar más arriba que esto (el menú vive encima, superpuesto). */
+  padding-top: calc(var(--puklla-nav-h) + clamp(1rem, 4vw, 2rem));
   z-index: 2;
 }
 .lib-hero__eyebrow {
@@ -1443,7 +1474,7 @@ body.is-radio {
 }
 .lib-hero__title {
   font-family: "Lato", system-ui, -apple-system, sans-serif;
-  font-size: clamp(2.2rem, 5.5vw, 5rem);
+  font-size: clamp(1.9rem, 1.2rem + 2.8vw, 3rem);
   font-weight: 500;
   margin: 0 0 .6rem;
   line-height: 1.1;
@@ -1451,7 +1482,7 @@ body.is-radio {
 }
 .lib-hero__title--cat {
   font-style: italic;
-  font-size: clamp(1.5rem, 4vw, 3.5rem);
+  font-size: clamp(1.4rem, 1rem + 1.8vw, 2.1rem);
 }
 .lib-hero__divider {
   width: 0;
@@ -2658,6 +2689,23 @@ button.lib-book-card__btn { border: 0; cursor: pointer; font-family: inherit; }
 
 .puklla-main-nav:has(+ main :is(.fixed-image-container, .lib-hero)):not(.is-scrolled) .menu-toggle .hamburger-line {
   background: #fff;
+}
+
+/* Logo de Radio/Sisipedia: la versión a color se perdía contra el fondo de
+   foto cuando el menú va transparente arriba del todo (ver menu.blade.php,
+   que ya imprime las dos versiones). Blanca mientras el menú es transparente,
+   a color en cuanto el menú vuelve a su fondo claro (con o sin hero). */
+/* Mismo encadenado de selectores que .menuPuklla .menu-brand .logo (la
+   regla base que fija display:block) para poder ganarle en especificidad
+   sin recurrir a !important. */
+.menuPuklla .menu-brand .logo--on-top {
+  display: none;
+}
+.puklla-main-nav:has(+ main :is(.fixed-image-container, .lib-hero)):not(.is-scrolled) .menuPuklla .menu-brand .logo--on-top {
+  display: block;
+}
+.puklla-main-nav:has(+ main :is(.fixed-image-container, .lib-hero)):not(.is-scrolled) .menuPuklla .menu-brand .logo--on-scroll {
+  display: none;
 }
 
 .menuPuklla .menu-dropdown {

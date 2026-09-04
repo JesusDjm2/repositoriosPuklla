@@ -1,23 +1,20 @@
 @extends('layouts.padre')
 @section('titulo', '- Kawsay')
 @section('contenido')
-    <div class="fixed-image-container">
+    <div class="fixed-image-container kawsay-hero">
+        <img src="{{ asset('img/kawsay/fondo-inicial-kawsay.webp') }}" alt="Fondo Kawsay" fetchpriority="high"
+            decoding="async">
         <div class="overlay"></div>
         <div class="centered-content">
-            <img src="{{ asset('img/kawsay.png') }}" alt="Logo Kawsay" class="project-hero-logo">
-            <h2>Kawsay</h2>
+            <h2>Repositorio Educativo Kawsay</h2>
             <p>
-                Repositorio del proyecto Kawsay: encuentra aquí sus textos y videos.
+                Aprender haciendo para regenerar el territorio.
             </p>
             <form action="{{ route('busqueda') }}" method="GET" class="search-container">
                 <input type="text" name="query" placeholder="Buscar por título, autor o tema..."
                     class="search-input" required minlength="3">
                 <button type="submit" class="search-button">🔍 Buscar</button>
             </form>
-            <div class="buttons-container">
-                <a href="{{ route('kawsaylibros.lista') }}" class="btn-action">📚 Libros</a>
-                <a href="{{ route('kawsayvideos.lista') }}" class="btn-action">🎥 Videos</a>
-            </div>
         </div>
     </div>
 
@@ -25,6 +22,56 @@
     <button id="lib-sidebar-fab" class="lib-sidebar-fab" aria-label="Ver categorías">
         <i class="fa fa-layer-group"></i> Categorías
     </button>
+
+    {{-- ═══ ÁREAS DEL REPOSITORIO EDUCATIVO: óvalos que se montan sobre el
+         hero (como en el diseño de referencia). Ahora administrables desde
+         Kawsay-Áreas (App\Models\KawsayArea) — cada una usa su 'imagen'; si
+         todavía no tiene, cae al ícono como relleno. Dos imágenes históricas
+         (subidas antes de que Áreas tuviera CRUD) necesitan un ajuste de
+         encuadre puntual que el cover+center por defecto no resuelve bien;
+         se mantiene acá por slug en vez de sumar campos nuevos al CRUD. ═══ --}}
+    <div class="container-fluid kawsay-area-circles-wrap">
+        <div class="row g-3 g-lg-4 justify-content-center">
+            @foreach ($areas as $area)
+                @php
+                    $ringStyle = '';
+                    if ($area->imagen) {
+                        $ringStyle .= "background-image: url('" . asset($area->imagen) . "');";
+                        $ringStyle .= 'background-position: ' . ($area->slug === 'territorio-vivo' ? 'center 78%' : 'center') . ';';
+                        $ringStyle .= 'background-size: ' . ($area->slug === 'gestion-sostenible' ? '76%' : 'cover') . ';';
+                        if ($area->slug === 'gestion-sostenible') {
+                            $ringStyle .= 'background-color: #1b4d3e;';
+                        }
+                    }
+                    if ($area->color) {
+                        $ringStyle .= 'border-color: ' . $area->color . ';';
+                    }
+                @endphp
+                <div class="col-6 col-md-3">
+                    <a href="{{ route('kawsay.area', $area->slug) }}" class="kawsay-area-circle">
+                        <span class="kawsay-area-circle__ring" @if ($ringStyle) style="{{ $ringStyle }}" @endif>
+                            @if (!$area->imagen)
+                                <i class="fa {{ $area->icono ?: 'fa-leaf' }} kawsay-area-circle__icon"></i>
+                            @endif
+                            <span class="kawsay-area-circle__scrim"></span>
+                            <span class="kawsay-area-circle__title">{{ $area->nombre }}</span>
+                        </span>
+                        @if ($area->descripcion)
+                            <span class="kawsay-area-circle__desc">{{ $area->descripcion }}</span>
+                        @endif
+                    </a>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+    <div class="container py-4 py-lg-5 pt-3">
+        <div class="lib-content-head">
+            <h2 class="lib-content-head__title">Explora nuestras áreas de trabajo</h2>
+            <p class="lib-content-head__sub">Cada área agrupa temas con fichas, teoría, videos y más</p>
+        </div>
+    </div>
+    @include('kawsay.partials.estilos')
 
     <div class="container py-4 py-lg-5">
         <div class="row g-4 g-lg-5">

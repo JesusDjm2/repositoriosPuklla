@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Canciones;
 use App\Models\Categoria;
 use App\Models\CategoriaFisica;
+use App\Models\KawsayArea;
 use App\Models\KawsayCategoria;
 use App\Models\KawsayLibro;
 use App\Models\KawsayVideo;
@@ -157,7 +158,9 @@ class EnlacesController extends Controller
             ->orderBy('nombre')
             ->get();
 
-        return view('kawsay', compact('libros', 'videos', 'categoriasVirtuales', 'categoriasVideos'));
+        $areas = KawsayArea::orderBy('orden')->get();
+
+        return view('kawsay', compact('libros', 'videos', 'categoriasVirtuales', 'categoriasVideos', 'areas'));
     }
 
     public function index()
@@ -310,6 +313,18 @@ class EnlacesController extends Controller
         // fuente de verdad: la tabla `proyectos`, no strings repetidos en la vista).
         $proyectosPorSlug = Proyecto::pluck('nombre', 'slug');
 
+        // A dónde lleva "explorar" cada grupo de resultados dentro de su propio
+        // proyecto (badge clicable en cada encabezado de sección).
+        $enlacesGrupos = [
+            'sisipedia' => route('public.sisi'),
+            'videos' => route('videos'),
+            'libros' => route('libros'),
+            'kawsayLibros' => route('kawsaylibros.lista'),
+            'kawsayVideos' => route('kawsayvideos.lista'),
+            'aportaciones' => route('public.sisi'),
+            'canciones' => route('cancionesPuklla'),
+        ];
+
         return view('buscador', [
             'canciones' => $canciones,
             'videos' => $videos,
@@ -330,6 +345,7 @@ class EnlacesController extends Controller
             'sisipediaCount' => $sisipediaCount,
             'aportacionesCount' => $aportacionesCount,
             'proyectosPorSlug' => $proyectosPorSlug,
+            'enlacesGrupos' => $enlacesGrupos,
             'fuzzyThreshold' => self::FUZZY_SIMILARITY_THRESHOLD,
         ]);
     }

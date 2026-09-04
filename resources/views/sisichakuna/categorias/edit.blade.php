@@ -37,24 +37,16 @@
                             </div>
 
                             <div class="form-group mb-3">
-                                <label for="parent_id">Categoría Padre</label>
-                                <select class="form-control @error('parent_id') is-invalid @enderror" id="parent_id"
-                                    name="parent_id">
-                                    <option value="">-- Ninguna (Raíz) --</option>
-                                    @foreach ($parents as $parent)
-                                        <option value="{{ $parent->id }}"
-                                            data-depth="{{ $parent->depth }}"
-                                            data-numbering="{{ $parent->numbering }}"
-                                            {{ old('parent_id', $category->parent_id) == $parent->id ? 'selected' : '' }}>
-                                            {{ str_repeat('— ', $parent->depth) }}{{ $parent->display_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <label for="parentPickerToggle">Categoría Padre</label>
+                                @include('sisichakuna.categorias._parent-picker', [
+                                    'parentTree' => $parentTree,
+                                    'selectedId' => old('parent_id', $category->parent_id),
+                                ])
                                 @error('parent_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                                 <small class="form-text text-muted">
-                                    <i class="fa fa-info-circle"></i> Selecciona la categoría padre para mover esta categoría
+                                    <i class="fa fa-info-circle"></i> Elige "Ninguna (Raíz)" o abre las ramas (flecha) hasta encontrar la categoría padre
                                 </small>
                             </div>
 
@@ -83,6 +75,38 @@
                                 @error('description')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 form-group mb-3">
+                                    <label for="fecha">Fecha</label>
+                                    <input type="date" class="form-control @error('fecha') is-invalid @enderror"
+                                        id="fecha" name="fecha"
+                                        value="{{ old('fecha', $category->fecha?->format('Y-m-d')) }}">
+                                    @error('fecha')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4 form-group mb-3">
+                                    <label for="idioma">Idioma</label>
+                                    <select class="form-control @error('idioma') is-invalid @enderror" id="idioma" name="idioma">
+                                        <option value="">-- Sin especificar --</option>
+                                        @foreach (\App\Models\sisipedia\Category::IDIOMAS as $value => $label)
+                                            <option value="{{ $value }}" {{ old('idioma', $category->idioma) === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('idioma')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4 form-group mb-3">
+                                    <label for="localidad">Localidad</label>
+                                    <input type="text" class="form-control @error('localidad') is-invalid @enderror"
+                                        id="localidad" name="localidad" value="{{ old('localidad', $category->localidad) }}" maxlength="255">
+                                    @error('localidad')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
                             </div>
 
                             <div class="form-group mb-3">
@@ -185,26 +209,28 @@
                 }
             });
 
+            function getParentPickerRows() {
+                return Array.from(document.querySelectorAll('#parentPicker .bv-parent-picker__row'));
+            }
+
             function getNextNumber(parentId) {
                 if (!parentId) {
-                    const rootOptions = Array.from(parentSelect.options)
-                        .filter(opt => opt.value !== '' && opt.getAttribute('data-depth') === '0');
-                    return rootOptions.length + 1;
+                    const rootRows = getParentPickerRows()
+                        .filter(row => row.getAttribute('data-id') !== '' && row.getAttribute('data-depth') === '0');
+                    return rootRows.length + 1;
                 }
-                const selectedOption = parentSelect.options[parentSelect.selectedIndex];
-                const parentNumbering = selectedOption.getAttribute('data-numbering');
+                const parentNumbering = parentSelect.getAttribute('data-numbering');
 
-                const siblings = Array.from(parentSelect.options)
-                    .filter(opt => {
-                        const numbering = opt.getAttribute('data-numbering');
+                const siblings = getParentPickerRows()
+                    .filter(row => {
+                        const numbering = row.getAttribute('data-numbering');
                         return numbering && numbering.startsWith(parentNumbering + '.');
                     });
                 return siblings.length + 1;
             }
 
             function calculatePreviewNumbering() {
-                const selectedOption = parentSelect.options[parentSelect.selectedIndex];
-                const parentNumbering = selectedOption.getAttribute('data-numbering');
+                const parentNumbering = parentSelect.getAttribute('data-numbering');
                 const currentNumbering = '{{ $category->numbering }}';
 
                 if (!parentSelect.value) {

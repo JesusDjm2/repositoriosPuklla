@@ -231,6 +231,27 @@
     // El evento "load" garantiza que jQuery y select2.min.js (ambos con defer)
     // ya terminaron de ejecutarse, sin depender del orden exacto entre scripts defer.
     window.addEventListener('load', function () {
+        function formatLibroResultado(data) {
+            if (data.loading || !data.id) return data.text;
+            var $wrap = $('<div class="bv-s2-result"></div>');
+            $('<div class="bv-s2-result-title"></div>').text(data.nombre + ' — ' + data.autor).appendTo($wrap);
+            var $meta = $('<div class="bv-s2-result-meta"></div>').appendTo($wrap);
+            if (data.codigo) $('<code></code>').text(data.codigo).appendTo($meta);
+            (data.categorias || []).forEach(function (c) {
+                $('<span class="bv-s2-result-badge"></span>').css('background', c.color).text(c.nombre).appendTo($meta);
+            });
+            if (data.tipo_material) $('<span class="bv-s2-result-badge"></span>').css('background', data.tipo_material.color).text(data.tipo_material.nombre).appendTo($meta);
+            if (data.ubicacion) $('<span class="bv-s2-result-badge"></span>').css('background', '#6c757d').text(data.ubicacion).appendTo($meta);
+            var dispClass = data.ejemplares_disponibles > 0 ? 'bv-s2-result-disp--ok' : 'bv-s2-result-disp--no';
+            $('<span></span>').addClass('bv-s2-result-disp ' + dispClass).text(data.ejemplares_disponibles + ' disp.').appendTo($meta);
+            return $wrap;
+        }
+
+        function formatLibroSeleccion(data) {
+            if (!data.id) return data.text;
+            return data.nombre ? (data.nombre + ' — ' + data.autor) : data.text;
+        }
+
         $('#pre-libro').select2({
             width: '100%',
             language: {
@@ -242,6 +263,8 @@
             placeholder: 'Todos los libros',
             allowClear: true,
             minimumInputLength: 2,
+            templateResult: formatLibroResultado,
+            templateSelection: formatLibroSeleccion,
             ajax: {
                 // El jQuery local de este panel es un build sin el módulo $.ajax,
                 // así que se reemplaza el transporte por fetch() nativo.

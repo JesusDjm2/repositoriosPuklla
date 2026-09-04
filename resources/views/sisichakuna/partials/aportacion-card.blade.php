@@ -39,11 +39,6 @@
                     <i class="fa fa-building me-1"></i>{{ $aportacion->institucion }}
                 </span>
             @endif
-            @if($aportacion->lugar_trabajo)
-                <span class="badge bg-light text-dark border">
-                    <i class="fa fa-briefcase me-1"></i>{{ $aportacion->lugar_trabajo }}
-                </span>
-            @endif
             @if($aportacion->ubicacion)
                 <span class="badge bg-light text-dark border">
                     <i class="fa fa-map-marker-alt me-1"></i>{{ $aportacion->ubicacion }}
@@ -76,6 +71,7 @@
                             default => 'fa-file',
                         };
                         $driveUrl = $archivo->getUrl();
+                        $downloadUrl = \App\Services\GoogleDriveService::getEmbedUrl($archivo->drive_id);
                         $previewUrl = $archivo->getPreviewUrl();
                         $label = ucfirst($archivo->tipo);
                         $showAudioPreview = $archivo->tipo === 'audio';
@@ -97,7 +93,7 @@
                                             <small>({{ $archivo->peso_mb }}MB)</small>
                                         @endif
                                     </span>
-                                    <a href="{{ $driveUrl }}" target="_blank" rel="noopener"
+                                    <a href="{{ $downloadUrl }}"
                                        class="btn btn-sm p-0 text-{{ $color }}" title="Descargar">
                                         <i class="fa fa-download"></i>
                                     </a>
@@ -111,6 +107,7 @@
                                             'src' => route('sisipedia.audio.aportacion.stream', $archivo),
                                             'title' => $archivo->nombre_original ?? 'Audio',
                                             'driveUrl' => $driveUrl,
+                                            'downloadUrl' => $downloadUrl,
                                         ])
                                     </div>
                                 @elseif($archivo->tipo === 'video')
@@ -148,6 +145,17 @@
                                                  onerror="this.parentElement.innerHTML='<div class=\'d-flex align-items-center justify-content-center h-100 text-muted\'><i class=\'fa fa-image fa-2x opacity-25\'></i></div>'">
                                         </div>
                                     </button>
+                                @elseif($archivo->tipo === 'pdf')
+                                    <div class="mt-1 text-center py-2">
+                                        <button type="button"
+                                                class="btn btn-outline-{{ $color }} btn-xs sisipedia-open-preview-modal"
+                                                data-preview="{{ $previewUrl }}"
+                                                data-nombre="{{ $archivo->nombre_original ?? 'PDF' }}"
+                                                data-drive="{{ $driveUrl }}"
+                                                data-download="{{ $downloadUrl }}">
+                                            <i class="fa fa-eye me-1"></i>Vista previa
+                                        </button>
+                                    </div>
                                 @else
                                     <div class="mt-1 text-center py-2">
                                         <a href="{{ $driveUrl }}" target="_blank" rel="noopener"

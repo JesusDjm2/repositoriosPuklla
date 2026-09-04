@@ -1,5 +1,6 @@
 @php
     $driveUrl = $driveUrl ?? null;
+    $downloadUrl = $downloadUrl ?? null;
 @endphp
 <div class="audio-player" data-src="{{ $src }}">
     <button type="button" class="audio-player-toggle" aria-label="Reproducir {{ $title }}">
@@ -24,6 +25,11 @@
                 aria-label="Nivel de volumen">
         </div>
     </div>
+    @if ($downloadUrl)
+        <a href="{{ $downloadUrl }}" class="audio-player-fallback" title="Descargar audio">
+            <i class="fa fa-download"></i>
+        </a>
+    @endif
     @if ($driveUrl)
         <a href="{{ $driveUrl }}" target="_blank" rel="noopener" class="audio-player-fallback"
             title="Abrir en Google Drive">

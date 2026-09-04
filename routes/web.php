@@ -5,7 +5,12 @@ use App\Http\Controllers\CancionesCategoriaController;
 use App\Http\Controllers\CancionesController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\EnlacesController;
+use App\Http\Controllers\BackupController;
+use App\Http\Controllers\KawsayAreaAdminController;
+use App\Http\Controllers\KawsayAreaController;
+use App\Http\Controllers\KawsayArchivoController;
 use App\Http\Controllers\KawsayCategoriaController;
+use App\Http\Controllers\KawsayTemaController;
 use App\Http\Controllers\KawsayLibroController;
 use App\Http\Controllers\KawsayVideoCategoriaController;
 use App\Http\Controllers\KawsayVideoController;
@@ -26,6 +31,10 @@ Route::get('/', [EnlacesController::class, 'hub'])->name('hub');
 Route::get('/repositorio/sisipedia', [EnlacesController::class, 'index'])->name('index');
 Route::get('/eesppukllasunchis', [EnlacesController::class, 'eesp'])->name('eesppukllasunchis');
 Route::get('/kawsay', [EnlacesController::class, 'kawsay'])->name('kawsay');
+Route::get('/kawsay/{area}', [KawsayAreaController::class, 'area'])->name('kawsay.area');
+Route::get('/kawsay/{area}/{tema}', [KawsayAreaController::class, 'tema'])->name('kawsay.tema');
+Route::post('/kawsay/{area}/{tema}/comentarios', [KawsayAreaController::class, 'comentarioStore'])->name('kawsay.tema.comentarios.store');
+Route::get('/kawsay/{area}/{tema}/{tipo}', [KawsayAreaController::class, 'contenido'])->name('kawsay.contenido');
 Auth::routes(['register' => false]);
 /* Route::get('administrador', [EnlacesController::class, 'admin'])->name('administrador')->middleware('auth'); */
 Route::resource('administradores', AdminController::class)->names('admin')->middleware('auth');
@@ -42,6 +51,7 @@ Route::get('Administrador-Kawsay', [AdminController::class, 'kawsay'])->middlewa
 Route::get('Administrador-Videos', [AdminController::class, 'videos'])->middleware('auth')->name('adminVideos');
 Route::get('Administrador-Canciones', [AdminController::class, 'canciones'])->middleware('auth')->name('adminCanciones');
 Route::get('Admini-Sisichakunay', [AdminController::class, 'sisicha'])->middleware('auth')->name('adminSisicha');
+Route::get('Administrador-Radio', [AdminController::class, 'radio'])->middleware('auth')->name('adminRadio');
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
@@ -72,6 +82,21 @@ Route::resource('kawsay-video-categorias', KawsayVideoCategoriaController::class
 Route::get('kawsay-video-categorias/{video_categoria}', [KawsayVideoCategoriaController::class, 'show'])->name('kawsayvideoscat.show');
 Route::resource('Kawsay-Videos', KawsayVideoController::class)->names('kawsayvideos')->middleware(['auth', 'role:admin|kawsay']);
 Route::get('videos-Kawsay', [KawsayVideoCategoriaController::class, 'lista'])->name('kawsayvideos.lista');
+
+Route::get('Kawsay-Archivos', [KawsayArchivoController::class, 'index'])->name('kawsayarchivos.index')->middleware(['auth', 'role:admin|kawsay']);
+Route::post('Kawsay-Archivos', [KawsayArchivoController::class, 'store'])->name('kawsayarchivos.store')->middleware(['auth', 'role:admin|kawsay']);
+Route::delete('Kawsay-Archivos/{archivo}', [KawsayArchivoController::class, 'destroy'])->name('kawsayarchivos.destroy')->middleware(['auth', 'role:admin|kawsay']);
+
+Route::resource('Kawsay-Areas', KawsayAreaAdminController::class)->names('kawsayareas')->parameters(['Kawsay-Areas' => 'area'])->except('show')->middleware(['auth', 'role:admin|kawsay']);
+
+Route::resource('Kawsay-Temas', KawsayTemaController::class)->names('kawsaytemas')->parameters(['Kawsay-Temas' => 'tema'])->except('show')->middleware(['auth', 'role:admin|kawsay']);
+Route::delete('Kawsay-Temas/{tema}/galeria/{imagen}', [KawsayTemaController::class, 'destroyImagen'])->name('kawsaytemas.galeria.destroy')->middleware(['auth', 'role:admin|kawsay']);
+Route::delete('Kawsay-Temas/{tema}/comentarios/{comentario}', [KawsayTemaController::class, 'destroyComentario'])->name('kawsaytemas.comentarios.destroy')->middleware(['auth', 'role:admin|kawsay']);
+
+Route::get('Administrador-Backups', [BackupController::class, 'index'])->name('backups.index')->middleware(['auth', 'role:admin']);
+Route::post('Administrador-Backups', [BackupController::class, 'store'])->name('backups.store')->middleware(['auth', 'role:admin']);
+Route::get('Administrador-Backups/{nombre}/descargar', [BackupController::class, 'download'])->name('backups.download')->middleware(['auth', 'role:admin']);
+Route::delete('Administrador-Backups/{nombre}', [BackupController::class, 'destroy'])->name('backups.destroy')->middleware(['auth', 'role:admin']);
 
 //Canciones
 Route::resource('Categorias-canciones', CancionesCategoriaController::class)->names('cancionescat')->middleware(['auth', 'role:admin|audios']);
@@ -148,6 +173,10 @@ Route::prefix('sisipedia')->name('sisipedia.')->group(function () {
 Route::get('sisipedia/registros', [CategoryController::class, 'registros'])->name('public.sisi');
 Route::get('sisipedia/categorias', [CategoryController::class, 'publicIndex'])->name('public.categoria.sisi');
 Route::get('sisipedia/search', [CategoryController::class, 'search'])->name('sisipedia.search');
+
+// Páginas estáticas de Sisipedia (menú simplificado: Inicio/Nosotros/Contáctanos).
+Route::get('sisipedia/nosotros', fn () => view('sisichakuna.nosotros'))->name('sisipedia.nosotros');
+Route::get('sisipedia/contacto', fn () => view('sisichakuna.contacto'))->name('sisipedia.contacto');
 
 Route::get('/limpiar-cache', function () {
     Artisan::call('cache:clear');

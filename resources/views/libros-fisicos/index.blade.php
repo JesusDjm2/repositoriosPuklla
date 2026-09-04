@@ -20,14 +20,14 @@
 
     <form method="get" action="{{ route('biblioteca-fisica.libros.index') }}" class="bv-crud-toolbar">
         <div class="form-row align-items-end">
-            <div class="form-group col-md-5 mb-2 mb-md-0">
+            <div class="form-group col-md-4 mb-2 mb-md-0">
                 <label for="fis-q" class="small text-muted mb-1 d-block">
                     <i class="fa fa-search mr-1"></i>Buscar
                 </label>
                 <input type="text" id="fis-q" name="q" class="form-control form-control-sm"
                     value="{{ request('q') }}" placeholder="Nombre, autor o código…" autocomplete="off">
             </div>
-            <div class="form-group col-md-4 mb-2 mb-md-0">
+            <div class="form-group col-md-3 mb-2 mb-md-0">
                 <label for="fis-cat" class="small text-muted mb-1 d-block">
                     <i class="fa fa-tag mr-1"></i>Categoría física
                 </label>
@@ -38,6 +38,17 @@
                             @selected((string) request('categoria_fisica_id') === (string) $cat->id)>
                             {{ $cat->nombre }}
                         </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="form-group col-md-2 mb-2 mb-md-0">
+                <label for="fis-ubicacion" class="small text-muted mb-1 d-block">
+                    <i class="fa fa-map-marker mr-1"></i>Ubicación
+                </label>
+                <select id="fis-ubicacion" name="ubicacion" class="custom-select custom-select-sm">
+                    <option value="">Todas</option>
+                    @foreach (\App\Models\LibroFisico::UBICACIONES as $valor => $etiqueta)
+                        <option value="{{ $valor }}" @selected(request('ubicacion') === $valor)>{{ $etiqueta }}</option>
                     @endforeach
                 </select>
             </div>
@@ -71,6 +82,7 @@
                     <th style="width:4.5rem;" class="text-right">Págs.</th>
                     <th style="width:7rem;">Código</th>
                     <th>Categorías</th>
+                    <th style="width:10rem;">Ubicación</th>
                     <th style="width:7rem;" class="text-center">Disponibilidad</th>
                     <th style="width:8rem;" class="text-center">Acciones</th>
                 </tr>
@@ -99,6 +111,15 @@
                                 </span>
                             @endforeach
                         </td>
+                        <td class="align-middle small">
+                            @if ($libro->ubicacion)
+                                <span class="badge badge-light border">
+                                    {{ \App\Models\LibroFisico::nombreParaUbicacion($libro->ubicacion) }}
+                                </span>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
                         <td class="text-center align-middle">
                             <span class="badge {{ $libro->ejemplares_disponibles > 0 ? 'badge-success' : 'badge-danger' }}">
                                 {{ $libro->ejemplares_disponibles }} / {{ $libro->cantidad_ejemplares }}
@@ -118,11 +139,11 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="p-0 border-0">
+                        <td colspan="10" class="p-0 border-0">
                             <div class="bv-empty-state">
                                 <i class="fa fa-book bv-empty-icon"></i>
                                 <p>No se encontraron libros físicos con esos criterios.</p>
-                                @if (request('q') || request('categoria_fisica_id'))
+                                @if (request('q') || request('categoria_fisica_id') || request('ubicacion'))
                                     <a href="{{ route('biblioteca-fisica.libros.index') }}"
                                         class="btn btn-sm btn-outline-secondary">
                                         <i class="fa fa-times mr-1"></i>Limpiar filtros

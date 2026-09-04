@@ -379,10 +379,8 @@
                     <span>{{ $errors->first() }}</span>
                 </div>
             @endif
-
             <form method="POST" action="{{ route('login') }}" class="login-form" novalidate>
                 @csrf
-
                 <div class="field @error('email') has-error @enderror">
                     <i class="fas fa-envelope field-icon"></i>
                     <input id="email" type="email" name="email" placeholder="Correo electrónico"
@@ -391,7 +389,6 @@
                         <p class="field-error">{{ $message }}</p>
                     @enderror
                 </div>
-
                 <div class="field field--password @error('password') has-error @enderror">
                     <i class="fas fa-lock field-icon"></i>
                     <input id="password" type="password" name="password" placeholder="Contraseña" required
@@ -417,7 +414,6 @@
             </form>
         </div>
     </div>
-
     <script>
         (function() {
             var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

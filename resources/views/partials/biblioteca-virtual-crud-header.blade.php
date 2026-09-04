@@ -1,3 +1,11 @@
+@push('styles')
+    {{-- Antes faltaba en este partial (solo lo pedía el hermano de biblioteca
+         física): sin esto, .bv-crud-nav/.bv-crud-tab quedaban sin la hoja de
+         estilos correcta y cualquier regla de admin.scss con el mismo nombre
+         de clase se colaba encima, dando un aspecto distinto según el grupo. --}}
+    <link rel="stylesheet" href="{{ asset('css/biblioteca-crud.css') }}?v={{ file_exists(public_path('css/biblioteca-crud.css')) ? filemtime(public_path('css/biblioteca-crud.css')) : 1 }}">
+@endpush
+@include('partials.biblioteca-grupo-tabs', ['grupoActivo' => 'digital'])
 @php
     $active = $active ?? '';
     $tabs = [

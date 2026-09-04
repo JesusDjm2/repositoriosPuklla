@@ -3,6 +3,7 @@
     $isBiblioteca = $proyectoActual === 'eesp';
     $isKawsay = $proyectoActual === 'kawsay';
     $isRadio = $proyectoActual === 'radio';
+    $isSisipedia = $proyectoActual === 'sisipedia';
 
     if ($isBiblioteca) {
         $navItems = [
@@ -20,24 +21,34 @@
         $navItems = [
             ['label' => 'Inicio', 'href' => route('cancionesPuklla'), 'active' => request()->routeIs('cancionesPuklla'), 'icon' => 'fa-music'],
         ];
-    } else {
-        $sisiTipo = request()->routeIs('public.sisi') ? request()->query('tipo') : null;
-        $isSisipedia = request()->routeIs('index', 'public.sisi', 'public.categoria.sisi', 'sisipedia.categories.show', 'sisipedia.search')
-            && ! in_array($sisiTipo, ['audio', 'imagen', 'video', 'pdf'], true);
-        $isAudios = $sisiTipo === 'audio';
-        $isImagenes = $sisiTipo === 'imagen';
-        $isVideos = $sisiTipo === 'video';
-
+    } elseif ($isSisipedia) {
+        // El buscador + acceso por formato vive en la cabecera de cada vista
+        // pública de Sisipedia (ver partials/lib-hero, prop heroFormatButtons),
+        // así que ya no hace falta que el menú duplique Audios/Imágenes/Videos
+        // como items sueltos — "Inicio" cubre eso, y el logo apunta al mismo
+        // lugar (usa $navItems[0]['href']).
         $navItems = [
-            ['label' => 'Sisipedia', 'href' => route('public.sisi'), 'active' => $isSisipedia, 'icon' => 'fa-sitemap'],
-            ['label' => 'Audios', 'href' => route('public.sisi', ['tipo' => 'audio']), 'active' => $isAudios, 'icon' => 'fa-music'],
-            ['label' => 'Imágenes', 'href' => route('public.sisi', ['tipo' => 'imagen']), 'active' => $isImagenes, 'icon' => 'fa-image'],
-            ['label' => 'Videos', 'href' => route('public.sisi', ['tipo' => 'video']), 'active' => $isVideos, 'icon' => 'fa-video'],
+            ['label' => 'Inicio', 'href' => route('index'), 'active' => request()->routeIs('index'), 'icon' => 'fa-home'],
+            ['label' => 'Nosotros', 'href' => route('sisipedia.nosotros'), 'active' => request()->routeIs('sisipedia.nosotros'), 'icon' => 'fa-info-circle'],
+            ['label' => 'Contáctanos', 'href' => route('sisipedia.contacto'), 'active' => request()->routeIs('sisipedia.contacto'), 'icon' => 'fa-envelope'],
+        ];
+    } else {
+        // Rutas sin proyecto dueño (ej. búsqueda global): marca neutral de la
+        // Asociación, sin fingir pertenecer a Escuela/Kawsay/Radio/Sisipedia.
+        $navItems = [
+            ['label' => 'Inicio', 'href' => route('hub'), 'active' => false, 'icon' => 'fa-home'],
         ];
     }
 
     // Cuenta: icono + destino + etiqueta legible (se reusa en el pill del panel lateral)
-    if (Auth::check() && Auth::user()->hasRole('alumno')) {
+    // El admin completo va primero porque puede tener además cualquiera de los
+    // otros roles (ej. admin+kawsay) y su panel principal manda sobre el de un
+    // rol específico.
+    if (Auth::check() && Auth::user()->hasRole('admin')) {
+        $accountLabel = 'Panel principal';
+        $accountIsLogout = false;
+        $accountHref = route('admin.principal');
+    } elseif (Auth::check() && Auth::user()->hasRole('alumno')) {
         $accountLabel = 'Cerrar sesión';
         $accountIsLogout = true;
         $accountHref = route('logout');
@@ -57,6 +68,10 @@
         $accountLabel = 'Sisicha';
         $accountIsLogout = false;
         $accountHref = route('adminSisicha');
+    } elseif (Auth::check() && Auth::user()->hasRole('kawsay')) {
+        $accountLabel = 'Panel Kawsay';
+        $accountIsLogout = false;
+        $accountHref = route('adminKawsay');
     } else {
         $accountLabel = 'Ingresar';
         $accountIsLogout = false;
@@ -72,13 +87,22 @@
                         <img src="{{ asset('img/logo-iesp-pukllasunchis.png') }}" alt="Logo EESP Pukllasunchis"
                             class="logo" width="168" decoding="async">
                     @elseif ($isKawsay)
+                        <img src="{{ asset('img/proyectos/kawsay.logo-blanco.png') }}" alt="Logo Kawsay"
+                            class="logo logo--on-top" width="168" decoding="async">
                         <img src="{{ asset('img/kawsay.png') }}" alt="Logo Kawsay"
-                            class="logo" width="168" decoding="async">
-                    @elseif ($isRadio)
+                            class="logo logo--on-scroll" width="168" decoding="async">
+                    @elseif ($isRadio || $isSisipedia)
+                        {{-- Arriba del todo el menú va transparente sobre la foto del hero (ver
+                             regla :not(.is-scrolled) en estilos.css) y el logo a color se perdía
+                             contra fondos con mucho naranja/marrón — se muestra la versión blanca
+                             solo mientras no se haya scrolleado; al bajar, el menú vuelve a su
+                             fondo claro y ahí sí se ve bien el logo a color de siempre. --}}
+                        <img src="{{ asset('img/logo-blanco-radio.png') }}" alt="Logo Radio Pukllasunchis"
+                            class="logo logo--on-top" width="168" decoding="async">
                         <img src="{{ asset('img/logo-radio.png') }}" alt="Logo Radio Pukllasunchis"
-                            class="logo" width="168" decoding="async">
+                            class="logo logo--on-scroll" width="168" decoding="async">
                     @else
-                        <img src="{{ asset('img/logo-radio.png') }}" alt="Logo Radio Pukllasunchis"
+                        <img src="{{ asset('img/Asociacion-logo-rojo.png') }}" alt="Asociación Pukllasunchis"
                             class="logo" width="168" decoding="async">
                     @endif
                 </a>

@@ -11,6 +11,11 @@ class LibroFisico extends Model
 
     protected $table = 'libros_fisicos';
 
+    public const UBICACIONES = [
+        'san_blas' => 'EESP Pukllasunchis - San Blas',
+        'awaqpinta' => 'Biblioteca Awaqpinta N°563',
+    ];
+
     protected $fillable = [
         'nombre',
         'autor',
@@ -19,6 +24,8 @@ class LibroFisico extends Model
         'numero_paginas',
         'codigo',
         'cantidad_ejemplares',
+        'tipo_material',
+        'ubicacion',
     ];
 
     protected $casts = [
@@ -58,5 +65,10 @@ class LibroFisico extends Model
     public function getEjemplaresDisponiblesAttribute(): int
     {
         return max(0, $this->cantidad_ejemplares - $this->ejemplares_prestados);
+    }
+
+    public static function nombreParaUbicacion(?string $ubicacion): ?string
+    {
+        return $ubicacion ? (self::UBICACIONES[$ubicacion] ?? $ubicacion) : null;
     }
 }

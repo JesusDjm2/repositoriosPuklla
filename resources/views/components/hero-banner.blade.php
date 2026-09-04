@@ -16,6 +16,11 @@
             @if ($subtitulo)
                 <p class="hero-banner__subtitle">{{ $subtitulo }}</p>
             @endif
+            @isset($stats)
+                <div class="hero-banner__stats" data-animate-stagger>
+                    {{ $stats }}
+                </div>
+            @endisset
         </div>
         @isset($actions)
             <div class="hero-banner__actions">

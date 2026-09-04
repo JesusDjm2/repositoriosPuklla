@@ -158,21 +158,12 @@
                                     class="form-control @error('ubicacion') is-invalid @enderror"
                                     value="{{ old('ubicacion') }}">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-12">
                                 <label class="form-label fw-semibold">Título</label>
                                 <input type="text" name="titulo"
                                     class="form-control @error('titulo') is-invalid @enderror"
                                     value="{{ old('titulo') }}">
                                 @error('titulo')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Lugar de trabajo</label>
-                                <input type="text" name="lugar_trabajo"
-                                    class="form-control @error('lugar_trabajo') is-invalid @enderror"
-                                    value="{{ old('lugar_trabajo') }}">
-                                @error('lugar_trabajo')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>

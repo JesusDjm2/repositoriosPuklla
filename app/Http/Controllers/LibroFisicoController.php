@@ -32,6 +32,10 @@ class LibroFisicoController extends Controller
             });
         }
 
+        if ($request->filled('ubicacion')) {
+            $query->where('ubicacion', $request->input('ubicacion'));
+        }
+
         $query->withCount(['prestamos as ejemplares_prestados_count' => fn ($q) => $q->activos()]);
 
         $libros = $query->paginate(25)->withQueryString();
@@ -57,11 +61,13 @@ class LibroFisicoController extends Controller
             'numero_paginas' => 'nullable|integer|min:1|max:65535',
             'codigo' => 'required|string|max:100|unique:libros_fisicos,codigo',
             'cantidad_ejemplares' => 'required|integer|min:1|max:9999',
+            'tipo_material' => ['required', Rule::in(array_keys(CategoriaFisica::TIPOS_MATERIAL))],
+            'ubicacion' => ['required', Rule::in(array_keys(LibroFisico::UBICACIONES))],
             'categorias_fisicas' => 'required|array|min:1',
             'categorias_fisicas.*' => 'exists:categorias_fisicas,id',
         ]);
 
-        $libro = LibroFisico::create($request->only(['nombre', 'autor', 'editorial', 'anio_publicacion', 'numero_paginas', 'codigo', 'cantidad_ejemplares']));
+        $libro = LibroFisico::create($request->only(['nombre', 'autor', 'editorial', 'anio_publicacion', 'numero_paginas', 'codigo', 'cantidad_ejemplares', 'tipo_material', 'ubicacion']));
         $libro->categoriasFisicas()->sync($request->input('categorias_fisicas'));
 
         return redirect()->route('biblioteca-fisica.libros.index')
@@ -92,6 +98,8 @@ class LibroFisicoController extends Controller
             'numero_paginas' => 'nullable|integer|min:1|max:65535',
             'codigo' => ['required', 'string', 'max:100', Rule::unique('libros_fisicos', 'codigo')->ignore($libro_fisico->id)],
             'cantidad_ejemplares' => 'required|integer|min:1|max:9999',
+            'tipo_material' => ['required', Rule::in(array_keys(CategoriaFisica::TIPOS_MATERIAL))],
+            'ubicacion' => ['required', Rule::in(array_keys(LibroFisico::UBICACIONES))],
             'categorias_fisicas' => 'required|array|min:1',
             'categorias_fisicas.*' => 'exists:categorias_fisicas,id',
         ]);
@@ -102,7 +110,7 @@ class LibroFisicoController extends Controller
                 "No se puede reducir a {$request->input('cantidad_ejemplares')} ejemplares: actualmente hay {$prestados} prestados.");
         }
 
-        $libro_fisico->update($request->only(['nombre', 'autor', 'editorial', 'anio_publicacion', 'numero_paginas', 'codigo', 'cantidad_ejemplares']));
+        $libro_fisico->update($request->only(['nombre', 'autor', 'editorial', 'anio_publicacion', 'numero_paginas', 'codigo', 'cantidad_ejemplares', 'tipo_material', 'ubicacion']));
         $libro_fisico->categoriasFisicas()->sync($request->input('categorias_fisicas'));
 
         return redirect()->route('biblioteca-fisica.libros.index')
@@ -204,6 +212,11 @@ class LibroFisicoController extends Controller
             'codigo' => $l->codigo,
             'cantidad_ejemplares' => $l->cantidad_ejemplares,
             'ejemplares_disponibles' => $l->ejemplares_disponibles,
+            'ubicacion' => LibroFisico::nombreParaUbicacion($l->ubicacion),
+            'tipo_material' => $l->tipo_material ? [
+                'nombre' => CategoriaFisica::nombreParaTipoMaterial($l->tipo_material),
+                'color' => CategoriaFisica::colorForTipoMaterial($l->tipo_material),
+            ] : null,
             'categorias' => $l->categoriasFisicas->map(fn (CategoriaFisica $c) => [
                 'nombre' => $c->nombre,
                 'color' => CategoriaFisica::colorForCodigo($c->codigo),

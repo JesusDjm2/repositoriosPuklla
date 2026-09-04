@@ -28,6 +28,9 @@ class ProyectoDetector
         ],
         'kawsay' => [
             'kawsay',
+            'kawsay.area',
+            'kawsay.tema',
+            'kawsay.contenido',
             'kawsaylibros.lista',
             'kawsaylibros.show',
             'kawsayvideos.lista',
@@ -44,6 +47,8 @@ class ProyectoDetector
             'public.categoria.sisi',
             'sisipedia.search',
             'sisipedia.categories.show',
+            'sisipedia.nosotros',
+            'sisipedia.contacto',
         ],
     ];
 

@@ -5,8 +5,11 @@ namespace App\Services;
 use App\Models\Canciones;
 use App\Models\CancionesCategoria;
 use App\Models\Categoria;
+use App\Models\KawsayArchivo;
+use App\Models\KawsayArea;
 use App\Models\KawsayCategoria;
 use App\Models\KawsayLibro;
+use App\Models\KawsayTema;
 use App\Models\KawsayVideo;
 use App\Models\KawsayVideoCategoria;
 use App\Models\Libro;
@@ -46,6 +49,9 @@ class ProyectoEstadisticasService
                 'Aportaciones pendientes' => fn () => Aportacion::where('is_approved', false)->count(),
             ],
             'kawsay' => [
+                'Áreas' => fn () => KawsayArea::count(),
+                'Temas' => fn () => KawsayTema::count(),
+                'Archivos' => fn () => KawsayArchivo::count(),
                 'Libros' => fn () => KawsayLibro::count(),
                 'Categorías' => fn () => KawsayCategoria::count(),
                 'Videos' => fn () => KawsayVideo::count(),
@@ -58,6 +64,43 @@ class ProyectoEstadisticasService
     public function paraProyecto(string $slug): Collection
     {
         $defs = $this->definiciones()[$slug] ?? [];
+
+        return collect($defs)->map(fn (Closure $c) => $c());
+    }
+
+    /**
+     * Un proyecto puede agrupar varios roles (p. ej. "Radio Pukllasunchis" =
+     * sisicha + audios + videos): esto le da a cada mini-dashboard de rol solo
+     * sus propias estadísticas, no las de los otros roles del mismo proyecto.
+     *
+     * @return array<string, array<string, Closure>>
+     */
+    private function definicionesPorRol(): array
+    {
+        $porProyecto = $this->definiciones();
+
+        return [
+            'biblioteca' => $porProyecto['eesp-pukllasunchis'] ?? [],
+            'kawsay' => $porProyecto['kawsay'] ?? [],
+            'videos' => [
+                'Videos' => fn () => Video::count(),
+                'Categorías de video' => fn () => VideoCategoria::count(),
+            ],
+            'audios' => [
+                'Canciones' => fn () => Canciones::count(),
+                'Categorías de canciones' => fn () => CancionesCategoria::count(),
+            ],
+            'sisicha' => [
+                'Registros Sisipedia' => fn () => SisipediaCategory::count(),
+                'Aportaciones pendientes' => fn () => Aportacion::where('is_approved', false)->count(),
+            ],
+        ];
+    }
+
+    /** @return Collection<string,int> etiqueta => valor, para el mini-dashboard de un rol. */
+    public function paraRol(string $rol): Collection
+    {
+        $defs = $this->definicionesPorRol()[$rol] ?? [];
 
         return collect($defs)->map(fn (Closure $c) => $c());
     }

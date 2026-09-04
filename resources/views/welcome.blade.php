@@ -10,6 +10,8 @@
         </div>
     @endif
     <div class="fixed-image-container">
+        <img src="{{ asset('img/hormigas/Sisipedia-04.jpeg') }}" alt="Fondo Sisipedia" fetchpriority="high"
+            decoding="async" style="object-position: 50% 0%;">
         <div class="overlay"></div>
         <div class="centered-content">
             <h2 class="sisipedia-hero-anim">SISIPEDIA</h2>

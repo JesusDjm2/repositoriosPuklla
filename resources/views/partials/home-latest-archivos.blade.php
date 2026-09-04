@@ -19,12 +19,12 @@
 @if ($items->isNotEmpty())
     <div class="row mt-3 mb-5 sisipedia-latest-section">
         <div class="col-lg-12">
-            <h2 class="titulosDos">
-                Últimas publicaciones en {{ $tc['label'] }}
+            <div class="sisipedia-latest-head">
+                <h2 class="titulosDos">Últimas publicaciones en {{ $tc['label'] }}</h2>
                 <a href="{{ route('public.sisi', ['tipo' => $tipo]) }}" class="verMas">
                     → Ver más {{ $tc['label'] }}
                 </a>
-            </h2>
+            </div>
         </div>
         <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3 sisipedia-latest-anim">
             @foreach ($items as $item)
@@ -40,6 +40,7 @@
                     $nombreMostrar = $item->nombre ?? ($tc['label'].' sin nombre');
                     $previewUrl = \App\Services\GoogleDriveService::getPreviewUrl($item->drive_id);
                     $driveUrl = \App\Services\GoogleDriveService::getUrl($item->drive_id);
+                    $downloadUrl = \App\Services\GoogleDriveService::getEmbedUrl($item->drive_id);
                     $registroUrl = $cat ? route('sisipedia.categories.show', $cat) : null;
                     $thumbUrl = $conThumbnail
                         ? \App\Services\GoogleDriveService::getThumbnailUrl($item->drive_id, $tipo === 'video' ? 600 : 400)
@@ -55,6 +56,7 @@
                                 <button type="button"
                                     class="sisipedia-latest-preview-btn position-absolute top-50 start-50 translate-middle btn btn-light rounded-circle shadow-sm d-flex align-items-center justify-content-center"
                                     data-tipo="{{ $tipo }}" data-preview="{{ $previewUrl }}" data-nombre="{{ $nombreMostrar }}"
+                                    data-drive="{{ $driveUrl }}" data-download="{{ $downloadUrl }}"
                                     title="{{ $tc['accion'] }}" aria-label="{{ $tc['accion'] }} {{ $nombreMostrar }}">
                                     <i class="fa {{ $tc['accionIcon'] }} text-dark"></i>
                                 </button>
@@ -103,6 +105,7 @@
                                         'src' => $item->stream_url,
                                         'title' => $nombreMostrar,
                                         'driveUrl' => $driveUrl,
+                                        'downloadUrl' => $downloadUrl,
                                     ])
                                 </div>
                             @else
@@ -121,7 +124,8 @@
                                     @else
                                         <button type="button"
                                             class="btn btn-sm btn-outline-{{ $tc['color'] }} flex-grow-1 sisipedia-latest-preview-btn"
-                                            data-tipo="{{ $tipo }}" data-preview="{{ $previewUrl }}" data-nombre="{{ $nombreMostrar }}">
+                                            data-tipo="{{ $tipo }}" data-preview="{{ $previewUrl }}" data-nombre="{{ $nombreMostrar }}"
+                                            data-drive="{{ $driveUrl }}" data-download="{{ $downloadUrl }}">
                                             <i class="fa {{ $tc['accionIcon'] }} me-1"></i>{{ $tc['accion'] }}
                                         </button>
                                         @if ($registroUrl)
@@ -196,7 +200,12 @@
                     if (tipo === 'video') {
                         playVideo(this);
                     } else if (window.sisipediaOpenPreview) {
-                        window.sisipediaOpenPreview(this.getAttribute('data-preview'), this.getAttribute('data-nombre'));
+                        window.sisipediaOpenPreview(
+                            this.getAttribute('data-preview'),
+                            this.getAttribute('data-nombre'),
+                            this.getAttribute('data-drive'),
+                            this.getAttribute('data-download')
+                        );
                     }
                 });
             });

@@ -2,7 +2,7 @@
 // Nota: este archivo NO importa Bootstrap (ni 4 ni 5). El panel admin sigue
 // cargando Bootstrap 4 + jQuery vía CDN (ver layouts/app.blade.php) porque ~20
 // vistas existentes dependen de sus plugins jQuery (modales, colapsables) que
-// Bootstrap 5 eliminó. Este archivo solo añade componentes nuevos (stat-card,
+// Bootstrap 5 eliminó. Este archivo solo añade componentes nuevos (hero-banner,
 // project-card, sidebar) y la paleta de marca, sin tocar ese código heredado.
 //
 // Esquema de color único: todos los dashboards (Biblioteca, Kawsay, Videos,
@@ -149,6 +149,46 @@ body.sidebar-open-lock {
     flex-shrink: 0;
 }
 
+// Chevron que indica que un item despliega un submenú, y su estado
+// abierto/cerrado — antes no había ninguna pista visual de esto aparte del
+// propio contenido apareciendo o no.
+#sidebar .dropdown-toggle::after {
+    content: "\f107";
+    font-family: FontAwesome;
+    margin-left: auto;
+    padding-left: 0.5rem;
+    font-size: 0.85rem;
+    opacity: 0.55;
+    transition: transform 0.25s ease;
+}
+
+#sidebar .dropdown-toggle[aria-expanded="true"]::after {
+    transform: rotate(180deg);
+}
+
+// Bootstrap 4 anima .collapsing con una curva lineal por defecto: se siente
+// brusca. La suavizamos y dejamos que el contenido aparezca con un pequeño
+// fade en vez de aparecer de golpe al terminar el slide.
+#sidebar .collapsing {
+    transition: height 0.28s ease;
+}
+
+#sidebar ul.collapse.show > li {
+    animation: sidebarSubmenuIn 0.2s ease both;
+}
+
+@keyframes sidebarSubmenuIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 // Sangría de submenús: se acumula sola en cada nivel (proyecto → subgrupo →
 // item), así una jerarquía de 3 niveles (p. ej. Biblioteca digital/física
 // dentro de un proyecto) se distingue de una de 2 sin necesitar reglas por
@@ -190,6 +230,20 @@ body.sidebar-open-lock {
     text-transform: uppercase;
     letter-spacing: 0.03em;
     color: rgba(255, 255, 255, 0.45);
+}
+
+// Flechita "→" que aparece al hacer hover sobre un item de submenú (antes vivía
+// como <style> suelto en medio de livewire/menu-admin.blade.php).
+.flecha-admin {
+    opacity: 0;
+    display: inline-block;
+    transform: translateX(-8px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+#sidebar ul li a:hover .flecha-admin {
+    opacity: 1;
+    transform: translateX(0);
 }
 
 @media (max-width: 991.98px) {
@@ -395,29 +449,88 @@ body.sidebar-open-lock {
     border-color: var(--puk-maroon-dark) !important;
 }
 
+// Botones de acción de los formularios/tablas del panel (Guardar, Cancelar,
+// Eliminar, Subir...): antes eran el Bootstrap 4 de fábrica (radio de 4px,
+// sin sombra, sin transición) — mismo tratamiento de elevación sutil que el
+// resto del sistema (module-card, hero-banner__actions), aplicado una sola
+// vez acá en vez de repetirlo vista por vista.
+.admin-content .btn {
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 0.4rem 0.9rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-content .btn-sm {
+    padding: 0.35rem 0.8rem;
+    font-size: 0.82rem;
+}
+
+.admin-content .btn-primary,
+.admin-content .btn-danger,
+.admin-content .btn-outline-secondary,
+.admin-content .btn-outline-danger {
+    box-shadow: 0 1px 2px rgba(20, 20, 40, 0.06);
+}
+
+.admin-content .btn-primary:hover,
+.admin-content .btn-danger:hover,
+.admin-content .btn-outline-secondary:hover,
+.admin-content .btn-outline-danger:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(20, 20, 40, 0.12);
+}
+
+.admin-content .btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.admin-content .btn-outline-secondary {
+    color: var(--bv-text, #495057);
+    border-color: var(--bv-border-strong, #ced4da);
+}
+
+.admin-content .btn-outline-secondary:hover,
+.admin-content .btn-outline-secondary:focus {
+    background: var(--bv-surface-2, #f8f9fb) !important;
+    color: var(--bv-text, #212529) !important;
+    border-color: var(--bv-border-strong, #ced4da) !important;
+}
+
+.admin-content .btn-outline-danger:hover,
+.admin-content .btn-outline-danger:focus {
+    background: var(--bv-danger, #dc3545) !important;
+    border-color: var(--bv-danger, #dc3545) !important;
+    color: #fff !important;
+}
+
 // ─── Hero banner (encabezado de bienvenida de cada dashboard) ──────────────
+// Padding recortado (antes llegaba a 2.75rem) y sin min-height: el alto lo
+// da el contenido, no un bloque de aire reservado de más.
 .hero-banner {
     --_accent: var(--puk-maroon);
     --_accent-dark: var(--puk-maroon-dark);
 
     position: relative;
     overflow: hidden;
-    border-radius: 1.25rem;
-    padding: clamp(1.5rem, 1rem + 2vw, 2.75rem);
-    margin-bottom: 2rem;
+    border-radius: 1.1rem;
+    padding: clamp(1.25rem, 1rem + 1vw, 1.85rem) clamp(1.25rem, 1rem + 1.5vw, 2.1rem);
+    margin-bottom: 1.5rem;
     background: linear-gradient(135deg, var(--_accent) 0%, var(--_accent-dark) 100%);
-    box-shadow: 0 1px 2px rgba(20, 20, 40, 0.06), 0 1.5rem 3rem rgba(20, 5, 8, 0.3);
+    box-shadow: 0 1px 2px rgba(20, 20, 40, 0.06), 0 1rem 2.25rem rgba(20, 5, 8, 0.25);
 }
 
-// El glow dorado es fijo en todas las variantes: cada dashboard cambia de
-// color base, pero el "hilo" dorado los mantiene reconocibles como una
-// misma marca (el mismo par rojo+dorado del login público).
+// El glow ya no es un tono dorado fijo (chocaba con las variantes verde/marrón
+// de Kawsay y Radio) — se deriva del propio acento de cada dashboard con
+// color-mix, así siempre es un tono más claro de la MISMA familia de color.
 .hero-banner__decor {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(circle at 85% -10%, rgba(200, 142, 65, 0.4), transparent 55%),
-        radial-gradient(circle at -5% 120%, rgba(255, 255, 255, 0.08), transparent 55%);
+        radial-gradient(circle at 88% -25%, color-mix(in srgb, var(--_accent-dark) 45%, white 55%), transparent 60%),
+        radial-gradient(circle at -5% 120%, rgba(255, 255, 255, 0.1), transparent 55%);
+    opacity: 0.5;
     pointer-events: none;
 }
 
@@ -426,17 +539,17 @@ body.sidebar-open-lock {
     z-index: 1;
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
-    gap: 1.25rem;
+    gap: 1rem;
 }
 
 .hero-banner__eyebrow {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    margin-bottom: 0.6rem;
-    color: var(--puk-gold-light);
+    margin-bottom: 0.45rem;
+    color: rgba(255, 255, 255, 0.75);
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.08em;
@@ -444,9 +557,9 @@ body.sidebar-open-lock {
 }
 
 .hero-banner__title {
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.3rem;
     color: #fff;
-    font-size: clamp(1.5rem, 1.1rem + 1.5vw, 2.1rem);
+    font-size: clamp(1.4rem, 1.05rem + 1.3vw, 1.9rem);
     font-weight: 800;
     letter-spacing: -0.01em;
 }
@@ -455,31 +568,108 @@ body.sidebar-open-lock {
     max-width: 46ch;
     margin-bottom: 0;
     color: rgba(255, 255, 255, 0.78);
+    font-size: 0.92rem;
+}
+
+// Contadores de registros del dashboard: fila única que hace scroll
+// horizontal en vez de envolver a una segunda línea — un dashboard con
+// muchos contadores (ej. Kawsay) no debe hacer crecer el hero en alto, solo
+// se desliza. El fade en el borde derecho avisa que hay más sin recurrir a
+// una barra de scroll visible.
+.hero-banner__stats {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent 100%);
+}
+
+.hero-banner__stats::-webkit-scrollbar {
+    display: none;
+}
+
+.hero-banner__stat {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.13);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-size: 0.8rem;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.hero-banner__stat i {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.8rem;
+}
+
+.hero-banner__stat-value {
+    font-weight: 800;
+}
+
+.hero-banner__stat-label {
+    color: rgba(255, 255, 255, 0.72);
+    font-weight: 500;
 }
 
 .hero-banner__actions {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 0.6rem;
 }
 
-// Botón invertido (blanco sobre el gradiente granate del hero) en vez de
-// dorado: usa el mismo rojo institucional que el resto del panel para el
-// texto, sin introducir un tercer color de acento para las llamadas a
-// acción. Funciona igual en modo claro y oscuro porque no depende de
-// variables de tema (el hero-banner sigue siendo granate en ambos).
-.hero-banner__actions .btn-primary {
+// Botón invertido (blanco sobre el degradé del hero) — mismo tratamiento para
+// .btn-primary y .btn-light, que hasta ahora se quedaba con el gris plano de
+// Bootstrap sin ningún estilo propio. El texto usa el acento oscuro de CADA
+// dashboard (--_accent-dark, ya definida por .hero-banner--*) en vez de un
+// rojo institucional fijo, así el botón combina con el color del panel en el
+// que aparece (verde en Kawsay, dorado en Biblioteca, etc.). Funciona igual
+// en modo claro y oscuro porque no depende de variables de tema.
+.hero-banner__actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    border: 1px solid transparent;
+    box-shadow: 0 2px 8px rgba(15, 5, 5, 0.18);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.hero-banner__actions .btn-primary,
+.hero-banner__actions .btn-light {
     background: #fff;
     border-color: #fff;
-    color: var(--puk-maroon);
-    font-weight: 600;
+    color: var(--_accent-dark);
 }
 
 .hero-banner__actions .btn-primary:hover,
-.hero-banner__actions .btn-primary:focus {
-    background: rgba(255, 255, 255, 0.88) !important;
-    border-color: rgba(255, 255, 255, 0.88) !important;
-    color: var(--puk-maroon-dark) !important;
+.hero-banner__actions .btn-primary:focus,
+.hero-banner__actions .btn-light:hover,
+.hero-banner__actions .btn-light:focus {
+    background: #fff !important;
+    border-color: #fff !important;
+    color: var(--_accent-dark) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(15, 5, 5, 0.28);
+}
+
+.hero-banner__actions .btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(15, 5, 5, 0.2);
 }
 
 @media (max-width: 575.98px) {
@@ -493,7 +683,27 @@ body.sidebar-open-lock {
 
     .hero-banner__actions .btn {
         flex: 1 1 auto;
+        justify-content: center;
     }
+}
+
+// Variantes de color: cada mini-dashboard de proyecto usa el mismo acento de
+// marca que su versión pública (ver public/css/estilos.css --project-accent),
+// para que el panel admin se sienta parte de la misma identidad en vez de un
+// granate genérico repetido en todas partes.
+.hero-banner--gold {
+    --_accent: #{$puk-gold};
+    --_accent-dark: #a8752f;
+}
+
+.hero-banner--kawsay {
+    --_accent: #6e7d1e;
+    --_accent-dark: #4e5915;
+}
+
+.hero-banner--radio {
+    --_accent: #8a5222;
+    --_accent-dark: #5c3614;
 }
 
 // ─── Componentes del Admin Principal ────────────────────────────────────────
@@ -524,65 +734,11 @@ body.sidebar-open-lock {
     gap: 0.5rem;
 }
 
-.stats-grid,
 .proyectos-grid {
     display: grid;
     gap: 1.25rem;
     margin-bottom: 2rem;
-}
-
-.stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
-
-.proyectos-grid {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-}
-
-.stat-card {
-    background: #fff;
-    border-radius: var(--bs-card-border-radius, 1rem);
-    box-shadow: 0 1px 2px rgba(20, 20, 40, 0.04), 0 0.75rem 1.75rem rgba(20, 20, 40, 0.07);
-    padding: 1.35rem 1.6rem;
-    display: flex;
-    align-items: center;
-    gap: 1.1rem;
-    border-left: 3px solid var(--puk-maroon);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 1px 2px rgba(20, 20, 40, 0.05), 0 1.25rem 2.25rem rgba(20, 20, 40, 0.1);
-}
-
-.stat-card__icon {
-    flex-shrink: 0;
-    width: 52px;
-    height: 52px;
-    border-radius: 14px;
-    background: linear-gradient(145deg, rgba(174, 12, 33, 0.1), rgba(174, 12, 33, 0.05));
-    color: var(--puk-maroon);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.35rem;
-}
-
-.stat-card__value {
-    font-size: 1.95rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1;
-    color: #212529;
-}
-
-.stat-card__label {
-    color: #6c757d;
-    font-size: 0.78rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
 }
 
 .project-card {
@@ -744,6 +900,27 @@ body.sidebar-open-lock {
     color: var(--_accent);
 }
 
+// Mismas variantes que .hero-banner--* (ver arriba): un módulo del panel de
+// Biblioteca/Kawsay/Radio se tiñe con el acento de esa marca, no del granate
+// institucional genérico.
+.module-card--gold {
+    --_accent: #{$puk-gold};
+    --_accent-dark: #a8752f;
+    --_accent-soft: rgba(200, 142, 65, 0.14);
+}
+
+.module-card--kawsay {
+    --_accent: #6e7d1e;
+    --_accent-dark: #4e5915;
+    --_accent-soft: rgba(110, 125, 30, 0.14);
+}
+
+.module-card--radio {
+    --_accent: #8a5222;
+    --_accent-dark: #5c3614;
+    --_accent-soft: rgba(138, 82, 34, 0.14);
+}
+
 [data-theme="dark"] .module-card {
     background-color: #162d42;
     border-color: #254560;
@@ -882,47 +1059,17 @@ body.sidebar-open-lock {
     opacity: 0.35;
 }
 
-// ─── Sub-navegación de pestañas dentro de un dominio (Secciones/Categorías/
-// Libros, o Categorías físicas/Libros físicos/Préstamos): las clases bv-*
-// ya existían en varias vistas (partials/biblioteca-virtual-crud-header.blade.php
-// y partials/biblioteca-fisica-crud-header.blade.php) pero nunca tuvieron CSS.
-.bv-crud-nav {
-    margin-bottom: 1.5rem;
-}
-
-.bv-crud-nav-inner {
-    display: inline-flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    padding: 0.3rem;
-    background: #fff;
-    border-radius: 999px;
-    box-shadow: 0 1px 2px rgba(20, 20, 40, 0.04), 0 0.5rem 1.25rem rgba(20, 20, 40, 0.06);
-}
-
-.bv-crud-tab {
-    padding: 0.5rem 1.1rem;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #6c757d;
-    white-space: nowrap;
-}
-
-.bv-crud-tab:hover,
-.bv-crud-tab:focus {
-    color: var(--puk-maroon);
-    text-decoration: none;
-}
-
-.bv-crud-tab.is-active {
-    background: var(--puk-maroon);
-    color: #fff;
-}
-
-.bv-crud-tab.is-active:hover {
-    color: #fff;
-}
+// Nota: .bv-crud-nav/.bv-crud-tab (Secciones/Categorías/Libros, Categorías
+// físicas/Libros físicos/Préstamos, y el switch Biblioteca digital/física)
+// NO se estilan acá — viven en public/css/biblioteca-crud.css, cargado por
+// partials/biblioteca-virtual-crud-header y biblioteca-fisica-crud-header.
+// Antes había una segunda definición de estas mismas clases en este archivo:
+// como este .scss se compila en el <head> ANTES que ese @push('styles'), la
+// cascada dejaba ganar a biblioteca-crud.css solo en las páginas que lo
+// cargaban — y como biblioteca-virtual-crud-header no lo cargaba, las
+// pestañas de Biblioteca digital se veían con un diseño distinto (esta
+// regla) al de Biblioteca física (biblioteca-crud.css). Una sola fuente de
+// verdad evita que vuelva a divergir.
 
 // ─── Campo de formulario del admin (x-form-field) ───────────────────────────
 .admin-form-field {
@@ -949,13 +1096,11 @@ body.sidebar-open-lock {
 
 // ─── Ajustes para pantallas muy pequeñas ────────────────────────────────────
 @media (max-width: 420px) {
-    .stats-grid,
     .proyectos-grid,
     .modules-grid {
         grid-template-columns: 1fr;
     }
 
-    .stat-card,
     .project-card,
     .module-card {
         padding: 1.1rem 1.25rem;
@@ -997,28 +1142,10 @@ body.sidebar-open-lock {
 
 [data-theme="dark"] .card,
 [data-theme="dark"] .card-body,
-[data-theme="dark"] .stat-card,
 [data-theme="dark"] .project-card {
     background-color: #162d42 !important;
     border-color: #254560 !important;
     color: #cdd9e5;
-}
-
-[data-theme="dark"] .stat-card__value {
-    color: #cdd9e5;
-}
-
-// El rojo institucional (var(--puk-maroon)) pierde casi todo el contraste
-// sobre las tarjetas oscuras (#162d42): en modo oscuro estos acentos pasan
-// al mismo azul que el resto del tema oscuro (sidebar, enlaces, foco de
-// formularios) en vez de un rojo aislado que no combina con nada más.
-[data-theme="dark"] .stat-card {
-    border-left-color: #4a90d9;
-}
-
-[data-theme="dark"] .stat-card__icon {
-    background: linear-gradient(145deg, rgba(74, 144, 217, 0.22), rgba(74, 144, 217, 0.08));
-    color: #8ec4f0;
 }
 
 [data-theme="dark"] .project-card__stats .badge {
@@ -1071,25 +1198,6 @@ body.sidebar-open-lock {
 [data-theme="dark"] .admin-empty-state i {
     color: #8ec4f0;
     opacity: 0.6;
-}
-
-[data-theme="dark"] .bv-crud-nav-inner {
-    background: #162d42;
-    box-shadow: none;
-    border: 1px solid #254560;
-}
-
-[data-theme="dark"] .bv-crud-tab {
-    color: #7a9ab8;
-}
-
-[data-theme="dark"] .bv-crud-tab:hover {
-    color: #8ec4f0;
-}
-
-[data-theme="dark"] .bv-crud-tab.is-active {
-    background: #4a90d9;
-    color: #fff;
 }
 
 [data-theme="dark"] .card-header,
@@ -1229,4 +1337,96 @@ body.sidebar-open-lock {
     background-color: #1c3a55 !important;
     color: #7a9ab8 !important;
     border-color: #254560 !important;
+}
+
+// ─── Modal de confirmación propio (reemplaza confirm() nativo / SweetAlert
+// para procesos importantes: cerrar sesión, eliminar registros) ───────────
+// Se construye una sola vez por invocación (ver pukllaConfirm() en admin.js)
+// e inyecta este marcado; el CSS vive acá para que sea parte del mismo
+// sistema visual del panel (mismo radio/sombra que .module-card/.bv-form-card)
+// en vez de heredar el look de una librería externa que no se puede retocar.
+.puklla-confirm-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(20, 10, 12, 0.55);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    transition: opacity 0.18s ease;
+}
+
+.puklla-confirm-backdrop.is-open {
+    opacity: 1;
+}
+
+.puklla-confirm {
+    width: min(400px, 100%);
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.3);
+    padding: 1.85rem 1.6rem 1.6rem;
+    text-align: center;
+    transform: translateY(14px) scale(0.97);
+    transition: transform 0.2s ease;
+}
+
+.puklla-confirm-backdrop.is-open .puklla-confirm {
+    transform: translateY(0) scale(1);
+}
+
+.puklla-confirm__icon {
+    width: 58px;
+    height: 58px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    background: rgba(174, 12, 33, 0.1);
+    color: var(--puk-maroon);
+}
+
+.puklla-confirm--danger .puklla-confirm__icon {
+    background: rgba(220, 53, 69, 0.12);
+    color: #dc3545;
+}
+
+.puklla-confirm__title {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #212529;
+    margin-bottom: 0.4rem;
+}
+
+.puklla-confirm__text {
+    color: #6c757d;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    margin-bottom: 1.5rem;
+}
+
+.puklla-confirm__actions {
+    display: flex;
+    gap: 0.6rem;
+}
+
+.puklla-confirm__actions .btn {
+    flex: 1 1 0;
+}
+
+[data-theme="dark"] .puklla-confirm {
+    background: #162d42;
+}
+
+[data-theme="dark"] .puklla-confirm__title {
+    color: #e6edf3;
+}
+
+[data-theme="dark"] .puklla-confirm__text {
+    color: #7a9ab8;
 }

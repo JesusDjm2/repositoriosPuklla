@@ -168,14 +168,13 @@ class AportacionController extends Controller
             'nombre_ol' => 'required|string|max:255',
             'titulo' => 'nullable|string|max:255',
             'institucion' => 'nullable|string|max:255',
-            'lugar_trabajo' => 'nullable|string|max:255',
             'ubicacion' => 'nullable|string|max:255',
             'detalle' => 'nullable|string',
             'archivos' => 'nullable|array',
             'archivos.*' => $this->reglasArchivoMulti(),
         ]);
 
-        $data = $request->only(['rol_nombre', 'nombre_ol', 'titulo', 'institucion', 'lugar_trabajo', 'ubicacion', 'detalle']);
+        $data = $request->only(['rol_nombre', 'nombre_ol', 'titulo', 'institucion', 'ubicacion', 'detalle']);
         $data['category_id'] = $category->id;
         $data['is_approved'] = true;
 
@@ -211,7 +210,6 @@ class AportacionController extends Controller
             'nombre_ol' => 'required|string|max:255',
             'titulo' => 'nullable|string|max:255',
             'institucion' => 'nullable|string|max:255',
-            'lugar_trabajo' => 'nullable|string|max:255',
             'ubicacion' => 'nullable|string|max:255',
             'detalle' => 'nullable|string',
             'archivos' => 'nullable|array',
@@ -225,7 +223,7 @@ class AportacionController extends Controller
                 ->withInput();
         }
 
-        $data = $request->only(['rol_nombre', 'nombre_ol', 'titulo', 'institucion', 'lugar_trabajo', 'ubicacion', 'detalle']);
+        $data = $request->only(['rol_nombre', 'nombre_ol', 'titulo', 'institucion', 'ubicacion', 'detalle']);
         $data['is_approved'] = true;
         $data['category_id'] = $this->autoRelateCategory($request->nombre_ol ?? '');
 
@@ -249,7 +247,6 @@ class AportacionController extends Controller
             'rol_nombre'  => "required|in:{$roles}",
             'titulo'      => 'nullable|string|max:255',
             'institucion' => 'nullable|string|max:255',
-            'lugar_trabajo' => 'nullable|string|max:255',
             'ubicacion'   => 'nullable|string|max:255',
             'detalle'     => 'nullable|string',
             'category_id' => 'nullable|exists:categories,id',

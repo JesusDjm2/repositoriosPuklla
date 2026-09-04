@@ -13,6 +13,7 @@
         'heroEyebrow' => 'Sisipedia',
         'heroTitle' => $category->display_name ?? 'Detalle del registro',
         'heroTitleSmall' => true,
+        'heroFormatButtons' => true,
     ])
     <div class="container">
         <div class="row mt-2 mt-md-5">
@@ -125,6 +126,7 @@
                                                     'iframe_h' => 200,
                                                 ];
                                                 $driveUrl = \App\Services\GoogleDriveService::getUrl($archivo->drive_id);
+                                                $downloadUrl = \App\Services\GoogleDriveService::getEmbedUrl($archivo->drive_id);
                                                 $previewUrl = \App\Services\GoogleDriveService::getPreviewUrl($archivo->drive_id);
                                                 $thumbUrl = $archivo->tipo === 'imagen'
                                                     ? \App\Services\GoogleDriveService::getThumbnailUrl($archivo->drive_id, 500)
@@ -148,7 +150,7 @@
                                                                     {{ $archivo->nombre_display }}
                                                                 </div>
                                                             </div>
-                                                            <a href="{{ $driveUrl }}" target="_blank" rel="noopener"
+                                                            <a href="{{ $downloadUrl }}"
                                                                class="btn btn-sm btn-{{ $m['color'] }} flex-shrink-0">
                                                                 <i class="fa fa-download me-1"></i>Descargar
                                                             </a>
@@ -161,24 +163,23 @@
                                                                     'src' => route('sisipedia.audio.stream', $archivo),
                                                                     'title' => $archivo->nombre_display,
                                                                     'driveUrl' => $driveUrl,
+                                                                    'downloadUrl' => $downloadUrl,
                                                                 ])
                                                             </div>
                                                         @elseif ($m['preview'] === 'iframe' && !empty($m['iframe_h']))
-                                                            <div class="sisipedia-file-preview-wrap position-relative bg-light"
-                                                                 data-preview-url="{{ $previewUrl }}">
-                                                                <div class="sisipedia-preview-placeholder d-flex flex-column align-items-center justify-content-center text-center px-3 py-4"
-                                                                     style="min-height: {{ max(140, min($m['iframe_h'], 200)) }}px;">
-                                                                    <button type="button"
-                                                                            class="btn btn-sm btn-{{ $m['color'] }} mb-2 sisipedia-load-category-preview">
-                                                                        <i class="fa fa-eye me-1"></i>Ver vista previa
-                                                                    </button>
-                                                                    <span class="small text-muted">Se carga bajo demanda para ahorrar datos y acelerar la página.</span>
-                                                                </div>
-                                                                <iframe title="{{ $archivo->nombre_display }}"
-                                                                    class="sisipedia-category-iframe w-100 border-0 d-none bg-white"
-                                                                    style="height: {{ $m['iframe_h'] }}px;"
-                                                                    loading="lazy"
-                                                                    allowfullscreen></iframe>
+                                                            {{-- PDF (y tipos desconocidos): vista previa en popup, no incrustada
+                                                                 en la tarjeta — mismo modal que el resto de vistas públicas
+                                                                 de Sisipedia (ver partials/home-preview-modal). --}}
+                                                            <div class="d-flex flex-column align-items-center justify-content-center text-center px-3 py-4"
+                                                                 style="min-height: {{ max(140, min($m['iframe_h'], 200)) }}px;">
+                                                                <button type="button"
+                                                                        class="btn btn-sm btn-{{ $m['color'] }} sisipedia-open-preview-modal"
+                                                                        data-preview="{{ $previewUrl }}"
+                                                                        data-nombre="{{ $archivo->nombre_display }}"
+                                                                        data-drive="{{ $driveUrl }}"
+                                                                        data-download="{{ $downloadUrl }}">
+                                                                    <i class="fa fa-eye me-1"></i>Ver vista previa
+                                                                </button>
                                                             </div>
                                                         @elseif ($m['preview'] === 'video')
                                                             <div class="sisipedia-file-video-wrap position-relative"
@@ -488,17 +489,11 @@
                                             <input type="text" name="ubicacion" class="form-control @error('ubicacion') is-invalid @enderror"
                                                    value="{{ old('ubicacion') }}">
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-12">
                                             <label class="form-label fw-semibold">Título:</label>
                                             <input type="text" name="titulo" class="form-control @error('titulo') is-invalid @enderror"
                                                    value="{{ old('titulo') }}">
                                             @error('titulo')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-semibold">Lugar de trabajo:</label>
-                                            <input type="text" name="lugar_trabajo" class="form-control @error('lugar_trabajo') is-invalid @enderror"
-                                                   value="{{ old('lugar_trabajo') }}">
-                                            @error('lugar_trabajo')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
                                         <div class="col-12">
                                             <label class="form-label fw-semibold">Detalle:</label>
@@ -661,24 +656,6 @@
                             originalSeleccionarRol(rol);
                             setTimeout(initSummernote, 100);
                         };
-                    });
-
-                    /** Carga bajo demanda: PDF/audio de "Archivos adjuntos" de la categoría */
-                    document.addEventListener('click', function (e) {
-                        var btn = e.target.closest('.sisipedia-load-category-preview');
-                        if (!btn) return;
-                        e.preventDefault();
-                        var wrap = btn.closest('.sisipedia-file-preview-wrap');
-                        if (!wrap || wrap.dataset.previewLoaded === '1') return;
-                        var iframe = wrap.querySelector('.sisipedia-category-iframe');
-                        var url = wrap.dataset.previewUrl;
-                        if (!iframe || !url) return;
-                        iframe.src = url;
-                        iframe.classList.remove('d-none');
-                        iframe.classList.add('d-block');
-                        wrap.dataset.previewLoaded = '1';
-                        var ph = wrap.querySelector('.sisipedia-preview-placeholder');
-                        if (ph) ph.classList.add('d-none');
                     });
 
                     /** Carga bajo demanda: video (categoría) sobre su miniatura real */
@@ -938,4 +915,6 @@
             </div>
         </div>
     @endif
+
+    @include('partials.home-preview-modal')
 @endsection

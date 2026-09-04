@@ -17,6 +17,36 @@ class CategoriaFisica extends Model
         'descripcion',
     ];
 
+    /**
+     * Tipos de material físico posibles para un libro (libros_fisicos.tipo_material).
+     * Ajustar si la institución maneja otras categorías de material.
+     */
+    public const TIPOS_MATERIAL = [
+        'libro' => 'Libro',
+        'revista' => 'Revista',
+        'tesis' => 'Tesis',
+        'folleto' => 'Folleto',
+        'separata' => 'Separata',
+    ];
+
+    private const COLORES_TIPO_MATERIAL = [
+        'libro' => '#0ea5e9',
+        'revista' => '#f97316',
+        'tesis' => '#7c3aed',
+        'folleto' => '#22c55e',
+        'separata' => '#64748b',
+    ];
+
+    public static function nombreParaTipoMaterial(?string $tipo): ?string
+    {
+        return $tipo ? (self::TIPOS_MATERIAL[$tipo] ?? $tipo) : null;
+    }
+
+    public static function colorForTipoMaterial(?string $tipo): string
+    {
+        return self::COLORES_TIPO_MATERIAL[$tipo ?? ''] ?? '#6c757d';
+    }
+
     public function librosFisicos()
     {
         return $this->belongsToMany(

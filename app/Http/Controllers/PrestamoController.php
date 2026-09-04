@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CategoriaFisica;
 use App\Models\LibroFisico;
 use App\Models\Prestamo;
 use Illuminate\Http\Request;
@@ -62,20 +63,48 @@ class PrestamoController extends Controller
 
     public function create()
     {
-        // Solo se precarga el libro ya seleccionado (repoblado tras un error de validación);
-        // el resto de opciones las trae Select2 vía AJAX (evita cargar ~9,000 libros).
-        $libroSeleccionado = old('libro_fisico_id')
-            ? LibroFisico::with('categoriasFisicas')->find(old('libro_fisico_id'))
-            : null;
+        // Repuebla la selección de libros tras un error de validación (vuelve del
+        // servidor con los ids ya elegidos); el resto de opciones las trae el
+        // buscador propio vía AJAX (evita cargar ~9,000 libros).
+        $idsSeleccionados = collect(old('libro_fisico_id', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->values();
+
+        $librosSeleccionados = $idsSeleccionados->isEmpty()
+            ? collect()
+            : LibroFisico::with('categoriasFisicas')
+                ->whereIn('id', $idsSeleccionados)
+                ->get()
+                ->sortBy(fn (LibroFisico $libro) => $idsSeleccionados->search($libro->id))
+                ->values()
+                ->map(fn (LibroFisico $libro) => [
+                    'id' => $libro->id,
+                    'nombre' => $libro->nombre,
+                    'autor' => $libro->autor,
+                    'codigo' => $libro->codigo,
+                    'ejemplares_disponibles' => $libro->ejemplares_disponibles,
+                    'ubicacion' => LibroFisico::nombreParaUbicacion($libro->ubicacion),
+                    'categorias' => $libro->categoriasFisicas->map(fn (CategoriaFisica $c) => [
+                        'nombre' => $c->nombre,
+                        'color' => CategoriaFisica::colorForCodigo($c->codigo),
+                    ])->values(),
+                    'tipo_material' => $libro->tipo_material ? [
+                        'nombre' => CategoriaFisica::nombreParaTipoMaterial($libro->tipo_material),
+                        'color' => CategoriaFisica::colorForTipoMaterial($libro->tipo_material),
+                    ] : null,
+                ]);
+
         $hayLibros = LibroFisico::query()->exists();
 
-        return view('prestamos.create', compact('libroSeleccionado', 'hayLibros'));
+        return view('prestamos.create', compact('librosSeleccionados', 'hayLibros'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'libro_fisico_id' => 'required|exists:libros_fisicos,id',
+            'libro_fisico_id' => 'required|array|min:1',
+            'libro_fisico_id.*' => 'distinct|exists:libros_fisicos,id',
             'nombre_prestatario' => 'required|string|max:255',
             'dni_prestatario' => 'required|string|max:20',
             'contacto_prestatario' => 'nullable|string|max:255',
@@ -84,29 +113,37 @@ class PrestamoController extends Controller
             'observaciones' => 'nullable|string|max:2000',
         ]);
 
-        DB::transaction(function () use ($request) {
-            $libro = LibroFisico::lockForUpdate()->findOrFail($request->input('libro_fisico_id'));
-            $prestados = $libro->prestamos()->activos()->lockForUpdate()->count();
+        $cantidad = DB::transaction(function () use ($request) {
+            $librosIds = $request->input('libro_fisico_id');
 
-            if ($prestados >= $libro->cantidad_ejemplares) {
-                throw ValidationException::withMessages([
-                    'libro_fisico_id' => 'No hay ejemplares disponibles de "'.$libro->nombre.'" para prestar.',
+            foreach ($librosIds as $libroId) {
+                $libro = LibroFisico::lockForUpdate()->findOrFail($libroId);
+                $prestados = $libro->prestamos()->activos()->lockForUpdate()->count();
+
+                if ($prestados >= $libro->cantidad_ejemplares) {
+                    throw ValidationException::withMessages([
+                        'libro_fisico_id' => 'No hay ejemplares disponibles de "'.$libro->nombre.'" para prestar.',
+                    ]);
+                }
+
+                Prestamo::create([
+                    'libro_fisico_id' => $libro->id,
+                    'nombre_prestatario' => $request->input('nombre_prestatario'),
+                    'dni_prestatario' => $request->input('dni_prestatario'),
+                    'contacto_prestatario' => $request->input('contacto_prestatario'),
+                    'fecha_prestamo' => $request->input('fecha_prestamo'),
+                    'fecha_limite' => $request->input('fecha_limite'),
+                    'observaciones' => $request->input('observaciones'),
                 ]);
             }
 
-            Prestamo::create($request->only([
-                'libro_fisico_id',
-                'nombre_prestatario',
-                'dni_prestatario',
-                'contacto_prestatario',
-                'fecha_prestamo',
-                'fecha_limite',
-                'observaciones',
-            ]));
+            return count($librosIds);
         });
 
         return redirect()->route('biblioteca-fisica.prestamos.index')
-            ->with('success', 'Préstamo registrado correctamente.');
+            ->with('success', $cantidad === 1
+                ? 'Préstamo registrado correctamente.'
+                : "Se registraron {$cantidad} préstamos correctamente.");
     }
 
     public function edit(Prestamo $prestamo)
