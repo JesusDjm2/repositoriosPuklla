@@ -183,22 +183,20 @@
                                                             </div>
                                                         @elseif ($m['preview'] === 'video')
                                                             <div class="sisipedia-file-video-wrap position-relative"
-                                                                 data-preview-url="{{ $previewUrl }}">
+                                                                 role="button" tabindex="0"
+                                                                 aria-label="Reproducir {{ $archivo->nombre_display }}"
+                                                                 onclick="abrirVistaPreviaVideo({{ \Illuminate\Support\Js::from(route('sisipedia.video.stream', $archivo)) }}, {{ \Illuminate\Support\Js::from($archivo->nombre_display) }}, {{ \Illuminate\Support\Js::from($driveUrl) }})"
+                                                                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
                                                                 <div class="ratio ratio-16x9 bg-dark">
                                                                     <img src="{{ $thumbUrl }}" alt="{{ $archivo->nombre_display }}"
-                                                                         class="w-100 h-100" style="object-fit:cover;opacity:.85;"
+                                                                         class="w-100 h-100" style="object-fit:contain;opacity:.85;"
                                                                          loading="lazy" onerror="this.style.display='none'">
                                                                 </div>
-                                                                <button type="button"
+                                                                <button type="button" tabindex="-1"
                                                                         class="sisipedia-load-category-video position-absolute top-50 start-50 translate-middle btn btn-light rounded-circle shadow"
                                                                         style="width:52px;height:52px;">
                                                                     <i class="fa fa-play text-dark" style="margin-left:2px;"></i>
                                                                 </button>
-                                                                <div class="sisipedia-category-video-iframe-wrap d-none position-absolute top-0 start-0 w-100 h-100">
-                                                                    <iframe title="{{ $archivo->nombre_display }}"
-                                                                        class="w-100 h-100 border-0" src=""
-                                                                        allow="autoplay; fullscreen" allowfullscreen></iframe>
-                                                                </div>
                                                             </div>
                                                         @elseif ($m['preview'] === 'imagen')
                                                             <button type="button"
@@ -658,35 +656,9 @@
                         };
                     });
 
-                    /** Carga bajo demanda: video (categoría) sobre su miniatura real */
-                    document.addEventListener('click', function (e) {
-                        var btn = e.target.closest('.sisipedia-load-category-video');
-                        if (!btn) return;
-                        e.preventDefault();
-                        var wrap = btn.closest('.sisipedia-file-video-wrap');
-                        if (!wrap || wrap.dataset.previewLoaded === '1') return;
-                        var iframeWrap = wrap.querySelector('.sisipedia-category-video-iframe-wrap');
-                        var iframe = iframeWrap ? iframeWrap.querySelector('iframe') : null;
-                        if (iframe) iframe.src = wrap.dataset.previewUrl;
-                        if (iframeWrap) iframeWrap.classList.remove('d-none');
-                        btn.classList.add('d-none');
-                        wrap.dataset.previewLoaded = '1';
-                    });
-
-                    /** Carga bajo demanda: video en tarjetas de aportación, sobre su miniatura real */
-                    document.addEventListener('click', function (e) {
-                        var btn = e.target.closest('.sisipedia-ap-video-play-btn');
-                        if (!btn) return;
-                        e.preventDefault();
-                        var wrap = btn.closest('.sisipedia-ap-video-preview');
-                        if (!wrap || wrap.dataset.previewLoaded === '1') return;
-                        var iframeWrap = wrap.querySelector('.sisipedia-ap-video-iframe-wrap');
-                        var iframe = iframeWrap ? iframeWrap.querySelector('iframe') : null;
-                        if (iframe) iframe.src = wrap.dataset.previewUrl;
-                        if (iframeWrap) iframeWrap.classList.remove('d-none');
-                        btn.classList.add('d-none');
-                        wrap.dataset.previewLoaded = '1';
-                    });
+                    {{-- Video (categoría y aportaciones): la miniatura solo abre el popup con
+                         <video controls> real (ver abrirVistaPreviaVideo en libro-preview-modal),
+                         ya no carga un iframe inline — el click va directo en el onclick del wrap. --}}
 
                     /** Imágenes (categoría y aportaciones): siempre miniatura + modal, nunca iframe */
                     document.addEventListener('click', function (e) {
@@ -820,6 +792,10 @@
                     }
 
                     /* ── Miniaturas de video (categoría y aportaciones) ──── */
+                    .sisipedia-file-video-wrap,
+                    .sisipedia-ap-video-preview {
+                        cursor: pointer;
+                    }
                     .sisipedia-load-category-video,
                     .sisipedia-ap-video-play-btn {
                         border: none;

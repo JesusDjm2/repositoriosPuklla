@@ -48,7 +48,6 @@
                     <th>Área</th>
                     <th>Título</th>
                     <th>Archivos</th>
-                    <th>Galería</th>
                     <th>Comentarios</th>
                     <th class="text-right">Acciones</th>
                 </tr>
@@ -60,15 +59,12 @@
                             @if ($tema->imagen)
                                 <img src="{{ asset($tema->imagen) }}" alt="{{ $tema->titulo }}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;">
                             @else
-                                <span class="bv-empty-icon" style="width:48px;height:48px;display:inline-flex;align-items:center;justify-content:center;">
-                                    <i class="fa {{ $tema->icono ?: 'fa-map-signs' }}"></i>
-                                </span>
+                                <span class="text-muted">—</span>
                             @endif
                         </td>
                         <td>{{ $tema->area->nombre ?? '—' }}</td>
                         <td>{{ $tema->titulo }}</td>
                         <td>{{ $tema->archivos_count }}</td>
-                        <td>{{ $tema->imagenes_count }}</td>
                         <td>{{ $tema->comentarios_count }}</td>
                         <td class="text-right bv-crud-actions">
                             <a href="{{ route('kawsay.tema', [$tema->area->slug, $tema->slug]) }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Ver en el sitio">

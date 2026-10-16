@@ -40,7 +40,7 @@ class EnlacesController extends Controller
         return '%'.addcslashes($t, '%_\\').'%';
     }
 
-    private static function needleNorm(string $query): string
+    public static function needleNorm(string $query): string
     {
         return mb_strtolower(trim($query));
     }
@@ -49,7 +49,7 @@ class EnlacesController extends Controller
      * Mejor similitud entre la consulta y un texto largo:
      * coincidencia parcial (substring) = 100 %; si no, similar_text global y por palabras.
      */
-    private static function fuzzyBestPercent(string $needleNorm, ?string $haystack): float
+    public static function fuzzyBestPercent(string $needleNorm, ?string $haystack): float
     {
         if ($haystack === null || $haystack === '') {
             return 0.0;
@@ -83,7 +83,7 @@ class EnlacesController extends Controller
     }
 
     /** ¿La consulta coincide por texto contenido o por similitud ≥ umbral? */
-    private static function fieldMatches(string $needleNorm, ?string $field): bool
+    public static function fieldMatches(string $needleNorm, ?string $field): bool
     {
         return self::fuzzyBestPercent($needleNorm, $field) >= self::FUZZY_SIMILARITY_THRESHOLD;
     }
@@ -207,7 +207,11 @@ class EnlacesController extends Controller
                 'fecha' => $f->updated_at,
                 'category' => $f->category,
                 'aportante' => null,
-                'stream_url' => $f->tipo === 'audio' ? route('sisipedia.audio.stream', $f) : null,
+                'stream_url' => match ($f->tipo) {
+                    'audio' => route('sisipedia.audio.stream', $f),
+                    'video' => route('sisipedia.video.stream', $f),
+                    default => null,
+                },
             ]);
 
         $deAportaciones = AportacionArchivo::query()
@@ -224,7 +228,11 @@ class EnlacesController extends Controller
                 'fecha' => $f->created_at,
                 'category' => $f->aportacion?->category,
                 'aportante' => $f->aportacion?->nombre_ol,
-                'stream_url' => $f->tipo === 'audio' ? route('sisipedia.audio.aportacion.stream', $f) : null,
+                'stream_url' => match ($f->tipo) {
+                    'audio' => route('sisipedia.audio.aportacion.stream', $f),
+                    'video' => route('sisipedia.video.aportacion.stream', $f),
+                    default => null,
+                },
             ]);
 
         return $deCategoria->concat($deAportaciones)

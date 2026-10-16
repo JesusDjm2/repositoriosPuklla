@@ -15,6 +15,7 @@
                     'Áreas' => 'fa-th-large',
                     'Temas' => 'fa-map-signs',
                     'Archivos' => 'fa-folder-open',
+                    'Comentarios' => 'fa-comments',
                     'Libros' => 'fa-book',
                     'Categorías' => 'fa-tags',
                     'Videos' => 'fa-video-camera',
@@ -53,6 +54,18 @@
             <x-module-card href="{{ route('kawsayarchivos.index') }}" icono="fa-folder-open" color="kawsay"
                 titulo="Archivos" descripcion="Fichas, teoría, videos y presentaciones — cada uno pertenece a un tema" />
         </div>
+    </div>
+
+    {{-- ═══ Moderación: no pertenece al flujo Área→Tema→Archivo (no crea nada
+         nuevo, revisa lo que la gente ya comentó en los temas), por eso va
+         aparte y no como un paso numerado más. ═══ --}}
+    <h2 class="h5 font-weight-bold mb-1 mt-4">Comunidad</h2>
+    <p class="text-muted mb-3" style="font-size:.9rem;">
+        Comentarios que deja el público en los temas del repositorio educativo.
+    </p>
+    <div class="modules-grid" data-animate-stagger>
+        <x-module-card href="{{ route('kawsaycomentarios.index') }}" icono="fa-comments" color="kawsay"
+            titulo="Comentarios" descripcion="Todos los comentarios públicos de los temas, en un solo lugar" />
     </div>
 
     {{-- ═══ Catálogo de Libros y Videos: sistema aparte (no se relaciona con

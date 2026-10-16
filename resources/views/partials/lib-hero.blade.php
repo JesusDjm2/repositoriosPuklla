@@ -18,6 +18,8 @@
     - $heroTitleSmall (bool, opcional)  usa el tamaño reducido (para nombres de categoría/registro)
     - $heroMeta       (array, opcional) [['icon' => 'fa-book-open', 'text' => '12 textos'], ...]
     - $heroCta        (array|null, opcional) ['href' => ..., 'icon' => ..., 'label' => ...]
+    - $heroSearchRoute (string|null, opcional) URL de un buscador simple en el hero (ej. la
+                          búsqueda propia de Kawsay); $heroSearchPlaceholder su texto de ayuda.
     - $heroFormatButtons (bool, opcional) buscador + accesos por formato (Audios/PDF/
                           Imágenes/Videos) + link al árbol completo, igual que en el
                           hero de /repositorio/sisipedia (welcome.blade.php). Uso
@@ -30,6 +32,7 @@
     $heroMeta = $heroMeta ?? [];
     $heroCta = $heroCta ?? null;
     $heroFormatButtons = $heroFormatButtons ?? false;
+    $heroSearchRoute = $heroSearchRoute ?? null;
 @endphp
 <div class="lib-hero {{ $heroFormatButtons ? 'lib-hero--formats' : '' }}">
     <img src="{{ $heroBg }}" alt="{{ $heroBgAlt }}" class="lib-hero__bg" loading="eager">
@@ -44,6 +47,17 @@
                     <span><i class="fa {{ $item['icon'] }}"></i> {{ $item['text'] }}</span>
                 @endforeach
             </div>
+        @endif
+        @if ($heroSearchRoute && ! $heroFormatButtons)
+            <form action="{{ $heroSearchRoute }}" method="GET" role="search" class="sisipedia-hero-search kawsay-hero-search mx-auto mt-3">
+                <div class="input-group shadow">
+                    <span class="input-group-text bg-white"><i class="fa fa-search"></i></span>
+                    <input type="search" name="query" class="form-control" aria-label="Buscar"
+                        placeholder="{{ $heroSearchPlaceholder ?? 'Buscar...' }}" value="{{ request('query') }}"
+                        minlength="3" maxlength="120" autocomplete="off" required>
+                    <button class="btn fw-semibold px-4 text-white" type="submit">Buscar</button>
+                </div>
+            </form>
         @endif
         @if ($heroFormatButtons)
             <form action="{{ route('busqueda') }}" method="GET" class="sisipedia-hero-search mx-auto mt-3">

@@ -128,7 +128,12 @@ class GoogleDriveService
     }
 
     /**
-     * Da permisos de lectura pública al archivo.
+     * Da permisos de lectura pública al archivo. Drive devuelve de forma
+     * intermitente errores 5xx transitorios en este paso (observado en
+     * producción con archivos de video) aunque el archivo ya se subió
+     * correctamente; se reintenta un par de veces y, si sigue fallando, no se
+     * relanza: es preferible que la aportación quede guardada con el archivo
+     * (aunque momentáneamente privado) que perder todo el envío del usuario.
      */
     private function makePublic(string $fileId): void
     {
@@ -136,7 +141,27 @@ class GoogleDriveService
             'type' => 'anyone',
             'role' => 'reader',
         ]);
-        $this->service->permissions->create($fileId, $permission, ['supportsAllDrives' => true]);
+
+        $intentos = 0;
+
+        while (true) {
+            try {
+                $this->service->permissions->create($fileId, $permission, ['supportsAllDrives' => true]);
+
+                return;
+            } catch (\Google\Service\Exception $e) {
+                $intentos++;
+                $esTransitorio = $e->getCode() >= 500;
+
+                if (! $esTransitorio || $intentos >= 3) {
+                    report($e);
+
+                    return;
+                }
+
+                usleep(300000 * $intentos);
+            }
+        }
     }
 
     public function getClient(): Client

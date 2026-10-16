@@ -10,8 +10,8 @@
             <p>
                 Aprender haciendo para regenerar el territorio.
             </p>
-            <form action="{{ route('busqueda') }}" method="GET" class="search-container">
-                <input type="text" name="query" placeholder="Buscar por título, autor o tema..."
+            <form action="{{ route('kawsay.buscar') }}" method="GET" class="search-container">
+                <input type="text" name="query" placeholder="Buscar en Kawsay: temas, contenido, libros, videos..."
                     class="search-input" required minlength="3">
                 <button type="submit" class="search-button">🔍 Buscar</button>
             </form>
@@ -23,54 +23,43 @@
         <i class="fa fa-layer-group"></i> Categorías
     </button>
 
-    {{-- ═══ ÁREAS DEL REPOSITORIO EDUCATIVO: óvalos que se montan sobre el
-         hero (como en el diseño de referencia). Ahora administrables desde
-         Kawsay-Áreas (App\Models\KawsayArea) — cada una usa su 'imagen'; si
-         todavía no tiene, cae al ícono como relleno. Dos imágenes históricas
-         (subidas antes de que Áreas tuviera CRUD) necesitan un ajuste de
-         encuadre puntual que el cover+center por defecto no resuelve bien;
-         se mantiene acá por slug en vez de sumar campos nuevos al CRUD. ═══ --}}
-    <div class="container-fluid kawsay-area-circles-wrap">
-        <div class="row g-3 g-lg-4 justify-content-center">
-            @foreach ($areas as $area)
-                @php
-                    $ringStyle = '';
-                    if ($area->imagen) {
-                        $ringStyle .= "background-image: url('" . asset($area->imagen) . "');";
-                        $ringStyle .= 'background-position: ' . ($area->slug === 'territorio-vivo' ? 'center 78%' : 'center') . ';';
-                        $ringStyle .= 'background-size: ' . ($area->slug === 'gestion-sostenible' ? '76%' : 'cover') . ';';
-                        if ($area->slug === 'gestion-sostenible') {
-                            $ringStyle .= 'background-color: #1b4d3e;';
-                        }
-                    }
-                    if ($area->color) {
-                        $ringStyle .= 'border-color: ' . $area->color . ';';
-                    }
-                @endphp
-                <div class="col-6 col-md-3">
-                    <a href="{{ route('kawsay.area', $area->slug) }}" class="kawsay-area-circle">
-                        <span class="kawsay-area-circle__ring" @if ($ringStyle) style="{{ $ringStyle }}" @endif>
-                            @if (!$area->imagen)
-                                <i class="fa {{ $area->icono ?: 'fa-leaf' }} kawsay-area-circle__icon"></i>
+    {{-- ═══ ÁREAS DEL REPOSITORIO EDUCATIVO: sección propia justo debajo del
+         hero (ya no óvalos flotando encima de la foto estirada — ese patrón
+         obligaba a estirar el fondo con hacks de alto/márgenes negativos por
+         breakpoint y a poner parches de contraste detrás del texto). Ahora
+         son tarjetas normales sobre superficie blanca: la foto de cada área
+         queda como avatar circular (mismo detalle visual que antes), el
+         color de KawsayArea se usa como acento del avatar en vez de teñir
+         toda la tarjeta, y el texto no necesita ningún truco de contraste
+         porque siempre está sobre blanco. Administrable desde Kawsay-Áreas. ═══ --}}
+    <section class="kawsay-areas">
+        <div class="container">
+            <p class="kawsay-areas__heading text-center">Áreas de trabajo</p>
+            <div class="row g-3 g-lg-4 justify-content-center">
+                @foreach ($areas as $area)
+                    <div class="col-6 col-md-3">
+                        <a href="{{ route('kawsay.area', $area->slug) }}" class="kawsay-area-item"
+                            style="--area-color: {{ $area->color ?: '#6e7d1e' }};">
+                            <span class="kawsay-area-item__avatar">
+                                @if ($area->imagen)
+                                    <img src="{{ asset($area->imagen) }}" alt=""
+                                        style="object-position: {{ $area->slug === 'territorio-vivo' ? 'center 78%' : 'center' }};"
+                                        loading="lazy">
+                                @else
+                                    <i class="fa {{ $area->icono ?: 'fa-leaf' }}"></i>
+                                @endif
+                                <span class="kawsay-area-item__scrim"></span>
+                                <span class="kawsay-area-item__title">{{ $area->nombre }}</span>
+                            </span>
+                            @if ($area->descripcion)
+                                <span class="kawsay-area-item__desc">{{ $area->descripcion }}</span>
                             @endif
-                            <span class="kawsay-area-circle__scrim"></span>
-                            <span class="kawsay-area-circle__title">{{ $area->nombre }}</span>
-                        </span>
-                        @if ($area->descripcion)
-                            <span class="kawsay-area-circle__desc">{{ $area->descripcion }}</span>
-                        @endif
-                    </a>
-                </div>
-            @endforeach
+                        </a>
+                    </div>
+                @endforeach
+            </div>
         </div>
-    </div>
-
-    <div class="container py-4 py-lg-5 pt-3">
-        <div class="lib-content-head">
-            <h2 class="lib-content-head__title">Explora nuestras áreas de trabajo</h2>
-            <p class="lib-content-head__sub">Cada área agrupa temas con fichas, teoría, videos y más</p>
-        </div>
-    </div>
+    </section>
     @include('kawsay.partials.estilos')
 
     <div class="container py-4 py-lg-5">
@@ -80,7 +69,7 @@
                 {{-- ═══ ÚLTIMOS LIBROS ═══ --}}
                 <div class="lib-content-head">
                     <h2 class="lib-content-head__title">Últimos libros</h2>
-                    <p class="lib-content-head__sub">Los {{ $libros->count() }} textos más recientes</p>
+                    <p class="lib-content-head__sub">Páginas que siembran conciencia y respeto por la naturaleza.</p>
                 </div>
                 <div class="row g-3" id="grid-libros">
                     @foreach ($libros as $libro)
@@ -117,7 +106,7 @@
                 {{-- ═══ ÚLTIMOS VIDEOS ═══ --}}
                 <div class="lib-content-head mt-5">
                     <h2 class="lib-content-head__title">Últimos videos</h2>
-                    <p class="lib-content-head__sub">{{ $videos->count() }} videos recientes</p>
+                    <p class="lib-content-head__sub">Historias que inspiran a cuidar la vida que nos rodea.</p>
                 </div>
                 <div class="row g-3" id="grid-videos">
                     @foreach ($videos as $video)
@@ -170,6 +159,7 @@
 
                     <div class="lib-sidebar__section">
                         <button type="button" class="lib-sidebar__section-btn">
+                            <span class="lib-sidebar__section-icon"><i class="fa fa-book"></i></span>
                             <span class="lib-sidebar__section-name">Libros</span>
                             <span class="lib-sidebar__meta">
                                 <span class="sidebar-badge sidebar-badge-cat"
@@ -191,6 +181,7 @@
 
                     <div class="lib-sidebar__section">
                         <button type="button" class="lib-sidebar__section-btn">
+                            <span class="lib-sidebar__section-icon"><i class="fa fa-video"></i></span>
                             <span class="lib-sidebar__section-name">Videos</span>
                             <span class="lib-sidebar__meta">
                                 <span class="sidebar-badge sidebar-badge-cat"
@@ -215,7 +206,7 @@
         </div>{{-- /.row --}}
     </div>
 
-    @include('partials.libro-preview-modal')
+    {{-- partials.libro-preview-modal ya lo incluye layouts.padre una sola vez --}}
 
     <script>
         (function() {

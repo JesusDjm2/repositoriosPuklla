@@ -32,6 +32,20 @@ class KawsayTaxonomia
         return self::tiposContenido()[$tipoSlug] ?? null;
     }
 
+    /**
+     * El panel de administración carga Font Awesome 4, donde algunos íconos de
+     * tiposContenido() (nombres de FA 5/6, que sí usa el sitio público) no
+     * existen y se ven como un cuadro vacío. Equivalente visible en FA 4.
+     */
+    public static function iconoAdmin(string $icono): string
+    {
+        return [
+            'fa-clipboard-list' => 'fa-list-alt',
+            'fa-book-open' => 'fa-book',
+            'fa-map-marker-alt' => 'fa-map-marker',
+        ][$icono] ?? $icono;
+    }
+
     /** Formato de archivo (pdf/imagen/audio/video/doc, el que usa GoogleDriveService) según la extensión. */
     public static function formatoPorExtension(string $extension): ?string
     {

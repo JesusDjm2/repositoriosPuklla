@@ -14,8 +14,7 @@
     } elseif ($isKawsay) {
         $navItems = [
             ['label' => 'Inicio', 'href' => route('kawsay'), 'active' => request()->routeIs('kawsay'), 'icon' => 'fa-home'],
-            ['label' => 'Libros', 'href' => route('kawsaylibros.lista'), 'active' => request()->routeIs('kawsaylibros.lista', 'kawsaylibros.show', 'kawsaycategorias.show'), 'icon' => 'fa-book'],
-            ['label' => 'Videos', 'href' => route('kawsayvideos.lista'), 'active' => request()->routeIs('kawsayvideos.lista', 'kawsayvideos.show', 'kawsayvideoscat.show'), 'icon' => 'fa-video'],
+            ['label' => 'Nosotros', 'href' => route('kawsay.nosotros'), 'active' => request()->routeIs('kawsay.nosotros'), 'icon' => 'fa-info-circle'],
         ];
     } elseif ($isRadio) {
         $navItems = [
@@ -140,11 +139,24 @@
                     </ul>
 
                     <div class="menu-actions">
-                        <button type="button" class="menu-link menu-link--search search-toggle" id="searchToggle"
-                            aria-expanded="false" aria-controls="searchBar" title="Buscar">
-                            <i class="fas fa-search" aria-hidden="true"></i>
-                            <span class="menu-link__label">Buscar</span>
-                        </button>
+                        {{-- Sin buscador acá: casi todas las vistas públicas ya
+                             tienen su propio buscador en el hero. En su lugar,
+                             redes sociales con el acento de color de cada
+                             proyecto (--project-accent) en vez del logo/color
+                             de marca de cada red. Sin enlace todavía (href="#")
+                             — pendiente de que se pasen las URLs reales. --}}
+                        <a href="#" class="menu-link menu-link--social" title="Facebook" aria-label="Facebook">
+                            <i class="fa-brands fa-facebook-f" aria-hidden="true"></i>
+                            <span class="menu-link__label">Facebook</span>
+                        </a>
+                        <a href="#" class="menu-link menu-link--social" title="Instagram" aria-label="Instagram">
+                            <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+                            <span class="menu-link__label">Instagram</span>
+                        </a>
+                        <a href="#" class="menu-link menu-link--social" title="YouTube" aria-label="YouTube">
+                            <i class="fa-brands fa-youtube" aria-hidden="true"></i>
+                            <span class="menu-link__label">YouTube</span>
+                        </a>
 
                         @if ($accountIsLogout)
                             <a href="{{ $accountHref }}" class="menu-link menu-link--login" title="{{ $accountLabel }}"
@@ -166,38 +178,12 @@
             </div>
         </div>
     </nav>
-    <!-- position:fixed; no suma altura: el sticky lo sigue siendo solo la barra del nav -->
-    <div class="search-bar" id="searchBar" role="search" aria-label="Buscar en el sitio" aria-hidden="true">
-        <div class="search-bar__panel">
-            <form action="{{ route('busqueda') }}" method="GET" class="search-form-custom">
-                <i class="fas fa-search search-form-custom__icon" aria-hidden="true"></i>
-                <input type="search" name="query" placeholder="¿Qué estás buscando?" minlength="3" maxlength="120"
-                    autocomplete="off" required>
-                <button type="submit" aria-label="Buscar"><i class="fas fa-arrow-right"></i></button>
-                <button type="button" class="close-search-bar" aria-label="Cerrar buscador">
-                    <i class="fas fa-times"></i>
-                </button>
-            </form>
-        </div>
-    </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
             const menuSidebar = document.getElementById('menuSidebar');
             const menuOverlay = document.getElementById('menuOverlay');
             const menuClose = document.getElementById('menuClose');
-            const searchBar = document.getElementById('searchBar');
-            const closeSearchBar = document.querySelector('.close-search-bar');
-
-            // Crear overlay del buscador si no existe
-            let searchOverlay = document.querySelector('.search-overlay');
-            if (!searchOverlay) {
-                searchOverlay = document.createElement('div');
-                searchOverlay.className = 'search-overlay';
-                document.body.appendChild(searchOverlay);
-            }
-
-            const searchToggleBtn = document.getElementById('searchToggle');
 
             // Toggle menú
             function toggleMenu() {
@@ -210,44 +196,12 @@
                 document.body.classList.toggle('menu-drawer-open', open);
                 document.body.style.overflow = open ? 'hidden' : '';
 
-                // Cerrar buscador si está abierto
-                if (open && searchBar.classList.contains('active')) {
-                    toggleSearch();
-                }
-
                 // Entrada escalonada de los ítems (solo móvil, solo GSAP si está cargado)
                 if (open && window.innerWidth <= 767 && typeof gsap !== 'undefined') {
                     const items = menuSidebar.querySelectorAll('.menu-sidebar-scroll > *');
                     gsap.fromTo(items, { x: -14, opacity: 0 }, {
                         x: 0, opacity: 1, duration: .35, stagger: .05, ease: 'power2.out', overwrite: true
                     });
-                }
-            }
-
-            // Toggle buscador
-            function toggleSearch() {
-                const open = !searchBar.classList.contains('active');
-                searchBar.classList.toggle('active', open);
-                searchOverlay.classList.toggle('active', open);
-                if (searchToggleBtn) {
-                    searchToggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-                }
-                searchBar.setAttribute('aria-hidden', open ? 'false' : 'true');
-                document.body.classList.toggle('search-open', open);
-
-                if (open) {
-                    searchBar.querySelector('input')?.focus();
-                }
-
-                // Cerrar menú si está abierto
-                if (open && menuSidebar.classList.contains('active')) {
-                    menuToggle.classList.remove('active');
-                    menuSidebar.classList.remove('active');
-                    menuOverlay.classList.remove('active');
-                    menuToggle.setAttribute('aria-expanded', 'false');
-                    menuOverlay.setAttribute('aria-hidden', 'true');
-                    document.body.classList.remove('menu-drawer-open');
-                    document.body.style.overflow = '';
                 }
             }
 
@@ -268,23 +222,10 @@
             menuClose?.addEventListener('click', toggleMenu);
             menuOverlay?.addEventListener('click', toggleMenu);
 
-            searchToggleBtn?.addEventListener('click', function(e) {
-                e.preventDefault();
-                toggleSearch();
-            });
-
-            closeSearchBar?.addEventListener('click', toggleSearch);
-            searchOverlay?.addEventListener('click', toggleSearch);
-
             // Cerrar con ESC
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    if (menuSidebar?.classList.contains('active')) {
-                        toggleMenu();
-                    }
-                    if (searchBar?.classList.contains('active')) {
-                        toggleSearch();
-                    }
+                if (e.key === 'Escape' && menuSidebar?.classList.contains('active')) {
+                    toggleMenu();
                 }
             });
 
@@ -306,21 +247,6 @@
             }, {
                 passive: true
             });
-
-            // Búsqueda con Enter
-            const searchInput = document.querySelector('.search-bar input');
-            if (searchInput) {
-                searchInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        const query = this.value.trim();
-                        if (query.length >= 3) {
-                            window.location.href = "{{ route('busqueda') }}?query=" + encodeURIComponent(
-                                query);
-                        }
-                    }
-                });
-            }
         });
     </script>
 </header>

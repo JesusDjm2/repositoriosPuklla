@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\KawsayArea;
 use App\Models\KawsayTemaComentario;
+use App\Services\AntiSpamComentarios;
 use App\Services\KawsayTaxonomia;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class KawsayAreaController extends Controller
 {
@@ -27,14 +29,20 @@ class KawsayAreaController extends Controller
         $areaModel = KawsayArea::where('slug', $area)->firstOrFail();
 
         $tema = $areaModel->temas()->where('slug', $temaSlug)->firstOrFail();
-        $tema->load(['imagenes', 'comentarios']);
+        $tema->load(['comentarios']);
 
         $conteos = $tema->archivos()
             ->selectRaw('tipo_contenido, count(*) as total')
             ->groupBy('tipo_contenido')
             ->pluck('total', 'tipo_contenido');
 
+        $fotos = $tema->archivos()
+            ->where('tipo_contenido', 'galeria')
+            ->orderBy('id')
+            ->get(['id', 'titulo', 'drive_id']);
+
         return view('kawsay.temas.show', [
+            'fotos' => $fotos,
             'areaSlug' => $area,
             'area' => $areaModel,
             'temaSlug' => $temaSlug,
@@ -71,17 +79,52 @@ class KawsayAreaController extends Controller
         $areaModel = KawsayArea::where('slug', $area)->firstOrFail();
         $tema = $areaModel->temas()->where('slug', $temaSlug)->firstOrFail();
 
-        $validated = $request->validate([
-            'nombre' => 'required|string|max:80',
-            'comentario' => 'required|string|max:1000',
+        $volver = route('kawsay.tema', [$area, $temaSlug]).'#comentarios';
+
+        $validador = Validator::make($request->all(), [
+            'nombre' => 'required|string|min:2|max:80',
+            'comentario' => 'required|string|min:5|max:1000',
+        ], [
+            'nombre.required' => 'Escribe tu nombre.',
+            'nombre.min' => 'Tu nombre es demasiado corto.',
+            'comentario.required' => 'Escribe tu comentario.',
+            'comentario.min' => 'El comentario es demasiado corto (mínimo 5 caracteres).',
+            'comentario.max' => 'El comentario no puede pasar de 1000 caracteres.',
         ]);
+
+        if ($validador->fails()) {
+            return redirect($volver)->withErrors($validador, 'comentario')->withInput();
+        }
+
+        $validated = $validador->validated();
+
+        $nombre = AntiSpamComentarios::limpiar($validated['nombre']);
+        $comentario = AntiSpamComentarios::limpiar($validated['comentario'], true);
+
+        if (mb_strlen($nombre) < 2 || mb_strlen($comentario) < 5) {
+            return redirect($volver)->withInput()->with('comentario_error', 'Revisa tu nombre y tu comentario.');
+        }
+
+        $antiSpam = app(AntiSpamComentarios::class);
+        $resultado = $antiSpam->evaluar($request, $tema->id, $nombre, $comentario);
+
+        if (! empty($resultado['bot'])) {
+            // Bot: se responde como si hubiera funcionado, pero no se guarda nada.
+            return redirect($volver)->with('comentario_ok', '¡Gracias por tu comentario!');
+        }
+
+        if (! $resultado['ok']) {
+            return redirect($volver)->withInput()->with('comentario_error', $resultado['error']);
+        }
+
+        $antiSpam->registrarPublicacion($request);
 
         KawsayTemaComentario::create([
             'kawsay_tema_id' => $tema->id,
-            'nombre' => $validated['nombre'],
-            'comentario' => $validated['comentario'],
+            'nombre' => $nombre,
+            'comentario' => $comentario,
         ]);
 
-        return redirect(route('kawsay.tema', [$area, $temaSlug]).'#comentarios')->with('success', 'Comentario publicado.');
+        return redirect($volver)->with('comentario_ok', '¡Gracias! Tu comentario ya está publicado.');
     }
 }

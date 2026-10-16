@@ -28,6 +28,9 @@ class Proyecto extends Model
      */
     private const RUTAS_PUBLICAS = [
         'eesp-pukllasunchis' => 'eesppukllasunchis',
+        // Sisipedia es la marca pública del repositorio de Radio Pukllasunchis
+        // (no un proyecto aparte) — su página de aterrizaje es esta, no
+        // 'cancionesPuklla' (que además requiere sesión iniciada).
         'radio-pukllasunchis' => 'index',
         'kawsay' => 'kawsay',
     ];

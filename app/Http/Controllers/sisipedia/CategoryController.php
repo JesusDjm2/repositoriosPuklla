@@ -212,11 +212,14 @@ class CategoryController extends Controller
             'files',
         ]);
 
-        // Aportaciones sin registro (de la portada), aprobadas
+        // Aportaciones sin registro (de la portada), aprobadas. Con límite: sin él,
+        // esta consulta (irrelevante para $category) se repite completa en cada
+        // página de registro y crece sin tope a medida que se acumulan aportaciones.
         $aportacionesSueltas = Aportacion::with('archivos')
             ->whereNull('category_id')
             ->where('is_approved', true)
             ->latest()
+            ->limit(20)
             ->get();
 
         $breadcrumbs = collect();

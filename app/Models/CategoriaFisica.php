@@ -60,22 +60,37 @@ class CategoriaFisica extends Model
     /**
      * Color de acento asociado a un código de categoría física (DEW/TEX/REF/...),
      * usado para colorear tarjetas, menús y encabezados de forma consistente.
+     *
+     * Los códigos DEW-XXX son Dewey de 3 dígitos (ej. DEW-610, DEW-370), no solo
+     * las centenas exactas (DEW-000, DEW-100...) — un str_starts_with contra la
+     * centena exacta solo reconocía esas 10 y mandaba a todo el resto (la
+     * inmensa mayoría de categorías reales) al color por defecto, repitiéndolo
+     * en casi todas. Se agrupa por la centena real del código (610 → 600), que
+     * es además el criterio estándar de las 10 clases principales Dewey.
      */
     public static function colorForCodigo(?string $codigo): string
     {
         $codigo = $codigo ?? '';
 
+        if (preg_match('/^DEW-(\d{3})$/', $codigo, $coincidencia)) {
+            $centena = intdiv((int) $coincidencia[1], 100) * 100;
+
+            return match ($centena) {
+                0 => '#6366f1',
+                100 => '#a855f7',
+                200 => '#eab308',
+                300 => '#22c55e',
+                400 => '#14b8a6',
+                500 => '#06b6d4',
+                600 => '#f97316',
+                700 => '#ef4444',
+                800 => '#ec4899',
+                900 => '#92400e',
+                default => '#cb9042',
+            };
+        }
+
         return match (true) {
-            str_starts_with($codigo, 'DEW-000') => '#6366f1',
-            str_starts_with($codigo, 'DEW-100') => '#a855f7',
-            str_starts_with($codigo, 'DEW-200') => '#eab308',
-            str_starts_with($codigo, 'DEW-300') => '#22c55e',
-            str_starts_with($codigo, 'DEW-400') => '#14b8a6',
-            str_starts_with($codigo, 'DEW-500') => '#06b6d4',
-            str_starts_with($codigo, 'DEW-600') => '#f97316',
-            str_starts_with($codigo, 'DEW-700') => '#ef4444',
-            str_starts_with($codigo, 'DEW-800') => '#ec4899',
-            str_starts_with($codigo, 'DEW-900') => '#92400e',
             str_starts_with($codigo, 'TEX-PRI') => '#10b981',
             str_starts_with($codigo, 'TEX-SEC') => '#0ea5e9',
             str_starts_with($codigo, 'REF')     => '#f59e0b',

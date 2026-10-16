@@ -10,6 +10,8 @@
     @include('partials.lib-hero', [
         'heroBg' => asset('img/fondo/sisi-fondo.png'),
         'heroBgAlt' => 'Fondo Kawsay',
+        'heroSearchRoute' => route('kawsay.buscar'),
+        'heroSearchPlaceholder' => 'Buscar en Kawsay...',
         'heroEyebrow' => 'Video · Kawsay',
         'heroTitle' => $video->nombre,
         'heroTitleSmall' => true,
@@ -24,10 +26,12 @@
                                 title="YouTube video" allowfullscreen frameborder="0"></iframe>
                         </div>
                     @elseif ($video->drive)
-                        <div class="ratio ratio-16x9">
-                            <iframe loading="lazy"
-                                src="https://drive.google.com/file/d/{{ $video->drive }}/preview"
-                                allowfullscreen frameborder="0"></iframe>
+                        {{-- Vista de detalle dedicada: reproductor nativo directo, sin popup
+                             (play/pause/tiempo/pantalla completa vía controles del navegador). --}}
+                        <div class="ratio ratio-16x9 bg-dark">
+                            <video controls playsinline preload="metadata" style="object-fit:contain;"
+                                   poster="{{ \App\Services\GoogleDriveService::getThumbnailUrl($video->drive, 700) }}"
+                                   src="{{ route('kawsayvideos.stream', $video) }}"></video>
                         </div>
                     @endif
                     <h6 class="mt-3">{{ $video->nombre }}</h6>

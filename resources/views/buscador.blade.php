@@ -277,7 +277,7 @@
                 ])
             </section>
         @endif
-
+        
         {{-- ── Kawsay — Videos ───────────────────────────────────────────── --}}
         @if ($kawsayVideosScored->isNotEmpty())
             @php
@@ -421,7 +421,6 @@
             </section>
         @endif
     </div>
-
     <style>
         /* ── Encabezado plano (sin foto de fondo) ── */
         .buscador-topbar {

@@ -255,7 +255,15 @@
                                         $iconMap = ['imagen' => 'fa-file-image-o', 'pdf' => 'fa-file-pdf-o', 'doc' => 'fa-file-word-o', 'audio' => 'fa-music', 'video' => 'fa-video-camera'];
                                         $colorMap = ['imagen' => 'info', 'pdf' => 'danger', 'doc' => 'primary', 'audio' => 'success', 'video' => 'warning'];
                                     @endphp
-                                    @if($archivo->tipo === 'imagen')
+                                    @if($archivo->pendiente)
+                                        <span class="badge badge-secondary" title="Subiéndose a Drive en segundo plano">
+                                            <i class="fa fa-spinner fa-spin"></i>
+                                        </span>
+                                    @elseif($archivo->fallo_en)
+                                        <span class="badge badge-danger" title="No se pudo subir a Drive">
+                                            <i class="fa fa-exclamation-triangle"></i>
+                                        </span>
+                                    @elseif($archivo->tipo === 'imagen')
                                         <a href="{{ $archivo->getUrl() }}" target="_blank" title="Ver imagen">
                                             <img src="https://drive.google.com/thumbnail?id={{ $archivo->drive_id }}&sz=w60"
                                                  alt="Imagen" width="60" height="60"

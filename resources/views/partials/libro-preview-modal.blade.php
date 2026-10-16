@@ -7,10 +7,11 @@
         </div>
         <div class="lpm-body">
             <iframe id="libroPreviewFrame" src="" loading="lazy" allow="autoplay"></iframe>
+            <video id="libroPreviewVideo" class="d-none" controls playsinline preload="none"></video>
         </div>
         <div class="lpm-foot">
             <a id="libroPreviewFullLink" href="#" target="_blank" rel="noopener" class="lpm-full-btn">
-                <i class="fab fa-google-drive"></i> Abrir PDF completo
+                <i class="fab fa-google-drive"></i> <span id="libroPreviewFullLabel">Abrir PDF completo</span>
             </a>
         </div>
     </div>
@@ -79,6 +80,15 @@
         border: 0;
         display: block;
     }
+    .lpm-body video {
+        width: 100%;
+        height: 100%;
+        min-height: 60vh;
+        max-height: 80vh;
+        background: #000;
+        display: block;
+        object-fit: contain;
+    }
     .lpm-foot {
         padding: 10px 16px;
         border-top: 1px solid rgba(200,142,65,.2);
@@ -97,17 +107,53 @@
         text-decoration: none;
     }
     .lpm-full-btn:hover { background: #af7d39; color: #fff; text-decoration: none; }
+    .lpm-box--video { max-width: 960px; }
 </style>
 
 <script>
-    function abrirVistaPreviaLibro(identificador, nombre) {
+    function abrirVistaPreviaLibro(identificador, nombre, etiquetaEnlace) {
         var modal = document.getElementById('libroPreviewModal');
         if (!modal || !identificador) return;
+        pausarLibroPreviewVideo();
+        document.getElementById('libroPreviewVideo').classList.add('d-none');
+        document.getElementById('libroPreviewFrame').classList.remove('d-none');
+        document.querySelector('#libroPreviewModal .lpm-box').classList.remove('lpm-box--video');
         document.getElementById('libroPreviewFrame').src = 'https://drive.google.com/file/d/' + encodeURIComponent(identificador) + '/preview';
         document.getElementById('libroPreviewTitulo').textContent = nombre || 'Vista previa';
+        document.getElementById('libroPreviewFullLabel').textContent = etiquetaEnlace || 'Abrir PDF completo';
         document.getElementById('libroPreviewFullLink').href = 'https://drive.google.com/file/d/' + encodeURIComponent(identificador) + '/view';
         modal.classList.add('is-open');
         document.body.style.overflow = 'hidden';
+    }
+
+    /**
+     * Mismo modal que abrirVistaPreviaLibro(), pero con un <video controls> real
+     * (streamUrl = ruta de streaming propia) en vez del iframe /preview de Drive:
+     * da play/pause/tiempo/pantalla completa nativos, no solo el visor pobre de Drive.
+     */
+    function abrirVistaPreviaVideo(streamUrl, nombre, driveUrl) {
+        var modal = document.getElementById('libroPreviewModal');
+        if (!modal || !streamUrl) return;
+        document.getElementById('libroPreviewFrame').src = '';
+        document.getElementById('libroPreviewFrame').classList.add('d-none');
+        document.querySelector('#libroPreviewModal .lpm-box').classList.add('lpm-box--video');
+        var video = document.getElementById('libroPreviewVideo');
+        video.classList.remove('d-none');
+        video.src = streamUrl;
+        document.getElementById('libroPreviewTitulo').textContent = nombre || 'Video';
+        document.getElementById('libroPreviewFullLabel').textContent = 'Abrir en Google Drive';
+        document.getElementById('libroPreviewFullLink').href = driveUrl || '#';
+        modal.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+        video.play().catch(function () {});
+    }
+
+    function pausarLibroPreviewVideo() {
+        var video = document.getElementById('libroPreviewVideo');
+        if (!video) return;
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
     }
 
     function cerrarVistaPreviaLibro() {
@@ -116,6 +162,7 @@
         modal.classList.remove('is-open');
         document.body.style.overflow = '';
         document.getElementById('libroPreviewFrame').src = '';
+        pausarLibroPreviewVideo();
     }
 
     document.addEventListener('keydown', function(e) {

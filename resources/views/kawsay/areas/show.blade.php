@@ -15,8 +15,8 @@
                 </div>
                 <p class="kawsay-area-header__desc">{{ $area->descripcion }}</p>
             </div>
-            <form action="{{ route('busqueda') }}" method="GET" class="kawsay-header-search">
-                <input type="text" name="query" placeholder="Buscar..." minlength="3" required>
+            <form action="{{ route('kawsay.buscar') }}" method="GET" class="kawsay-header-search">
+                <input type="text" name="query" placeholder="Buscar en Kawsay..." minlength="3" required aria-label="Buscar en Kawsay">
                 <button type="submit" aria-label="Buscar"><i class="fa fa-search"></i></button>
             </form>
         </div>
@@ -33,11 +33,10 @@
         <div class="row g-3">
             @foreach ($temas as $tema)
                 <div class="col-6 col-md-4 col-lg-3">
-                    <a href="{{ route('kawsay.tema', [$areaSlug, $tema->slug]) }}" class="kawsay-tema-card">
+                    <a href="{{ route('kawsay.tema', [$areaSlug, $tema->slug]) }}" class="kawsay-tema-card {{ $tema->imagen ? 'kawsay-tema-card--foto' : 'kawsay-tema-card--texto' }}"
+                        style="--area-color: {{ $area->color ?: '#6e7d1e' }};">
                         @if ($tema->imagen)
-                            <span class="kawsay-tema-card__cover" style="background-image:url('{{ asset($tema->imagen) }}')"></span>
-                        @else
-                            <span class="kawsay-tema-card__icon" style="background: {{ $area->color ?: '#6e7d1e' }}"><i class="fa {{ $tema->icono ?: 'fa-map-signs' }}"></i></span>
+                            <span class="kawsay-tema-card__foto" style="background-image:url('{{ asset($tema->imagen) }}')" role="img" aria-label="{{ $tema->titulo }}"></span>
                         @endif
                         <span class="kawsay-tema-card__title">{{ $tema->titulo }}</span>
                         @if ($tema->archivos_count)

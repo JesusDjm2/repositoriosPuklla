@@ -83,6 +83,20 @@
                             </a>
                         </li>
                     </ul>
+
+                    {{-- Mismo buscador global de la portada (busca entre los registros
+                         de todos los proyectos), en versión discreta: sin caja ni botón
+                         de relleno, solo una línea que se ilumina con el acento del
+                         proyecto activo al enfocar. --}}
+                    <form action="{{ route('busqueda') }}" method="GET" role="search" class="puklla-footer__search">
+                        <label for="footerBuscadorInput" class="visually-hidden">Buscar en todos los registros</label>
+                        <input type="search" id="footerBuscadorInput" name="query"
+                            placeholder="Buscar en todos los registros…" minlength="3" maxlength="120"
+                            autocomplete="off" required>
+                        <button type="submit" aria-label="Buscar">
+                            <i class="fa fa-search" aria-hidden="true"></i>
+                        </button>
+                    </form>
                 </div>
             </div>
 
@@ -97,24 +111,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
     </script>
-
-    {{-- Íconos flotantes de redes sociales (solo escritorio) --}}
-    <div class="floating-social d-none d-lg-flex">
-        <a href="https://www.facebook.com/AsociacionPukllasunchis" target="_blank" class="fs-item fs-facebook" title="Facebook">
-            <i class="fa-brands fa-facebook-f"></i>
-            <span>Facebook</span>
-        </a>
-        <a href="https://www.instagram.com/asociacionpuklla/" target="_blank" class="fs-item fs-instagram"
-            title="Instagram">
-            <i class="fa-brands fa-instagram"></i>
-            <span>Instagram</span>
-        </a>
-        <a href="https://www.youtube.com/@AsociacionPukllasunchis" target="_blank" class="fs-item fs-youtube"
-            title="YouTube">
-            <i class="fa-brands fa-youtube"></i>
-            <span>YouTube</span>
-        </a>
-    </div>
 
     {{-- Botón volver arriba --}}
     <button id="btnTop" class="btn-top" title="Volver arriba" aria-label="Volver arriba">

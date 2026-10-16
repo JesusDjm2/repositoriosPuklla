@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\sisipedia;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SubirArchivoAportacionJob;
 use App\Models\sisipedia\Aportacion;
 use App\Models\sisipedia\AportacionArchivo;
 use App\Models\sisipedia\Category;
@@ -304,8 +305,14 @@ class AportacionController extends Controller
     }
 
     /**
-     * Procesa y sube los archivos del request a Google Drive,
-     * creando registros en la tabla aportacion_archivos.
+     * Guarda localmente los archivos del request y despacha un job por cada uno
+     * que los sube a Google Drive en segundo plano (ver SubirArchivoAportacionJob).
+     *
+     * Antes se subían a Drive de forma síncrona aquí mismo: con internet lento,
+     * el tiempo de re-subir un video grande a Drive se sumaba al de recibirlo del
+     * visitante, superando el timeout del proxy del hosting (504 Gateway Timeout)
+     * aunque PHP todavía tuviera margen. Guardar en disco local es rápido y no
+     * depende de la red hacia Google, así que el formulario ya no se cuelga.
      */
     private function procesarArchivos(Request $request, Aportacion $aportacion, string $prefix): void
     {
@@ -342,15 +349,18 @@ class AportacionController extends Controller
             $nombreOriginal = $archivo->getClientOriginalName();
             $nombreDrive = "{$prefix}-{$tipo}-{$nombreOriginal}";
 
-            $driveId = $this->drive->upload($archivo, $tipo, $nombreDrive);
+            $rutaLocal = $archivo->storeAs('aportaciones-pendientes', $nombreDrive, 'local');
 
-            AportacionArchivo::create([
+            $archivoCreado = AportacionArchivo::create([
                 'aportacion_id' => $aportacion->id,
                 'tipo' => $tipo,
-                'drive_id' => $driveId,
+                'drive_id' => null,
+                'ruta_local' => $rutaLocal,
                 'nombre_original' => $nombreOriginal,
                 'peso_mb' => $pesoMb,
             ]);
+
+            SubirArchivoAportacionJob::dispatch($archivoCreado->id);
         }
     }
 
@@ -372,7 +382,12 @@ class AportacionController extends Controller
     private function eliminarAportacion(Aportacion $aportacion)
     {
         foreach ($aportacion->archivos as $archivo) {
-            $this->drive->delete($archivo->drive_id);
+            if ($archivo->drive_id) {
+                $this->drive->delete($archivo->drive_id);
+            }
+            if ($archivo->ruta_local) {
+                \Illuminate\Support\Facades\Storage::disk('local')->delete($archivo->ruta_local);
+            }
             $archivo->delete();
         }
 

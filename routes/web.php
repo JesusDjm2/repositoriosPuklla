@@ -7,9 +7,11 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\EnlacesController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\KawsayAreaAdminController;
+use App\Http\Controllers\KawsayBusquedaController;
 use App\Http\Controllers\KawsayAreaController;
 use App\Http\Controllers\KawsayArchivoController;
 use App\Http\Controllers\KawsayCategoriaController;
+use App\Http\Controllers\KawsayComentarioController;
 use App\Http\Controllers\KawsayTemaController;
 use App\Http\Controllers\KawsayLibroController;
 use App\Http\Controllers\KawsayVideoCategoriaController;
@@ -22,6 +24,7 @@ use App\Http\Controllers\sisipedia\AudioStreamController;
 use App\Http\Controllers\sisipedia\CategoryController;
 use App\Http\Controllers\VideoCategoriaController;
 use App\Http\Controllers\VideoController;
+use App\Http\Controllers\VideoStreamController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -31,9 +34,15 @@ Route::get('/', [EnlacesController::class, 'hub'])->name('hub');
 Route::get('/repositorio/sisipedia', [EnlacesController::class, 'index'])->name('index');
 Route::get('/eesppukllasunchis', [EnlacesController::class, 'eesp'])->name('eesppukllasunchis');
 Route::get('/kawsay', [EnlacesController::class, 'kawsay'])->name('kawsay');
+Route::get('/kawsay/nosotros', fn () => view('kawsay.nosotros'))->name('kawsay.nosotros');
+// Streaming de video de Kawsay (proxy a Drive con soporte de Range). Ruta fuera de
+// /kawsay/... para no chocar con los wildcards /kawsay/{area}/{tema}/{tipo} de abajo.
+Route::get('kawsay-video/{archivo}/stream', [VideoStreamController::class, 'kawsayArchivo'])->name('kawsay.archivo.video.stream');
+Route::get('kawsay-videos-catalogo/{kawsayVideo}/stream', [VideoStreamController::class, 'kawsayVideo'])->name('kawsayvideos.stream');
+Route::get('/kawsay/buscar', [KawsayBusquedaController::class, 'buscar'])->name('kawsay.buscar')->middleware('throttle:60,1');
 Route::get('/kawsay/{area}', [KawsayAreaController::class, 'area'])->name('kawsay.area');
 Route::get('/kawsay/{area}/{tema}', [KawsayAreaController::class, 'tema'])->name('kawsay.tema');
-Route::post('/kawsay/{area}/{tema}/comentarios', [KawsayAreaController::class, 'comentarioStore'])->name('kawsay.tema.comentarios.store');
+Route::post('/kawsay/{area}/{tema}/comentarios', [KawsayAreaController::class, 'comentarioStore'])->name('kawsay.tema.comentarios.store')->middleware('throttle:20,1');
 Route::get('/kawsay/{area}/{tema}/{tipo}', [KawsayAreaController::class, 'contenido'])->name('kawsay.contenido');
 Auth::routes(['register' => false]);
 /* Route::get('administrador', [EnlacesController::class, 'admin'])->name('administrador')->middleware('auth'); */
@@ -70,6 +79,7 @@ Route::resource('Videos', VideoController::class)->names('videos')->middleware([
 Route::resource('video-categorias', VideoCategoriaController::class)->names('videoscat')->except('show')->middleware(['auth', 'role:admin|videos']);
 Route::get('video-categorias/{video_categoria}', [VideoCategoriaController::class, 'show'])->name('videoscat.show');
 Route::get('videos-Puklla', [VideoCategoriaController::class, 'lista'])->name('videos');
+Route::get('videos/{video}/stream', [VideoStreamController::class, 'video'])->name('videos.stream');
 
 //Kawsay
 Route::resource('Kawsay-Categorias', KawsayCategoriaController::class)->names('kawsaycategorias')->except('show')->middleware(['auth', 'role:admin|kawsay']);
@@ -90,8 +100,11 @@ Route::delete('Kawsay-Archivos/{archivo}', [KawsayArchivoController::class, 'des
 Route::resource('Kawsay-Areas', KawsayAreaAdminController::class)->names('kawsayareas')->parameters(['Kawsay-Areas' => 'area'])->except('show')->middleware(['auth', 'role:admin|kawsay']);
 
 Route::resource('Kawsay-Temas', KawsayTemaController::class)->names('kawsaytemas')->parameters(['Kawsay-Temas' => 'tema'])->except('show')->middleware(['auth', 'role:admin|kawsay']);
-Route::delete('Kawsay-Temas/{tema}/galeria/{imagen}', [KawsayTemaController::class, 'destroyImagen'])->name('kawsaytemas.galeria.destroy')->middleware(['auth', 'role:admin|kawsay']);
 Route::delete('Kawsay-Temas/{tema}/comentarios/{comentario}', [KawsayTemaController::class, 'destroyComentario'])->name('kawsaytemas.comentarios.destroy')->middleware(['auth', 'role:admin|kawsay']);
+
+Route::get('Kawsay-Comentarios', [KawsayComentarioController::class, 'index'])->name('kawsaycomentarios.index')->middleware(['auth', 'role:admin|kawsay']);
+Route::delete('Kawsay-Comentarios/masivo', [KawsayComentarioController::class, 'destroyMasivo'])->name('kawsaycomentarios.destroyMasivo')->middleware(['auth', 'role:admin|kawsay']);
+Route::delete('Kawsay-Comentarios/{comentario}', [KawsayComentarioController::class, 'destroy'])->name('kawsaycomentarios.destroy')->middleware(['auth', 'role:admin|kawsay']);
 
 Route::get('Administrador-Backups', [BackupController::class, 'index'])->name('backups.index')->middleware(['auth', 'role:admin']);
 Route::post('Administrador-Backups', [BackupController::class, 'store'])->name('backups.store')->middleware(['auth', 'role:admin']);
@@ -164,6 +177,12 @@ Route::prefix('sisipedia')->name('sisipedia.')->group(function () {
         ->name('audio.aportacion.stream');
     Route::get('audio/aportacion-directa/{aportacion}/stream', [AudioStreamController::class, 'aportacionSingle'])
         ->name('audio.aportacion-directa.stream');
+
+    // Streaming de video (mismo proxy a Google Drive con soporte de Range)
+    Route::get('video/{categoryFile}/stream', [VideoStreamController::class, 'categoryFile'])
+        ->name('video.stream');
+    Route::get('video/aportacion/{aportacionArchivo}/stream', [VideoStreamController::class, 'aportacionArchivo'])
+        ->name('video.aportacion.stream');
 
     // Detalle público al final (wildcard {category} no captura rutas fijas de arriba)
     Route::get('categories/{category}', [CategoryController::class, 'show'])

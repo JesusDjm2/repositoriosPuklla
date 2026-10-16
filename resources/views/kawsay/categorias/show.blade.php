@@ -10,6 +10,8 @@
     @include('partials.lib-hero', [
         'heroBg' => asset('img/fondo/sisi-fondo.png'),
         'heroBgAlt' => 'Fondo Kawsay',
+        'heroSearchRoute' => route('kawsay.buscar'),
+        'heroSearchPlaceholder' => 'Buscar en Kawsay...',
         'heroEyebrow' => 'Libros · Kawsay',
         'heroTitle' => $categoria->nombre,
         'heroTitleSmall' => true,

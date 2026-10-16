@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class KawsayTema extends Model
 {
-    protected $fillable = ['kawsay_area_id', 'slug', 'titulo', 'icono', 'descripcion', 'imagen', 'orden'];
+    protected $fillable = ['kawsay_area_id', 'slug', 'titulo', 'descripcion', 'imagen', 'orden'];
 
     public function area(): BelongsTo
     {
@@ -18,11 +18,6 @@ class KawsayTema extends Model
     public function archivos(): HasMany
     {
         return $this->hasMany(KawsayArchivo::class);
-    }
-
-    public function imagenes(): HasMany
-    {
-        return $this->hasMany(KawsayTemaImagen::class)->orderBy('orden');
     }
 
     public function comentarios(): HasMany

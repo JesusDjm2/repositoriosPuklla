@@ -187,6 +187,16 @@
                                 </a>
                             @endif
                         </li>
+                        {{-- Botón aparte, solo para Kawsay: acceso directo al gestor de
+                             comentarios sin meter un desplegable ni tocar el resto de
+                             proyectos (pedido puntual, ver KawsayComentarioController). --}}
+                        @if ($proyecto->slug === 'kawsay' && \Illuminate\Support\Facades\Route::has('kawsaycomentarios.index'))
+                            <li class="{{ request()->routeIs('kawsaycomentarios.index') ? 'active' : '' }}">
+                                <a href="{{ route('kawsaycomentarios.index') }}">
+                                    <i class="fa fa-comments"></i> Comentarios
+                                </a>
+                            </li>
+                        @endif
                     @endforeach
                 @endif
 
@@ -240,6 +250,15 @@
                                 </ul>
                             @endif
                         </li>
+                        {{-- Botón aparte, solo para el rol Kawsay: acceso directo al gestor
+                             de comentarios sin meter un desplegable (pedido puntual). --}}
+                        @if ($nombreRol === 'kawsay' && \Illuminate\Support\Facades\Route::has('kawsaycomentarios.index'))
+                            <li class="{{ request()->routeIs('kawsaycomentarios.index') ? 'active' : '' }}">
+                                <a href="{{ route('kawsaycomentarios.index') }}">
+                                    <i class="fa fa-comments"></i> Comentarios
+                                </a>
+                            </li>
+                        @endif
                     @endrole
                 @endforeach
             @endrole

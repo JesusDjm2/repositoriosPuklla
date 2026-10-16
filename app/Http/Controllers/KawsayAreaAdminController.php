@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\KawsayArchivo;
 use App\Models\KawsayArea;
+use App\Services\KawsayTaxonomia;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
@@ -11,9 +13,22 @@ class KawsayAreaAdminController extends Controller
 {
     public function index()
     {
-        $areas = KawsayArea::with('temas')->withCount('temas')->orderBy('orden')->get();
+        $areas = KawsayArea::with(['temas' => fn ($q) => $q->withCount('comentarios')])
+            ->withCount('temas')
+            ->orderBy('orden')
+            ->get();
 
-        return view('kawsay.areas_admin.index', compact('areas'));
+        // Archivos por tema y por tipo de contenido: [tema_id => [tipo => total]]
+        $conteos = KawsayArchivo::selectRaw('kawsay_tema_id, tipo_contenido, count(*) as total')
+            ->groupBy('kawsay_tema_id', 'tipo_contenido')
+            ->get()
+            ->groupBy('kawsay_tema_id')
+            ->map(fn ($filas) => $filas->pluck('total', 'tipo_contenido')->all())
+            ->all();
+
+        $tiposContenido = KawsayTaxonomia::tiposContenido();
+
+        return view('kawsay.areas_admin.index', compact('areas', 'conteos', 'tiposContenido'));
     }
 
     public function create()

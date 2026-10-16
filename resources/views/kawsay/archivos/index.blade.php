@@ -77,7 +77,11 @@
                         <td>{{ $archivo->peso_mb ? $archivo->peso_mb . ' MB' : '—' }}</td>
                         <td>{{ $archivo->created_at->format('d/m/Y') }}</td>
                         <td class="text-right bv-crud-actions">
-                            <a href="{{ $archivo->getUrl() }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Ver en Drive">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" title="Vista previa"
+                                onclick="abrirVistaPreviaLibro({{ \Illuminate\Support\Js::from($archivo->drive_id) }}, {{ \Illuminate\Support\Js::from($archivo->titulo) }}, 'Abrir en nueva ventana')">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                            <a href="{{ $archivo->getUrl() }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary" title="Abrir en nueva ventana">
                                 <i class="fa fa-external-link"></i>
                             </a>
                             @if ($archivo->tema)
@@ -110,5 +114,7 @@
     <div class="bv-crud-pagination">
         {{ $archivos->links() }}
     </div>
+
+    @include('partials.libro-preview-modal')
 
 @endsection

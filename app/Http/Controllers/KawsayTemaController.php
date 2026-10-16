@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\KawsayArea;
 use App\Models\KawsayTema;
 use App\Models\KawsayTemaComentario;
-use App\Models\KawsayTemaImagen;
 use App\Services\KawsayTaxonomia;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -20,7 +19,7 @@ class KawsayTemaController extends Controller
         $temas = KawsayTema::query()
             ->with('area')
             ->when($request->filled('area'), fn ($q) => $q->where('kawsay_area_id', $request->area))
-            ->withCount(['archivos', 'imagenes', 'comentarios'])
+            ->withCount(['archivos', 'comentarios'])
             ->orderBy('kawsay_area_id')
             ->orderBy('orden')
             ->get();
@@ -49,9 +48,7 @@ class KawsayTemaController extends Controller
             $validated['imagen'] = $this->storeImage($request->file('imagen'), $validated['slug']);
         }
 
-        $tema = KawsayTema::create($validated);
-
-        $this->storeGaleria($request, $tema);
+        KawsayTema::create($validated);
 
         return redirect()->route('kawsaytemas.index')->with('success', 'Tema creado correctamente.');
     }
@@ -60,7 +57,7 @@ class KawsayTemaController extends Controller
     {
         $areas = KawsayArea::orderBy('orden')->get();
         $tiposContenido = KawsayTaxonomia::tiposContenido();
-        $tema->load(['imagenes', 'comentarios', 'archivos']);
+        $tema->load(['comentarios', 'archivos']);
         $archivosPorTipo = $tema->archivos->groupBy('tipo_contenido');
 
         return view('kawsay.temas.edit', compact('tema', 'areas', 'tiposContenido', 'archivosPorTipo'));
@@ -89,8 +86,6 @@ class KawsayTemaController extends Controller
 
         $tema->update($validated);
 
-        $this->storeGaleria($request, $tema);
-
         return redirect()->route('kawsaytemas.edit', $tema)->with('success', 'Tema actualizado correctamente.');
     }
 
@@ -99,29 +94,10 @@ class KawsayTemaController extends Controller
         if ($tema->imagen && file_exists(public_path($tema->imagen))) {
             unlink(public_path($tema->imagen));
         }
-        foreach ($tema->imagenes as $imagen) {
-            if (file_exists(public_path($imagen->imagen))) {
-                unlink(public_path($imagen->imagen));
-            }
-        }
 
         $tema->delete();
 
         return redirect()->route('kawsaytemas.index')->with('success', 'Tema eliminado.');
-    }
-
-    public function destroyImagen(KawsayTema $tema, KawsayTemaImagen $imagen)
-    {
-        if ($imagen->kawsay_tema_id !== $tema->id) {
-            abort(404);
-        }
-
-        if (file_exists(public_path($imagen->imagen))) {
-            unlink(public_path($imagen->imagen));
-        }
-        $imagen->delete();
-
-        return redirect()->route('kawsaytemas.edit', $tema)->with('success', 'Imagen eliminada de la galería.');
     }
 
     public function destroyComentario(KawsayTema $tema, KawsayTemaComentario $comentario)
@@ -142,8 +118,6 @@ class KawsayTemaController extends Controller
             'titulo' => 'required|string|max:255',
             'descripcion' => 'nullable|string|max:5000',
             'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'galeria' => 'nullable|array',
-            'galeria.*' => 'image|mimes:jpg,jpeg,png,webp|max:2048',
             'orden' => 'nullable|integer',
         ]);
     }
@@ -164,23 +138,6 @@ class KawsayTemaController extends Controller
         }
 
         return $slug;
-    }
-
-    private function storeGaleria(Request $request, KawsayTema $tema): void
-    {
-        if (! $request->hasFile('galeria')) {
-            return;
-        }
-
-        $orden = $tema->imagenes()->max('orden') + 1;
-
-        foreach ($request->file('galeria') as $archivo) {
-            KawsayTemaImagen::create([
-                'kawsay_tema_id' => $tema->id,
-                'imagen' => $this->storeImage($archivo, $tema->slug, 'img/kawsay/temas/galeria'),
-                'orden' => $orden++,
-            ]);
-        }
     }
 
     private function storeImage(UploadedFile $file, string $slug, string $carpeta = 'img/kawsay/temas'): string

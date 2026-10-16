@@ -93,15 +93,26 @@
                                             <small>({{ $archivo->peso_mb }}MB)</small>
                                         @endif
                                     </span>
-                                    <a href="{{ $downloadUrl }}"
-                                       class="btn btn-sm p-0 text-{{ $color }}" title="Descargar">
-                                        <i class="fa fa-download"></i>
-                                    </a>
+                                    @unless($archivo->pendiente || $archivo->fallo_en)
+                                        <a href="{{ $downloadUrl }}"
+                                           class="btn btn-sm p-0 text-{{ $color }}" title="Descargar">
+                                            <i class="fa fa-download"></i>
+                                        </a>
+                                    @endunless
                                 </div>
                                 <div class="small text-muted text-truncate" title="{{ $archivo->nombre_original ?? '' }}">
                                     {{ $archivo->nombre_original ?? $archivo->tipo }}
                                 </div>
-                                @if($showAudioPreview)
+                                @if($archivo->pendiente)
+                                    {{-- Aún subiéndose a Drive en segundo plano (ver SubirArchivoAportacionJob) --}}
+                                    <div class="mt-1 text-center py-3 text-muted small">
+                                        <i class="fa fa-spinner fa-spin me-1"></i>Procesando archivo...
+                                    </div>
+                                @elseif($archivo->fallo_en)
+                                    <div class="mt-1 text-center py-3 text-danger small">
+                                        <i class="fa fa-triangle-exclamation me-1"></i>No se pudo subir
+                                    </div>
+                                @elseif($showAudioPreview)
                                     <div class="mt-1">
                                         @include('partials.audio-player', [
                                             'src' => route('sisipedia.audio.aportacion.stream', $archivo),
@@ -111,26 +122,22 @@
                                         ])
                                     </div>
                                 @elseif($archivo->tipo === 'video')
-                                    {{-- Video: miniatura real + play, iframe solo tras click --}}
+                                    {{-- Video: miniatura real + play, abre popup con <video controls> real --}}
                                     <div class="mt-1 sisipedia-ap-video-preview position-relative rounded overflow-hidden"
-                                         data-preview-url="{{ $previewUrl }}">
+                                         role="button" tabindex="0"
+                                         aria-label="Reproducir {{ $archivo->nombre_original ?? 'Video' }}"
+                                         onclick="abrirVistaPreviaVideo({{ \Illuminate\Support\Js::from(route('sisipedia.video.aportacion.stream', $archivo)) }}, {{ \Illuminate\Support\Js::from($archivo->nombre_original ?? 'Video') }}, {{ \Illuminate\Support\Js::from($driveUrl) }})"
+                                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
                                         <div class="ratio ratio-16x9 bg-dark">
                                             <img src="{{ $thumbUrl }}" alt="{{ $archivo->nombre_original ?? 'Video' }}"
-                                                 class="w-100 h-100" style="object-fit:cover;opacity:.85;"
+                                                 class="w-100 h-100" style="object-fit:contain;opacity:.85;"
                                                  loading="lazy" onerror="this.style.display='none'">
                                         </div>
-                                        <button type="button"
+                                        <button type="button" tabindex="-1"
                                                 class="sisipedia-ap-video-play-btn position-absolute top-50 start-50 translate-middle btn btn-light rounded-circle shadow-sm"
                                                 style="width:36px;height:36px;padding:0;">
                                             <i class="fa fa-play text-dark" style="font-size:.7rem;margin-left:1px;"></i>
                                         </button>
-                                        <div class="sisipedia-ap-video-iframe-wrap d-none position-absolute top-0 start-0 w-100 h-100">
-                                            <iframe title="{{ $archivo->nombre_original ?? 'Video' }}"
-                                                    class="sisipedia-ap-iframe w-100 h-100 border-0"
-                                                    src=""
-                                                    allow="autoplay; fullscreen"
-                                                    allowfullscreen></iframe>
-                                        </div>
                                     </div>
                                 @elseif($archivo->tipo === 'imagen')
                                     {{-- Imagen: solo miniatura ligera; ampliar abre modal (nunca iframe) --}}

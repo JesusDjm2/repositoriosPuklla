@@ -13,9 +13,21 @@ class AportacionArchivo extends Model
         'aportacion_id',
         'tipo',
         'drive_id',
+        'ruta_local',
+        'fallo_en',
         'nombre_original',
         'peso_mb',
     ];
+
+    protected $casts = [
+        'fallo_en' => 'datetime',
+    ];
+
+    /** Sigue en cola para subirse a Drive (ver SubirArchivoAportacionJob). */
+    public function getPendienteAttribute(): bool
+    {
+        return $this->drive_id === null && $this->fallo_en === null;
+    }
 
     public function aportacion(): BelongsTo
     {

@@ -419,30 +419,28 @@
             @endphp
             <div class="col-12 col-sm-6 col-md-4 col-lg-3 media-item">
                 <div class="card border-0 shadow-sm rounded-3 overflow-hidden h-100 sisipedia-video-card">
-                    {{-- Miniatura + play --}}
-                    <div class="sisipedia-video-thumb-wrap position-relative">
+                    {{-- Miniatura + play: abre popup con <video controls> real --}}
+                    <div class="sisipedia-video-thumb-wrap position-relative" role="button" tabindex="0"
+                         aria-label="Reproducir {{ $archivo->nombre_original ?? 'Video' }}"
+                         onclick="abrirVistaPreviaVideo({{ \Illuminate\Support\Js::from(route('sisipedia.video.stream', $archivo)) }}, {{ \Illuminate\Support\Js::from($archivo->nombre_original ?? 'Video') }}, {{ \Illuminate\Support\Js::from(\App\Services\GoogleDriveService::getUrl($archivo->drive_id)) }})"
+                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}"
+                         style="cursor:pointer;">
                         <div class="ratio ratio-16x9 bg-dark">
                             <img src="{{ $thumbUrl }}"
                                  alt="{{ $archivo->nombre_original ?? 'Video' }}"
                                  class="w-100 h-100"
-                                 style="object-fit:cover;opacity:.88;"
+                                 style="object-fit:contain;opacity:.88;"
                                  loading="lazy"
                                  onerror="this.style.display='none'">
                         </div>
                         <span class="position-absolute top-0 end-0 m-2 badge bg-danger" style="font-size:.65rem;z-index:2;">
                             <i class="fa fa-video me-1"></i>Video
                         </span>
-                        <button class="sisipedia-video-play-btn position-absolute top-50 start-50 translate-middle btn btn-light rounded-circle shadow"
-                                data-preview="{{ $previewUrl }}"
+                        <button type="button" tabindex="-1"
+                                class="sisipedia-video-play-btn position-absolute top-50 start-50 translate-middle btn btn-light rounded-circle shadow"
                                 style="width:52px;height:52px;z-index:2;">
                             <i class="fa fa-play text-dark" style="margin-left:2px;"></i>
                         </button>
-                        <div class="sisipedia-video-iframe-wrap d-none position-absolute top-0 start-0 w-100 h-100" style="z-index:3;">
-                            <div class="ratio ratio-16x9">
-                                <iframe src="" class="w-100 h-100" frameborder="0"
-                                        allow="autoplay; fullscreen" allowfullscreen></iframe>
-                            </div>
-                        </div>
                     </div>
                     {{-- Info --}}
                     <div class="card-body p-3">
@@ -890,28 +888,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // ── Click play en video ──────────────────────────────
-    document.querySelectorAll('.sisipedia-video-play-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var thumbWrap = this.closest('.sisipedia-video-thumb-wrap');
-            if (!thumbWrap) return;
-            var iframeWrap = thumbWrap.querySelector('.sisipedia-video-iframe-wrap');
-            var iframe = iframeWrap ? iframeWrap.querySelector('iframe') : null;
-
-            if (iframe) iframe.src = this.getAttribute('data-preview');
-
-            var self = this;
-            gsap.to(this, { opacity: 0, scale: 0.8, duration: 0.2, onComplete: function () {
-                self.classList.add('d-none');
-            }});
-
-            if (iframeWrap) {
-                iframeWrap.classList.remove('d-none');
-                gsap.from(iframeWrap, { opacity: 0, duration: 0.35, ease: 'power2.out' });
-            }
-        });
-    });
-
+    // Click play en video: el onclick del wrap abre el popup con <video controls>
+    // real (abrirVistaPreviaVideo, ver partials.libro-preview-modal) — ya no hay
+    // iframe inline que activar aquí.
 
     @else
     // ── Entrada del árbol de categorías ──────────────────

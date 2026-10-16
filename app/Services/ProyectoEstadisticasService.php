@@ -10,6 +10,7 @@ use App\Models\KawsayArea;
 use App\Models\KawsayCategoria;
 use App\Models\KawsayLibro;
 use App\Models\KawsayTema;
+use App\Models\KawsayTemaComentario;
 use App\Models\KawsayVideo;
 use App\Models\KawsayVideoCategoria;
 use App\Models\Libro;
@@ -52,6 +53,7 @@ class ProyectoEstadisticasService
                 'Áreas' => fn () => KawsayArea::count(),
                 'Temas' => fn () => KawsayTema::count(),
                 'Archivos' => fn () => KawsayArchivo::count(),
+                'Comentarios' => fn () => KawsayTemaComentario::count(),
                 'Libros' => fn () => KawsayLibro::count(),
                 'Categorías' => fn () => KawsayCategoria::count(),
                 'Videos' => fn () => KawsayVideo::count(),

@@ -50,22 +50,17 @@
                     <div class="card border-0 shadow-sm rounded-3 overflow-hidden h-100 sisipedia-latest-card">
                         @if ($thumbUrl)
                             {{-- Video / Imagen: miniatura + botón de previsualización superpuesto --}}
-                            <div class="ratio {{ $tipo === 'video' ? 'ratio-16x9' : 'ratio-4x3' }} bg-light position-relative sisipedia-latest-thumb">
+                            <div class="ratio {{ $tipo === 'video' ? 'ratio-16x9' : 'ratio-4x3' }} {{ $tipo === 'video' ? 'bg-dark' : 'bg-light' }} position-relative sisipedia-latest-thumb">
                                 <img src="{{ $thumbUrl }}" alt="{{ $nombreMostrar }}" class="w-100 h-100"
-                                    style="object-fit:cover;" loading="lazy" onerror="this.style.display='none'">
+                                    style="object-fit:{{ $tipo === 'video' ? 'contain' : 'cover' }};" loading="lazy" onerror="this.style.display='none'">
                                 <button type="button"
                                     class="sisipedia-latest-preview-btn position-absolute top-50 start-50 translate-middle btn btn-light rounded-circle shadow-sm d-flex align-items-center justify-content-center"
                                     data-tipo="{{ $tipo }}" data-preview="{{ $previewUrl }}" data-nombre="{{ $nombreMostrar }}"
                                     data-drive="{{ $driveUrl }}" data-download="{{ $downloadUrl }}"
+                                    data-stream="{{ $item->stream_url ?? '' }}"
                                     title="{{ $tc['accion'] }}" aria-label="{{ $tc['accion'] }} {{ $nombreMostrar }}">
                                     <i class="fa {{ $tc['accionIcon'] }} text-dark"></i>
                                 </button>
-                                @if ($tipo === 'video')
-                                    <div class="sisipedia-latest-video-iframe-wrap d-none position-absolute top-0 start-0 w-100 h-100">
-                                        <iframe src="" class="w-100 h-100 border-0" allow="autoplay; fullscreen"
-                                            allowfullscreen loading="lazy"></iframe>
-                                    </div>
-                                @endif
                             </div>
                         @else
                             <div style="height:4px;background:rgba({{ $tc['rgb'] }},.8);"></div>
@@ -183,22 +178,19 @@
                 }
             }
 
-            // ── Reproducción de video inline sobre la miniatura ──
-            function playVideo(btn) {
-                var thumb = btn.closest('.sisipedia-latest-thumb');
-                if (!thumb) return;
-                var iframeWrap = thumb.querySelector('.sisipedia-latest-video-iframe-wrap');
-                var iframe = iframeWrap ? iframeWrap.querySelector('iframe') : null;
-                if (iframe) iframe.src = btn.getAttribute('data-preview');
-                btn.classList.add('d-none');
-                if (iframeWrap) iframeWrap.classList.remove('d-none');
-            }
-
             section.querySelectorAll('.sisipedia-latest-preview-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     var tipo = this.getAttribute('data-tipo');
                     if (tipo === 'video') {
-                        playVideo(this);
+                        // Popup con <video controls> real (ver abrirVistaPreviaVideo en
+                        // partials.libro-preview-modal): play/pause/tiempo/pantalla completa.
+                        if (window.abrirVistaPreviaVideo) {
+                            window.abrirVistaPreviaVideo(
+                                this.getAttribute('data-stream'),
+                                this.getAttribute('data-nombre'),
+                                this.getAttribute('data-drive')
+                            );
+                        }
                     } else if (window.sisipediaOpenPreview) {
                         window.sisipediaOpenPreview(
                             this.getAttribute('data-preview'),
