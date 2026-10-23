@@ -270,9 +270,13 @@ class KawsayDemoSeeder extends Seeder
                 $slug = Str::slug($titulo);
                 $imagen = null;
                 $portada = mt_rand(1, 5) === 1 ? null : array_shift($portadas);
-                if ($portada && is_file("{$origen}/{$portada}")) {
-                    $imagen = self::IMAGENES_TEMAS."/{$slug}.".strtolower(pathinfo($portada, PATHINFO_EXTENSION));
-                    File::copy("{$origen}/{$portada}", public_path($imagen));
+                if ($portada) {
+                    $destino = self::IMAGENES_TEMAS."/{$slug}.".strtolower(pathinfo($portada, PATHINFO_EXTENSION));
+                    // Las portadas ya vienen en el repo; la carpeta de origen solo hace falta para regenerarlas.
+                    if (! is_file(public_path($destino)) && is_file("{$origen}/{$portada}")) {
+                        File::copy("{$origen}/{$portada}", public_path($destino));
+                    }
+                    $imagen = is_file(public_path($destino)) ? $destino : null;
                 }
 
                 KawsayTema::create([
@@ -404,7 +408,6 @@ class KawsayDemoSeeder extends Seeder
 
         $slugs = collect(self::TEMAS)->flatten()->map(fn ($titulo) => Str::slug($titulo));
         KawsayTema::whereIn('slug', $slugs)->get()->each->delete();
-        File::deleteDirectory(public_path(self::IMAGENES_TEMAS));
 
         KawsayLibro::whereIn('identificador', $ids)->get()->each(function ($libro) {
             $libro->categorias()->detach();
@@ -421,6 +424,7 @@ class KawsayDemoSeeder extends Seeder
                 $drive->delete($id);
             }
             File::delete(storage_path('app/'.self::CACHE));
+            File::deleteDirectory(public_path(self::IMAGENES_TEMAS));
         }
     }
 
