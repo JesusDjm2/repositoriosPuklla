@@ -29,8 +29,25 @@
     @endphp
     @php
         $pdfs = $archivos->where('tipo', 'pdf');
-        $otros = $archivos->where('tipo', '!=', 'pdf');
+        $videos = $archivos->where('tipo', 'video');
+        $otros = $archivos->whereNotIn('tipo', ['pdf', 'video']);
     @endphp
+
+    {{-- Video: tarjeta con reproductor propio, al estilo de los audios de Radio --}}
+    @if ($videos->isNotEmpty())
+        <div class="row g-3 {{ $pdfs->isNotEmpty() || $otros->isNotEmpty() ? 'mb-4' : '' }}">
+            @foreach ($videos as $archivo)
+                <div class="col-md-6 col-lg-4">
+                    @include('kawsay.partials.video-card', [
+                        'src' => route('kawsay.archivo.video.stream', $archivo),
+                        'titulo' => $archivo->titulo,
+                        'driveId' => $archivo->drive_id,
+                        'meta' => strtoupper(pathinfo($archivo->nombre_original, PATHINFO_EXTENSION) ?: 'video') . ($archivo->peso_mb ? ' · ' . $archivo->peso_mb . ' MB' : ''),
+                    ])
+                </div>
+            @endforeach
+        </div>
+    @endif
 
     {{-- PDF: tarjeta con portada (primera página) + vista previa en popup, igual que los libros virtuales de la Escuela --}}
     @if ($pdfs->isNotEmpty())
@@ -85,17 +102,10 @@
                 </div>
             </div>
             <div class="kawsay-archivo-card__actions">
-                @if ($archivo->tipo === 'video')
-                    <button type="button" class="btn btn-sm btn-primary"
-                        onclick="abrirVistaPreviaVideo({{ \Illuminate\Support\Js::from(route('kawsay.archivo.video.stream', $archivo)) }}, {{ \Illuminate\Support\Js::from($archivo->titulo) }}, {{ \Illuminate\Support\Js::from(\App\Services\GoogleDriveService::getUrl($archivo->drive_id)) }})">
-                        <i class="fa fa-play"></i> Reproducir
-                    </button>
-                @else
-                    <button type="button" class="btn btn-sm btn-primary"
-                        onclick="abrirVistaPreviaLibro({{ \Illuminate\Support\Js::from($archivo->drive_id) }}, {{ \Illuminate\Support\Js::from($archivo->titulo) }}, 'Abrir en nueva ventana')">
-                        <i class="fa fa-eye"></i> Vista previa
-                    </button>
-                @endif
+                <button type="button" class="btn btn-sm btn-primary"
+                    onclick="abrirVistaPreviaLibro({{ \Illuminate\Support\Js::from($archivo->drive_id) }}, {{ \Illuminate\Support\Js::from($archivo->titulo) }}, 'Abrir en nueva ventana')">
+                    <i class="fa fa-eye"></i> Vista previa
+                </button>
                 <a href="{{ \App\Services\GoogleDriveService::getUrl($archivo->drive_id) }}" target="_blank" rel="noopener"
                     class="btn btn-sm btn-outline-secondary" title="Abrir en una nueva ventana">
                     <i class="fa fa-external-link-alt"></i> <span class="d-none d-md-inline">Nueva ventana</span>

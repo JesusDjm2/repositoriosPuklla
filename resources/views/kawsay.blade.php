@@ -121,10 +121,21 @@
                                             <span class="video-card-h__play"><i class="fab fa-youtube"></i></span>
                                         </a>
                                     @elseif ($video->drive)
-                                        <div class="video-card-h__iframe-wrap">
-                                            <iframe src="https://drive.google.com/file/d/{{ $video->drive }}/preview"
-                                                loading="lazy" allowfullscreen></iframe>
-                                        </div>
+                                        {{-- Miniatura + play que abre el popup con <video controls> real
+                                             (streaming propio), igual que la portada de Radio; no el iframe de Drive. --}}
+                                        <button type="button" class="video-card-h__link border-0 p-0 bg-transparent"
+                                            aria-label="Reproducir {{ $video->nombre }}"
+                                            onclick="abrirVistaPreviaVideo({{ \Illuminate\Support\Js::from(route('kawsayvideos.stream', $video)) }}, {{ \Illuminate\Support\Js::from($video->nombre) }}, {{ \Illuminate\Support\Js::from(\App\Services\GoogleDriveService::getUrl($video->drive)) }})">
+                                            <img src="{{ \App\Services\GoogleDriveService::getThumbnailUrl($video->drive, 600) }}"
+                                                alt="{{ $video->nombre }}" loading="lazy" style="object-fit:contain;"
+                                                onerror="this.style.display='none'">
+                                            <span class="video-card-h__play">
+                                                <span class="btn btn-light rounded-circle shadow-sm d-flex align-items-center justify-content-center"
+                                                    style="width:46px;height:46px;padding:0;">
+                                                    <i class="fa fa-play text-dark" style="font-size:1rem;margin-left:2px;"></i>
+                                                </span>
+                                            </span>
+                                        </button>
                                     @endif
                                 </div>
                                 <div class="video-card-h__body">

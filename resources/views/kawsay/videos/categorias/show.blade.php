@@ -55,33 +55,24 @@
 
                     @foreach ($videos as $video)
                         <div class="col-lg-6 p-3">
-                            <div class="cardVideos">
-                                @if ($video->youtube)
+                            @if ($video->youtube)
+                                <div class="cardVideos">
                                     <div class="ratio ratio-16x9">
                                         <iframe loading="lazy" src="https://www.youtube.com/embed/{{ $video->youtube }}"
                                             title="YouTube video" allowfullscreen frameborder="0"></iframe>
                                     </div>
                                     <h6>{{ $video->nombre }}</h6>
                                     <p>{{ $video->descripcion }}</p>
-                                @elseif ($video->drive)
-                                    <div class="ratio ratio-16x9 bg-dark position-relative" role="button" tabindex="0"
-                                         style="cursor:pointer;"
-                                         aria-label="Reproducir {{ $video->nombre }}"
-                                         onclick="abrirVistaPreviaVideo({{ \Illuminate\Support\Js::from(route('kawsayvideos.stream', $video)) }}, {{ \Illuminate\Support\Js::from($video->nombre) }}, {{ \Illuminate\Support\Js::from(\App\Services\GoogleDriveService::getUrl($video->drive)) }})"
-                                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
-                                        <img src="{{ \App\Services\GoogleDriveService::getThumbnailUrl($video->drive, 500) }}"
-                                             alt="{{ $video->nombre }}" class="w-100 h-100" style="object-fit:contain;opacity:.88;"
-                                             loading="lazy" onerror="this.style.display='none'">
-                                        <button type="button" tabindex="-1"
-                                                class="position-absolute top-50 start-50 translate-middle btn btn-light rounded-circle shadow"
-                                                style="width:52px;height:52px;padding:0;">
-                                            <i class="fa fa-play text-dark" style="margin-left:2px;"></i>
-                                        </button>
-                                    </div>
-                                    <h6>{{ $video->nombre }}</h6>
-                                    <p>{{ $video->descripcion }}</p>
-                                @endif
-                            </div>
+                                </div>
+                            @elseif ($video->drive)
+                                @include('kawsay.partials.video-card', [
+                                    'src' => route('kawsayvideos.stream', $video),
+                                    'titulo' => $video->nombre,
+                                    'driveId' => $video->drive,
+                                    'meta' => $video->categoria?->nombre,
+                                    'descripcion' => $video->descripcion,
+                                ])
+                            @endif
                         </div>
                     @endforeach
                 </div>
@@ -91,7 +82,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('search-input');
-            const videoCards = document.querySelectorAll('.cardVideos');
+            const videoCards = document.querySelectorAll('.cardVideos, .kawsay-video-card');
 
             // Animación de placeholder
             const texts = [
