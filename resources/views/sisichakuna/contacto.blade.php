@@ -42,9 +42,7 @@
                                 <div>
                                     <div class="fw-semibold">WhatsApp</div>
                                     <div class="text-muted">
-                                        <a class="text-decoration-none" href="https://wa.me/51984529158" target="_blank" rel="noopener">+51 984 529 158</a>
-                                        <span aria-hidden="true"> · </span>
-                                        <a class="text-decoration-none" href="https://wa.me/51969572566" target="_blank" rel="noopener">+51 969 572 566</a>
+                                        <a class="text-decoration-none" href="https://wa.me/51961185453" target="_blank" rel="noopener">+51 961 185 453</a>
                                     </div>
                                 </div>
                             </li>
@@ -55,7 +53,7 @@
                                 </span>
                                 <div>
                                     <div class="fw-semibold">Correo</div>
-                                    <a class="text-decoration-none" href="mailto:eespp@pukllasunchis.org">eespp@pukllasunchis.org</a>
+                                    <a class="text-decoration-none" href="mailto:radio@pukllavirtual.edu.pe">radio@pukllavirtual.edu.pe</a>
                                 </div>
                             </li>
                         </ul>
@@ -64,15 +62,19 @@
 
                         <h3 class="h6 fw-bold mb-3">Síguenos</h3>
                         <div class="d-flex gap-2">
-                            <a href="https://www.facebook.com/AsociacionPukllasunchis" target="_blank" rel="noopener"
+                            <a href="https://www.facebook.com/Sisichakunaq" target="_blank" rel="noopener"
                                 class="btn btn-outline-secondary rounded-circle" style="width:42px;height:42px;" aria-label="Facebook">
                                 <i class="fa-brands fa-facebook-f"></i>
                             </a>
-                            <a href="https://www.instagram.com/asociacionpuklla/" target="_blank" rel="noopener"
+                            <a href="https://www.instagram.com/sisichakunaq/" target="_blank" rel="noopener"
                                 class="btn btn-outline-secondary rounded-circle" style="width:42px;height:42px;" aria-label="Instagram">
                                 <i class="fa-brands fa-instagram"></i>
                             </a>
-                            <a href="https://www.youtube.com/@AsociacionPukllasunchis" target="_blank" rel="noopener"
+                            <a href="https://open.spotify.com/show/21uqGdVqtet2iYx3XkhAVh?si=28d6c5ac81f94329" target="_blank" rel="noopener"
+                                class="btn btn-outline-secondary rounded-circle" style="width:42px;height:42px;" aria-label="Spotify">
+                                <i class="fa-brands fa-spotify"></i>
+                            </a>
+                            <a href="https://www.youtube.com/@RadioPukllasunchis" target="_blank" rel="noopener"
                                 class="btn btn-outline-secondary rounded-circle" style="width:42px;height:42px;" aria-label="YouTube">
                                 <i class="fa-brands fa-youtube"></i>
                             </a>

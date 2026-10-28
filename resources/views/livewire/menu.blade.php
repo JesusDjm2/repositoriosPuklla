@@ -39,6 +39,23 @@
         ];
     }
 
+    // Redes del proyecto actual. Los proyectos sin URLs reales todavía
+    // mantienen los íconos genéricos con href="#".
+    if ($isRadio || $isSisipedia) {
+        $socialLinks = [
+            ['label' => 'Facebook', 'href' => 'https://www.facebook.com/Sisichakunaq', 'icon' => 'fa-facebook-f'],
+            ['label' => 'Instagram', 'href' => 'https://www.instagram.com/sisichakunaq/', 'icon' => 'fa-instagram'],
+            ['label' => 'Spotify', 'href' => 'https://open.spotify.com/show/21uqGdVqtet2iYx3XkhAVh?si=28d6c5ac81f94329', 'icon' => 'fa-spotify'],
+            ['label' => 'YouTube', 'href' => 'https://www.youtube.com/@RadioPukllasunchis', 'icon' => 'fa-youtube'],
+        ];
+    } else {
+        $socialLinks = [
+            ['label' => 'Facebook', 'href' => '#', 'icon' => 'fa-facebook-f'],
+            ['label' => 'Instagram', 'href' => '#', 'icon' => 'fa-instagram'],
+            ['label' => 'YouTube', 'href' => '#', 'icon' => 'fa-youtube'],
+        ];
+    }
+
     // Cuenta: icono + destino + etiqueta legible (se reusa en el pill del panel lateral)
     // El admin completo va primero porque puede tener además cualquiera de los
     // otros roles (ej. admin+kawsay) y su panel principal manda sobre el de un
@@ -143,20 +160,16 @@
                              tienen su propio buscador en el hero. En su lugar,
                              redes sociales con el acento de color de cada
                              proyecto (--project-accent) en vez del logo/color
-                             de marca de cada red. Sin enlace todavía (href="#")
-                             — pendiente de que se pasen las URLs reales. --}}
-                        <a href="#" class="menu-link menu-link--social" title="Facebook" aria-label="Facebook">
-                            <i class="fa-brands fa-facebook-f" aria-hidden="true"></i>
-                            <span class="menu-link__label">Facebook</span>
-                        </a>
-                        <a href="#" class="menu-link menu-link--social" title="Instagram" aria-label="Instagram">
-                            <i class="fa-brands fa-instagram" aria-hidden="true"></i>
-                            <span class="menu-link__label">Instagram</span>
-                        </a>
-                        <a href="#" class="menu-link menu-link--social" title="YouTube" aria-label="YouTube">
-                            <i class="fa-brands fa-youtube" aria-hidden="true"></i>
-                            <span class="menu-link__label">YouTube</span>
-                        </a>
+                             de marca de cada red. Las URLs salen de
+                             $socialLinks (arriba, por proyecto). --}}
+                        @foreach ($socialLinks as $social)
+                            <a href="{{ $social['href'] }}" class="menu-link menu-link--social"
+                                title="{{ $social['label'] }}" aria-label="{{ $social['label'] }}"
+                                @if ($social['href'] !== '#') target="_blank" rel="noopener" @endif>
+                                <i class="fa-brands {{ $social['icon'] }}" aria-hidden="true"></i>
+                                <span class="menu-link__label">{{ $social['label'] }}</span>
+                            </a>
+                        @endforeach
 
                         @if ($accountIsLogout)
                             <a href="{{ $accountHref }}" class="menu-link menu-link--login" title="{{ $accountLabel }}"
