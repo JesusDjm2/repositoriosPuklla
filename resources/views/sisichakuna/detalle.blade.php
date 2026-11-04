@@ -27,6 +27,14 @@
             'Niño/Estudiante' => ['color' => '#fd7e14', 'icon' => 'fa-child', 'label' => 'Niño / Estudiante', 'hint' => 'Aporto como estudiante'],
         ];
         $idiomaLabel = $category->idioma ? (\App\Models\sisipedia\Category::IDIOMAS[$category->idioma] ?? ucfirst($category->idioma)) : null;
+        // Muchas descripciones solo repiten el nombre con su numeración ("4.1 Vestido"): no aportan nada.
+        $descripcion = trim((string) $category->description);
+        if ($descripcion !== '' && mb_strtolower(\App\Models\sisipedia\Category::stripLegacyOntologyPrefix($descripcion)) === mb_strtolower($category->display_name)) {
+            $descripcion = '';
+        }
+        $nFiles = $category->files->count();
+        $nSubs = $subRegistros->count();
+        $nAps = $aportaciones->count();
     @endphp
 
     @include('partials.lib-hero', [
@@ -57,7 +65,7 @@
             </ol>
         </nav>
 
-        <div class="row g-4 align-items-start">
+        <div class="row g-3 g-lg-4 align-items-start">
             {{-- ══ Columna principal ══════════════════════════════════════ --}}
             <div class="col-lg-8 sisi-min-0">
 
@@ -76,8 +84,8 @@
 
                     <h1 class="sisi-reg__title">{{ $category->display_name }}</h1>
 
-                    @if ($category->description)
-                        <p class="sisi-reg__desc">{{ $category->description }}</p>
+                    @if ($descripcion !== '')
+                        <p class="sisi-reg__desc">{{ $descripcion }}</p>
                     @endif
 
                     @if ($category->fecha || $idiomaLabel || $category->localidad)
@@ -94,30 +102,32 @@
                         </ul>
                     @endif
 
-                    <dl class="sisi-reg__stats">
-                        <div>
-                            <dt>Archivos</dt>
-                            <dd>{{ $category->files->count() }}</dd>
-                        </div>
-                        <div>
-                            <dt>Sub-registros</dt>
-                            <dd>{{ $subRegistros->count() }}</dd>
-                        </div>
-                        <div>
-                            <dt>Aportaciones</dt>
-                            <dd><a href="#sisipedia-aportaciones-section">{{ $aportaciones->count() }}</a></dd>
-                        </div>
-                    </dl>
+                    {{-- Resumen en palabras simples; cada etiqueta lleva a su sección --}}
+                    <nav class="sisi-reg__jump" aria-label="En este registro">
+                        <a href="#sisi-files" class="{{ $nFiles ? '' : 'is-empty' }}">
+                            <i class="fa fa-paperclip" aria-hidden="true"></i>
+                            <strong>{{ $nFiles }}</strong> {{ $nFiles === 1 ? 'material' : 'materiales' }}
+                        </a>
+                        <a href="#sisi-subs" class="{{ $nSubs ? '' : 'is-empty' }}">
+                            <i class="fa fa-folder" aria-hidden="true"></i>
+                            <strong>{{ $nSubs }}</strong> {{ $nSubs === 1 ? 'subtema' : 'subtemas' }}
+                        </a>
+                        <a href="#sisipedia-aportaciones-section" class="{{ $nAps ? '' : 'is-empty' }}">
+                            <i class="fa fa-comments" aria-hidden="true"></i>
+                            <strong>{{ $nAps }}</strong> {{ $nAps === 1 ? 'aporte' : 'aportes' }}
+                        </a>
+                    </nav>
                 </section>
 
                 {{-- Archivos del registro (curados por el equipo) --}}
                 @if ($category->files->isNotEmpty())
-                    <section class="sisi-card mt-4 sisipedia-reveal-onload" aria-labelledby="sisi-files-title">
+                    <section class="sisi-card sisi-gap sisipedia-reveal-onload" id="sisi-files" aria-labelledby="sisi-files-title">
                         <h2 class="sisi-section-title" id="sisi-files-title">
-                            <i class="fa fa-paperclip" aria-hidden="true"></i>Archivos del registro
-                            <span class="sisi-count">{{ $category->files->count() }}</span>
+                            <i class="fa fa-paperclip" aria-hidden="true"></i>Materiales
+                            <span class="sisi-count">{{ $nFiles }}</span>
                         </h2>
-                        <div class="row g-3">
+                        <p class="sisi-help">Toca <strong>Ver</strong> para mirarlo aquí o <strong>Descargar</strong> para guardarlo en tu equipo.</p>
+                        <div class="row g-2 g-md-3">
                             @foreach ($category->files as $archivo)
                                 @php
                                     $m = $tipoMeta[$archivo->tipo] ?? ['label' => ucfirst($archivo->tipo), 'color' => 'secondary', 'icon' => 'fa-file'];
@@ -166,26 +176,26 @@
                                                 <div class="sisipedia-file-card__name" title="{{ $archivo->nombre_display }}">{{ $archivo->nombre_display }}</div>
                                                 <div class="sisipedia-file-card__type">{{ $m['label'] }}</div>
                                             </div>
-                                            <div class="sisipedia-file-card__actions">
-                                                @if ($archivo->tipo === 'pdf')
-                                                    <button type="button" class="btn btn-sm btn-outline-{{ $m['color'] }} sisipedia-open-preview-modal"
-                                                            data-preview="{{ $previewUrl }}" data-nombre="{{ $archivo->nombre_display }}"
-                                                            data-drive="{{ $driveUrl }}" data-download="{{ $downloadUrl }}"
-                                                            title="Vista previa" aria-label="Vista previa de {{ $archivo->nombre_display }}">
-                                                        <i class="fa fa-eye"></i>
-                                                    </button>
-                                                @elseif (! in_array($archivo->tipo, ['imagen', 'video', 'audio'], true))
-                                                    <a href="{{ $driveUrl }}" target="_blank" rel="noopener"
-                                                       class="btn btn-sm btn-outline-{{ $m['color'] }}"
-                                                       title="Abrir en Google Drive" aria-label="Abrir {{ $archivo->nombre_display }} en Google Drive">
-                                                        <i class="fa fa-external-link-alt"></i>
-                                                    </a>
-                                                @endif
-                                                <a href="{{ $downloadUrl }}" class="btn btn-sm btn-{{ $m['color'] }}"
-                                                   title="Descargar" aria-label="Descargar {{ $archivo->nombre_display }}">
-                                                    <i class="fa fa-download"></i>
+                                        </div>
+                                        <div class="sisipedia-file-card__actions">
+                                            @if ($archivo->tipo === 'pdf')
+                                                <button type="button" class="btn btn-sm btn-outline-{{ $m['color'] }} sisipedia-open-preview-modal"
+                                                        data-preview="{{ $previewUrl }}" data-nombre="{{ $archivo->nombre_display }}"
+                                                        data-drive="{{ $driveUrl }}" data-download="{{ $downloadUrl }}"
+                                                        aria-label="Ver {{ $archivo->nombre_display }}">
+                                                    <i class="fa fa-eye me-1" aria-hidden="true"></i>Ver
+                                                </button>
+                                            @elseif (! in_array($archivo->tipo, ['imagen', 'video', 'audio'], true))
+                                                <a href="{{ $driveUrl }}" target="_blank" rel="noopener"
+                                                   class="btn btn-sm btn-outline-{{ $m['color'] }}"
+                                                   aria-label="Abrir {{ $archivo->nombre_display }}">
+                                                    <i class="fa fa-external-link-alt me-1" aria-hidden="true"></i>Abrir
                                                 </a>
-                                            </div>
+                                            @endif
+                                            <a href="{{ $downloadUrl }}" class="btn btn-sm btn-{{ $m['color'] }}"
+                                               aria-label="Descargar {{ $archivo->nombre_display }}">
+                                                <i class="fa fa-download me-1" aria-hidden="true"></i>Descargar
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -197,10 +207,10 @@
 
             {{-- ══ Lateral: sub-registros (herencia hacia abajo) ═══════════ --}}
             <aside class="col-lg-4 sisi-min-0 sisi-reg__aside" aria-labelledby="sisi-subs-title">
-                <section class="sisi-card sisi-card--flush sisipedia-reveal-onload">
+                <section class="sisi-card sisi-card--flush sisipedia-reveal-onload" id="sisi-subs">
                     <header class="sisi-subs__head">
                         <h2 class="sisi-section-title mb-0" id="sisi-subs-title">
-                            <i class="fa fa-sitemap" aria-hidden="true"></i>Sub-registros
+                            <i class="fa fa-folder-open" aria-hidden="true"></i>Subtemas
                         </h2>
                         @if ($subRegistros->isNotEmpty())
                             <span class="sisi-count">{{ $subRegistros->count() }}</span>
@@ -210,14 +220,20 @@
                     @if ($subRegistros->isNotEmpty())
                         <ul class="sisi-subs">
                             @foreach ($subRegistros as $child)
-                                @php $tiposHijo = $child->files->pluck('tipo')->unique(); @endphp
+                                @php
+                                    $tiposHijo = $child->files->pluck('tipo')->unique();
+                                    $descHijo = trim((string) $child->description);
+                                    if ($descHijo !== '' && mb_strtolower(\App\Models\sisipedia\Category::stripLegacyOntologyPrefix($descHijo)) === mb_strtolower($child->display_name)) {
+                                        $descHijo = '';
+                                    }
+                                @endphp
                                 <li>
                                     <a href="{{ route('sisipedia.categories.show', $child) }}" class="sisipedia-child-card">
                                         <span class="sisi-subs__icon" aria-hidden="true"><i class="fa fa-folder"></i></span>
                                         <span class="sisi-min-0 flex-grow-1">
                                             <span class="sisi-subs__name">{{ $child->display_name }}</span>
-                                            @if ($child->description)
-                                                <span class="sisi-subs__desc">{{ Str::limit($child->description, 70) }}</span>
+                                            @if ($descHijo !== '')
+                                                <span class="sisi-subs__desc">{{ Str::limit($descHijo, 70) }}</span>
                                             @endif
                                             @if ($tiposHijo->isNotEmpty() || $child->aportaciones_count)
                                                 <span class="sisi-subs__tags">
@@ -243,7 +259,7 @@
                     @else
                         <p class="sisi-empty sisi-empty--sm">
                             <i class="fa fa-folder-open" aria-hidden="true"></i>
-                            Este registro no tiene sub-registros.
+                            Este tema no tiene subtemas.
                         </p>
                     @endif
 
@@ -257,27 +273,28 @@
         </div>
 
         {{-- ══ Aportaciones de ESTE registro ═════════════════════════════ --}}
-        <section class="sisi-card mt-4" id="sisipedia-aportaciones-section" aria-labelledby="sisi-ap-title">
+        <section class="sisi-card sisi-gap" id="sisipedia-aportaciones-section" aria-labelledby="sisi-ap-title">
             <header class="sisi-ap-head">
                 <div class="sisi-min-0">
                     <h2 class="sisi-section-title mb-1" id="sisi-ap-title">
-                        <i class="fa fa-layer-group" aria-hidden="true"></i>Aportaciones
-                        @if ($aportaciones->isNotEmpty())
-                            <span class="sisi-count">{{ $aportaciones->count() }}</span>
+                        <i class="fa fa-comments" aria-hidden="true"></i>Aportes de la comunidad
+                        @if ($nAps)
+                            <span class="sisi-count">{{ $nAps }}</span>
                         @endif
                     </h2>
-                    <p class="text-muted small mb-0">
-                        Conocimientos compartidos por la comunidad sobre <strong>{{ $category->display_name }}</strong>.
+                    <p class="sisi-help mb-0">
+                        ¿Sabes algo sobre <strong>{{ $category->display_name }}</strong>? Compártelo: puedes escribir y subir fotos, audios, videos o documentos.
                     </p>
                 </div>
                 <button type="button" class="btn sisi-btn-cta" id="btnAbrirRoles" onclick="mostrarRoles()">
-                    <i class="fa fa-plus-circle me-2" aria-hidden="true"></i>Agregar aportación
+                    <i class="fa fa-plus-circle me-2" aria-hidden="true"></i>Compartir un aporte
                 </button>
             </header>
 
             {{-- Paso 1: Selector de rol --}}
             <div id="rolSelector" class="sisi-ap-step" style="display:none;">
-                <p class="fw-semibold mb-3 text-center">¿Cómo deseas aportar?</p>
+                <p class="fw-semibold mb-1 text-center">Paso 1 de 2: ¿Quién eres?</p>
+                <p class="sisi-help text-center mb-3">Toca la opción que mejor te describe.</p>
                 <div class="row row-cols-2 row-cols-md-4 g-2 g-md-3 mb-3">
                     @foreach ($roles as $valor => $r)
                         <div class="col">
@@ -305,6 +322,7 @@
                     </div>
                 @endif
 
+                <p class="fw-semibold mb-2">Paso 2 de 2: Cuéntanos tu aporte</p>
                 <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
                     <span class="badge fs-6 px-3 py-2" id="rolBadge" style="background:#0d6efd;">
                         <i class="fa fa-user me-1"></i><span id="rolTexto"></span>
@@ -392,8 +410,8 @@
                 @empty
                     <div class="sisi-empty">
                         <i class="fa fa-comments" aria-hidden="true"></i>
-                        <p class="mb-1 fw-semibold">Aún no hay aportaciones en este registro.</p>
-                        <p class="small mb-0">¿Conoces algo sobre este tema? Sé la primera persona en compartirlo.</p>
+                        <p class="mb-1 fw-semibold">Todavía nadie ha compartido un aporte aquí.</p>
+                        <p class="small mb-0">Puedes ser la primera persona: toca <strong>Compartir un aporte</strong>.</p>
                     </div>
                 @endforelse
             </div>
@@ -584,14 +602,18 @@
         .sisi-card {
             background: #fff; border-radius: var(--sisi-radius);
             box-shadow: 0 1px 2px rgba(16,24,40,.05), 0 4px 16px rgba(16,24,40,.06);
-            padding: 1.25rem;
+            padding: 1rem;
         }
         .sisi-card--flush { padding: 0; overflow: hidden; }
-        @media (min-width: 768px) { .sisi-card { padding: 1.75rem; } .sisi-card--flush { padding: 0; } }
+        @media (min-width: 768px) { .sisi-card { padding: 1.25rem 1.5rem; } .sisi-card--flush { padding: 0; } }
+        .sisi-gap { margin-top: 1rem; }
+        @media (min-width: 768px) { .sisi-gap { margin-top: 1.25rem; } }
         .sisi-section-title {
             display: flex; align-items: center; gap: .5rem;
-            font-size: 1.05rem; font-weight: 700; color: #212529; margin-bottom: 1rem;
+            font-size: 1.05rem; font-weight: 700; color: #212529; margin-bottom: .35rem;
         }
+        /* Texto de ayuda: frases cortas que dicen qué hacer */
+        .sisi-help { font-size: .875rem; color: #6c757d; margin-bottom: .85rem; }
         .sisi-section-title > i { color: var(--sisi-accent); }
         .sisi-count {
             display: inline-flex; align-items: center; justify-content: center;
@@ -604,7 +626,7 @@
 
         /* ── Migas ────────────────────────────────────────────── */
         .sisi-reg__crumbs {
-            margin: 1.5rem 0 1.25rem; background: #fff; border-radius: .75rem;
+            margin: 1.25rem 0 1rem; background: #fff; border-radius: .75rem;
             box-shadow: 0 1px 2px rgba(16,24,40,.06); padding: .55rem 1rem;
             overflow-x: auto; scrollbar-width: none;
         }
@@ -612,7 +634,7 @@
         .sisi-reg__crumbs .breadcrumb { flex-wrap: nowrap; white-space: nowrap; font-size: .875rem; }
         .sisi-reg__crumbs .breadcrumb-item { flex-shrink: 0; }
         .sisi-reg__crumbs a { text-decoration: none; }
-        @media (min-width: 768px) { .sisi-reg__crumbs { margin-top: 2.5rem; } }
+        @media (min-width: 768px) { .sisi-reg__crumbs { margin-top: 2rem; } }
 
         /* ── Cabecera del registro ────────────────────────────── */
         .sisi-reg__lineage {
@@ -634,19 +656,21 @@
             display: inline-flex; align-items: center; gap: .4rem; font-size: .8rem;
             padding: .3rem .7rem; border-radius: 99px; background: #f1f3f5; color: #495057;
         }
-        .sisi-reg__stats {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem;
-            margin: 1.25rem 0 0; padding-top: 1.25rem; border-top: 1px solid var(--sisi-line);
+        .sisi-reg__jump { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
+        .sisi-reg__jump a {
+            display: inline-flex; align-items: center; gap: .4rem; min-height: 2.5rem;
+            padding: .4rem .9rem; border-radius: 99px; font-size: .875rem; text-decoration: none;
+            background: rgba(13,110,253,.08); color: #0a58ca; border: 1px solid rgba(13,110,253,.18);
+            transition: background-color .15s ease;
         }
-        .sisi-reg__stats > div { text-align: center; }
-        .sisi-reg__stats dt { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #868e96; }
-        .sisi-reg__stats dd { font-size: 1.4rem; font-weight: 800; margin: 0; color: #212529; }
-        .sisi-reg__stats dd a { color: inherit; text-decoration: none; }
+        .sisi-reg__jump a:hover, .sisi-reg__jump a:focus-visible { background: rgba(13,110,253,.16); }
+        .sisi-reg__jump a.is-empty { background: #f1f3f5; color: #868e96; border-color: transparent; pointer-events: none; }
 
         /* ── Archivos del registro ────────────────────────────── */
         .sisipedia-file-card {
             height: 100%; border: 1px solid var(--sisi-line); border-radius: .75rem; overflow: hidden;
             background: #fff; transition: transform .2s ease, box-shadow .2s ease;
+            display: flex; flex-direction: column;
         }
         .sisipedia-file-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(16,24,40,.1); }
         .sisipedia-file-card__media {
@@ -657,17 +681,19 @@
         .sisipedia-file-card__media:hover img { transform: scale(1.04); }
         .sisipedia-file-card__media--video { background: #212529; cursor: pointer; }
         .sisipedia-file-card__media--video img { object-fit: contain; opacity: .85; }
-        .sisipedia-file-card__body { display: flex; align-items: center; gap: .75rem; padding: .75rem; }
+        .sisipedia-file-card__body { display: flex; align-items: center; gap: .65rem; padding: .65rem .75rem .5rem; }
         .sisipedia-file-card__icon {
             flex-shrink: 0; width: 2.25rem; height: 2.25rem; border-radius: .6rem;
             display: inline-flex; align-items: center; justify-content: center;
         }
+        /* Nombre en hasta 2 líneas: completo es más fácil de reconocer que cortado con "…" */
         .sisipedia-file-card__name {
-            font-size: .875rem; font-weight: 600; color: #212529;
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            font-size: .875rem; font-weight: 600; color: #212529; overflow-wrap: anywhere;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
         }
         .sisipedia-file-card__type { font-size: .72rem; color: #868e96; }
-        .sisipedia-file-card__actions { display: flex; gap: .35rem; flex-shrink: 0; }
+        .sisipedia-file-card__actions { display: flex; gap: .4rem; padding: 0 .75rem .75rem; margin-top: auto; }
+        .sisipedia-file-card__actions .btn { flex: 1 1 0; min-height: 2.4rem; display: inline-flex; align-items: center; justify-content: center; }
 
         /* Botón de play compartido (archivos del registro y aportaciones) */
         .sisipedia-load-category-video,
@@ -797,7 +823,12 @@
             flex: 1 1 auto; min-width: 0; font-size: .75rem; color: #495057;
             overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
-        .sisi-ap-file__foot .btn-link { flex-shrink: 0; font-size: .85rem; text-decoration: none; }
+        /* Íconos táctiles de al menos ~32px: más fáciles de tocar con el dedo */
+        .sisi-ap-file__foot .btn-link {
+            flex-shrink: 0; width: 2rem; height: 2rem; font-size: .95rem; text-decoration: none;
+            display: inline-flex; align-items: center; justify-content: center; border-radius: .5rem;
+        }
+        .sisi-ap-file__foot .btn-link:hover { background: #f1f3f5; }
     </style>
 
     @include('partials.home-preview-modal')
