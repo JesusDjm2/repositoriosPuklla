@@ -996,7 +996,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (noResults) noResults.classList.add('d-none');
     }
     function filterCategories(term) {
-        const search = term.trim().toLowerCase();
+        // Sin tildes, igual que data-searchable (Str::ascii en tree.blade): "cosmovision" encuentra "Cosmovisión"
+        const search = term.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
         if (!search) { showAll(); return; }
         clearHighlights();
         allCollapses().forEach(l => l.classList.remove('show'));

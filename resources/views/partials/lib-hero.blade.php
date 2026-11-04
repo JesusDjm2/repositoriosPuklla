@@ -60,13 +60,15 @@
             </form>
         @endif
         @if ($heroFormatButtons)
-            <form action="{{ route('busqueda') }}" method="GET" class="sisipedia-hero-search mx-auto mt-3">
+            {{-- Busca solo dentro de Sisipedia (árbol de registros, vía ?buscar=). La búsqueda
+                 global de toda la Asociación es la del pie de página (route('busqueda')). --}}
+            <form action="{{ route('public.sisi') }}" method="GET" role="search" class="sisipedia-hero-search mx-auto mt-3">
                 <div class="input-group shadow">
                     <span class="input-group-text bg-white">
                         <i class="fa fa-search"></i>
                     </span>
-                    <input type="search" name="query" class="form-control"
-                        placeholder="Busca un tema: plantas medicinales, fiestas, tejido..." value="{{ request('query') }}"
+                    <input type="search" name="buscar" class="form-control" aria-label="Buscar en Sisipedia"
+                        placeholder="Busca un tema: plantas medicinales, fiestas, tejido..." value="{{ request('buscar') }}"
                         minlength="3" maxlength="120" autocomplete="off" required>
                     <button class="btn fw-semibold px-4 text-white" type="submit">
                         Buscar

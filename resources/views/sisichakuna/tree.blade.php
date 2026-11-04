@@ -16,7 +16,7 @@
     {{-- ── Fila principal ───────────────────────────────────────── --}}
     <div class="list-group-item border rounded-3 px-3 py-2"
          data-category-item
-         data-searchable="{{ strtolower($category->display_name . ' ' . ($category->description ?? '')) }}">
+         data-searchable="{{ mb_strtolower(\Illuminate\Support\Str::ascii($category->display_name . ' ' . ($category->description ?? ''))) }}">
 
         <div class="d-flex align-items-center gap-2">
             {{-- Flecha acordeón a la izquierda (antes del ícono de carpeta) --}}
