@@ -68,8 +68,9 @@ class BusquedaController extends Controller
             $ids[$t] = $this->rankear($lista, $q);
         }
 
-        $tab = in_array($request->query('tab'), self::TABS, true) ? $request->query('tab') : null;
-        // Sin pestaña elegida: la primera que tenga resultados.
+        $tab = in_array($request->query('tab'), self::TABS, true) && count($ids[$request->query('tab')]) > 0
+            ? $request->query('tab') : null;
+        // Sin pestaña elegida (o la pedida no tiene nada, p. ej. un enlace viejo): la primera con resultados.
         $tab ??= collect(self::TABS)->first(fn ($t) => count($ids[$t]) > 0) ?? 'registros';
 
         // Áreas presentes en la pestaña actual (antes de filtrar), para los chips "¿De qué área?".
