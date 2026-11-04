@@ -2561,8 +2561,17 @@ button.lib-book-card__btn { border: 0; cursor: pointer; font-family: inherit; }
     background: #fff;
   }
 
-  .menuPuklla .menu-link--social:hover {
-    background: var(--puklla-accent-soft);
+  /* Hover sólido (no el acento suave semitransparente): con el menú
+     transparente sobre el hero, el botón se perdía contra la foto. */
+  .menuPuklla .menu-link--social:hover,
+  .menuPuklla .menu-link--social:focus-visible {
+    background: var(--project-accent);
+    border-color: var(--project-accent);
+  }
+
+  .menuPuklla .menu-link--social:hover i,
+  .menuPuklla .menu-link--social:focus-visible i {
+    color: #fff !important;
   }
 
   /* Relleno sólido = acción principal, para que no se confunda con las
@@ -2631,6 +2640,16 @@ button.lib-book-card__btn { border: 0; cursor: pointer; font-family: inherit; }
     border: 1px solid var(--project-accent);
     background: #fff;
     border-radius: 50%;
+  }
+
+  .menuPuklla .menu-link--social:hover,
+  .menuPuklla .menu-link--social:active {
+    background: var(--project-accent);
+  }
+
+  .menuPuklla .menu-link--social:hover i,
+  .menuPuklla .menu-link--social:active i {
+    color: #fff !important;
   }
 
   .menuPuklla .menu-link--social .menu-link__label {
