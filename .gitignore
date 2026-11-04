@@ -26,3 +26,6 @@ yarn-error.log
 /fix_env.php
 /fix_env.ps1
 /middleware('auth')
+
+# Respaldos comprimidos del proyecto (GitHub no acepta >100 MB)
+*.zip
