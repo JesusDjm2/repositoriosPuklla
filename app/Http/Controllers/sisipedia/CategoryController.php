@@ -203,24 +203,19 @@ class CategoryController extends Controller
             abort(404);
         }
 
+        // Solo lo que pertenece a ESTE registro. Antes también se cargaban las
+        // aportaciones sin registro (de la portada) y se listaban al pie de cada
+        // registro, así que parecían pertenecer a todos; esas viven en
+        // sisipedia.aportaciones.general.
         $category->load([
             'parent.parent.parent',
-            'children.children',
-            'children.files',
+            'children' => fn ($q) => $q->where('is_active', true)
+                ->withCount(['aportaciones' => fn ($a) => $a->where('is_approved', true)]),
+            'children.files:id,category_id,tipo',
             'aportaciones' => fn ($q) => $q->where('is_approved', true)->latest(),
             'aportaciones.archivos',
             'files',
         ]);
-
-        // Aportaciones sin registro (de la portada), aprobadas. Con límite: sin él,
-        // esta consulta (irrelevante para $category) se repite completa en cada
-        // página de registro y crece sin tope a medida que se acumulan aportaciones.
-        $aportacionesSueltas = Aportacion::with('archivos')
-            ->whereNull('category_id')
-            ->where('is_approved', true)
-            ->latest()
-            ->limit(20)
-            ->get();
 
         $breadcrumbs = collect();
         $current = $category;
@@ -230,7 +225,7 @@ class CategoryController extends Controller
             $current = $current->parent;
         }
 
-        return view('sisichakuna.detalle', compact('category', 'breadcrumbs', 'aportacionesSueltas'));
+        return view('sisichakuna.detalle', compact('category', 'breadcrumbs'));
     }
 
     public function adminShow(Category $category)

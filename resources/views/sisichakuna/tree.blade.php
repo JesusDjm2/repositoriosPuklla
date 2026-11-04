@@ -34,19 +34,12 @@
                 <span style="width:24px;height:24px;display:inline-block;" class="flex-shrink-0"></span>
             @endif
 
-            {{-- Miniatura / icono --}}
-            @if ($category->image)
-                <img src="{{ asset($category->image) }}" alt="{{ $category->display_name }}"
-                     class="rounded-circle flex-shrink-0 d-none d-sm-block"
-                     width="40" height="40" loading="lazy" decoding="async"
-                     style="object-fit:cover;">
-            @else
-                <div class="rounded-circle bg-light text-secondary d-inline-flex align-items-center
-                            justify-content-center flex-shrink-0 d-none d-sm-block"
-                     style="width:40px;height:40px;min-width:40px;">
-                    <i class="fa fa-folder{{ $hasChildren ? '-open' : '' }} fa-sm"></i>
-                </div>
-            @endif
+            {{-- Icono (la imagen del registro ya no se usa) --}}
+            <div class="rounded-circle bg-light text-secondary d-inline-flex align-items-center
+                        justify-content-center flex-shrink-0 d-none d-sm-block"
+                 style="width:40px;height:40px;min-width:40px;">
+                <i class="fa fa-folder{{ $hasChildren ? '-open' : '' }} fa-sm"></i>
+            </div>
 
             {{-- Nombre + descripción + badges --}}
             <div class="flex-grow-1 min-width-0" style="min-width:0;">

@@ -109,28 +109,8 @@
                                 </div>
                             </div>
 
-                            <div class="form-group mb-3">
-                                <label for="image">Imagen</label>
-                                @if($category->image)
-                                    <div class="mb-2">
-                                        <img src="{{ asset($category->image) }}"
-                                             alt="{{ $category->display_name }}"
-                                             style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
-                                        <div class="form-check mt-2">
-                                            <input type="checkbox" class="form-check-input" id="remove_image" name="remove_image" value="1">
-                                            <label class="form-check-label text-danger" for="remove_image">
-                                                <i class="fa fa-trash"></i> Eliminar imagen actual
-                                            </label>
-                                        </div>
-                                    </div>
-                                @endif
-                                <input type="file" class="form-control @error('image') is-invalid @enderror"
-                                    id="image" name="image" accept="image/*">
-                                <small class="form-text text-muted">Formatos: JPG, PNG, GIF, WEBP. Máximo 2MB.</small>
-                                @error('image')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
+                            {{-- Campo "Imagen" retirado: ninguna vista pública la usaba. La columna
+                                 categories.image sigue en la BD por si se retoma. --}}
 
                             {{-- Archivos múltiples --}}
                             @include('sisichakuna.categorias._file-inputs', [

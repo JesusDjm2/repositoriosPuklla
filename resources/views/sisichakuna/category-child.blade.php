@@ -11,16 +11,10 @@
                             <div class="d-flex align-items-start flex-grow-1">
                                 <!-- Icono pequeño para subcategorías -->
                                 <div class="flex-shrink-0">
-                                    @if ($category->image)
-                                        <img src="{{ asset($category->image) }}" alt="{{ $category->display_name }}"
-                                            class="rounded-circle"
-                                            style="width: 35px; height: 35px; object-fit: cover;">
-                                    @else
-                                        <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
-                                            style="width: 35px; height: 35px;">
-                                            <i class="fa fa-folder fa-lg text-secondary"></i>
-                                        </div>
-                                    @endif
+                                    <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                                        style="width: 35px; height: 35px;">
+                                        <i class="fa fa-folder fa-lg text-secondary"></i>
+                                    </div>
                                 </div>
 
                                 <!-- Contenido -->

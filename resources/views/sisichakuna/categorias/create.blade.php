@@ -98,15 +98,8 @@
                                 </div>
                             </div>
 
-                            <div class="form-group mb-3">
-                                <label for="image">Imagen</label>
-                                <input type="file" class="form-control @error('image') is-invalid @enderror"
-                                    id="image" name="image" accept="image/*">
-                                <small class="form-text text-muted">Formatos permitidos: JPG, PNG, WEBP. Máximo 2MB.</small>
-                                @error('image')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
+                            {{-- Campo "Imagen" retirado: ninguna vista pública la usaba. La columna
+                                 categories.image sigue en la BD por si se retoma. --}}
 
                             {{-- Archivos múltiples --}}
                             @include('sisichakuna.categorias._file-inputs')
