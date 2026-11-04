@@ -82,13 +82,32 @@
                             <i class="fa fa-sitemap" aria-hidden="true"></i>
                             <span class="visually-hidden">Pertenece a:</span>
                             @foreach ($ancestros as $anc)
-                                <a href="{{ route('sisipedia.categories.show', $anc) }}">{{ $anc->display_name }}</a>
+                                {{-- Sin numeral romano del área y con tildes corregidas, igual que en la búsqueda --}}
+                                <a href="{{ route('sisipedia.categories.show', $anc) }}">{{ \App\Http\Controllers\sisipedia\BusquedaController::nombre($anc->name, $anc->parent_id === null) }}</a>
                                 @unless ($loop->last)<span aria-hidden="true">›</span>@endunless
                             @endforeach
                         </p>
                     @endif
 
-                    <h1 class="sisi-reg__title">{{ $category->display_name }}</h1>
+                    {{-- Título y contadores en una línea (en celular los contadores bajan debajo).
+                         Los contadores en 0 no se muestran: "0 descargas" no informa, desanima. --}}
+                    @php
+                        $nVisitas = $hayContadores ? (int) $category->visitas : 0;
+                        $nDescargas = $hayContadores ? $descargasTotal : 0;
+                    @endphp
+                    <div class="sisi-reg__titlerow">
+                        <h1 class="sisi-reg__title">{{ $category->display_name }}</h1>
+                        @if ($nVisitas > 0 || $nDescargas > 0)
+                            <p class="sisi-reg__stats">
+                                @if ($nVisitas > 0)
+                                    <span><i class="fa fa-eye" aria-hidden="true"></i>{{ $Contador::formato($nVisitas) }} {{ $nVisitas === 1 ? 'visita' : 'visitas' }}</span>
+                                @endif
+                                @if ($nDescargas > 0)
+                                    <span><i class="fa fa-download" aria-hidden="true"></i>{{ $Contador::formato($nDescargas) }} {{ $nDescargas === 1 ? 'descarga' : 'descargas' }}</span>
+                                @endif
+                            </p>
+                        @endif
+                    </div>
 
                     @if ($descripcion !== '')
                         <p class="sisi-reg__desc">{{ $descripcion }}</p>
@@ -108,28 +127,26 @@
                         </ul>
                     @endif
 
-                    @if ($hayContadores)
-                        <p class="sisi-reg__stats">
-                            <span><i class="fa fa-eye" aria-hidden="true"></i><strong>{{ $Contador::formato((int) $category->visitas) }}</strong> {{ (int) $category->visitas === 1 ? 'visita' : 'visitas' }}</span>
-                            <span><i class="fa fa-download" aria-hidden="true"></i><strong>{{ $Contador::formato($descargasTotal) }}</strong> {{ $descargasTotal === 1 ? 'descarga' : 'descargas' }}</span>
-                        </p>
+                    {{-- Resumen en palabras simples; cada enlace lleva a su sección. Solo los que tienen algo. --}}
+                    @if ($nFiles || $nSubs || $nAps)
+                        <nav class="sisi-reg__jump" aria-label="En este registro">
+                            @if ($nFiles)
+                                <a href="#sisi-files">
+                                    <i class="fa fa-paperclip" aria-hidden="true"></i>{{ $nFiles }} {{ $nFiles === 1 ? 'material' : 'materiales' }}
+                                </a>
+                            @endif
+                            @if ($nSubs)
+                                <a href="#sisi-subs">
+                                    <i class="fa fa-folder" aria-hidden="true"></i>{{ $nSubs }} {{ $nSubs === 1 ? 'subtema' : 'subtemas' }}
+                                </a>
+                            @endif
+                            @if ($nAps)
+                                <a href="#sisipedia-aportaciones-section">
+                                    <i class="fa fa-comments" aria-hidden="true"></i>{{ $nAps }} {{ $nAps === 1 ? 'aporte' : 'aportes' }}
+                                </a>
+                            @endif
+                        </nav>
                     @endif
-
-                    {{-- Resumen en palabras simples; cada etiqueta lleva a su sección --}}
-                    <nav class="sisi-reg__jump" aria-label="En este registro">
-                        <a href="#sisi-files" class="{{ $nFiles ? '' : 'is-empty' }}">
-                            <i class="fa fa-paperclip" aria-hidden="true"></i>
-                            <strong>{{ $nFiles }}</strong> {{ $nFiles === 1 ? 'material' : 'materiales' }}
-                        </a>
-                        <a href="#sisi-subs" class="{{ $nSubs ? '' : 'is-empty' }}">
-                            <i class="fa fa-folder" aria-hidden="true"></i>
-                            <strong>{{ $nSubs }}</strong> {{ $nSubs === 1 ? 'subtema' : 'subtemas' }}
-                        </a>
-                        <a href="#sisipedia-aportaciones-section" class="{{ $nAps ? '' : 'is-empty' }}">
-                            <i class="fa fa-comments" aria-hidden="true"></i>
-                            <strong>{{ $nAps }}</strong> {{ $nAps === 1 ? 'aporte' : 'aportes' }}
-                        </a>
-                    </nav>
                 </section>
 
                 {{-- Materiales del registro (curados por el equipo).
@@ -779,16 +796,19 @@
         /* ── Cabecera del registro ────────────────────────────── */
         .sisi-reg__lineage {
             display: flex; flex-wrap: wrap; align-items: center; gap: .35rem;
-            font-size: .8rem; color: #6c757d; margin-bottom: .5rem;
+            font-size: .8rem; color: #6c757d; margin-bottom: .35rem;
         }
         .sisi-reg__lineage > i { color: var(--sisi-accent); margin-right: .15rem; }
         .sisi-reg__lineage a { color: inherit; font-weight: 600; text-decoration: none; }
         .sisi-reg__lineage a:hover { color: var(--sisi-accent); text-decoration: underline; }
+        /* Título + contadores en una línea; si no caben, los contadores bajan solos */
+        .sisi-reg__titlerow { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem 1rem; }
         .sisi-reg__title {
+            flex: 1 1 auto; min-width: 0;
             font-size: clamp(1.35rem, 1.1rem + 1.2vw, 1.9rem); font-weight: 800;
-            line-height: 1.2; margin-bottom: .5rem; overflow-wrap: anywhere;
+            line-height: 1.2; margin: 0; overflow-wrap: anywhere;
         }
-        .sisi-reg__desc { color: #495057; margin-bottom: 0; overflow-wrap: anywhere; }
+        .sisi-reg__desc { color: #495057; margin: .5rem 0 0; overflow-wrap: anywhere; }
         .sisi-reg__facts {
             list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-wrap: wrap; gap: .5rem;
         }
@@ -796,20 +816,21 @@
             display: inline-flex; align-items: center; gap: .4rem; font-size: .8rem;
             padding: .3rem .7rem; border-radius: 99px; background: #f1f3f5; color: #495057;
         }
-        .sisi-reg__jump { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
+        /* Enlaces a las secciones: texto con ícono, sin píldora (sutiles, pero con área táctil de ~38px) */
+        .sisi-reg__jump { display: flex; flex-wrap: wrap; gap: 0 1.1rem; margin: .35rem 0 -.4rem; }
         .sisi-reg__jump a {
-            display: inline-flex; align-items: center; gap: .4rem; min-height: 2.5rem;
-            padding: .4rem .9rem; border-radius: 99px; font-size: .875rem; text-decoration: none;
-            background: rgba(13,110,253,.08); color: #0a58ca; border: 1px solid rgba(13,110,253,.18);
-            transition: background-color .15s ease;
+            display: inline-flex; align-items: center; gap: .4rem; min-height: 2.4rem;
+            font-size: .85rem; font-weight: 600; color: var(--sisi-accent); text-decoration: none;
+            text-underline-offset: 3px;
         }
-        .sisi-reg__jump a:hover, .sisi-reg__jump a:focus-visible { background: rgba(13,110,253,.16); }
-        .sisi-reg__jump a.is-empty { background: #f1f3f5; color: #868e96; border-color: transparent; pointer-events: none; }
+        .sisi-reg__jump a > i { font-size: .8rem; opacity: .85; }
+        .sisi-reg__jump a:hover, .sisi-reg__jump a:focus-visible { text-decoration: underline; }
 
-        /* Contadores: discretos, debajo de los datos del registro */
-        .sisi-reg__stats { display: flex; flex-wrap: wrap; gap: .25rem 1.1rem; margin: .85rem 0 0; font-size: .875rem; color: #6c757d; }
-        .sisi-reg__stats span { display: inline-flex; align-items: center; gap: .4rem; }
-        .sisi-reg__stats strong { color: #212529; }
+        /* Contadores: dato secundario a la derecha del título (debajo en celular) */
+        .sisi-reg__stats { display: flex; flex-wrap: wrap; gap: .1rem .9rem; margin: 0; font-size: .8rem; color: #6c757d; white-space: nowrap; }
+        .sisi-reg__stats span { display: inline-flex; align-items: center; gap: .35rem; }
+        .sisi-reg__stats i { font-size: .75rem; }
+        @media (max-width: 575.98px) { .sisi-reg__stats { flex-basis: 100%; } }
 
         /* ── Materiales: lista compacta ───────────────────────── */
         .sisi-files__tools { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .75rem; }
