@@ -2592,6 +2592,48 @@ button.lib-book-card__btn { border: 0; cursor: pointer; font-family: inherit; }
   }
 }
 
+/* Tablet (768–1099px): logo + 3 enlaces + 4 redes + cuenta no caben en una línea y el
+   flex-wrap bajaba las redes a una segunda fila que se montaba sobre el contenido (el
+   alto del menú es fijo). Aquí se compacta: enlaces sin ícono y redes en círculos. */
+@media (min-width: 768px) and (max-width: 1099.98px) {
+  .menuPuklla .menu-sidebar {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+
+  .menuPuklla .menu-nav--primary {
+    flex-wrap: nowrap;
+    gap: 0;
+    margin-right: 0.25rem;
+  }
+
+  .menuPuklla .menu-nav--primary .menu-link {
+    padding: 0.55rem 0.55rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .menuPuklla .menu-nav--primary .menu-link > i {
+    display: none;
+  }
+
+  .menuPuklla .menu-nav--social {
+    gap: 0.3rem;
+  }
+
+  .menuPuklla .menu-link--login,
+  .menuPuklla .menu-link--social {
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .menuPuklla .menu-link--login {
+    margin-left: 0.2rem;
+  }
+}
+
 @media (max-width: 767px) {
   .menuPuklla .menu-actions {
     padding: 0.85rem 1.25rem 1.25rem;

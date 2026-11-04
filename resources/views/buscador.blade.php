@@ -705,7 +705,9 @@
                     revealFallback();
                     return;
                 }
-                gsap.from('.buscador-reveal', {
+                // Cada elemento recibe UN solo tween: las secciones también llevan .buscador-reveal y,
+                // con dos from() encima, el segundo tomaba opacity:0 como valor final y las dejaba invisibles.
+                gsap.from('.buscador-topbar .buscador-reveal', {
                     opacity: 0,
                     y: 16,
                     duration: 0.5,
