@@ -45,21 +45,50 @@ class BusquedaController extends Controller
                 'totales' => ['registros' => 0, 'materiales' => 0, 'aportes' => 0],
                 'resultados' => null,
                 'temas' => $this->temasPrincipales(),
+                'areas' => collect(),
+                'area' => null,
+                'areaDe' => [],
+                'areasPorId' => collect(),
             ]);
         }
 
-        $ids = [
-            'registros' => $this->rankear($this->candidatosRegistros($palabras), $q),
-            'materiales' => $this->rankear($this->candidatosMateriales($palabras), $q),
-            'aportes' => $this->rankear($this->candidatosAportes($palabras), $q),
+        // Cada candidato trae el registro al que pertenece, para saber su área (raíz del árbol).
+        $candidatos = [
+            'registros' => $this->candidatosRegistros($palabras),
+            'materiales' => $this->candidatosMateriales($palabras),
+            'aportes' => $this->candidatosAportes($palabras),
         ];
-        $totales = array_map('count', $ids);
+        $raizDe = $this->mapaDeRaices();
+        $areaDe = [];
+        $ids = [];
+        foreach ($candidatos as $t => $lista) {
+            foreach ($lista as $id => $c) {
+                $areaDe[$t][$id] = $c[2] ? ($raizDe[$c[2]] ?? null) : null;
+            }
+            $ids[$t] = $this->rankear($lista, $q);
+        }
 
         $tab = in_array($request->query('tab'), self::TABS, true) ? $request->query('tab') : null;
         // Sin pestaña elegida: la primera que tenga resultados.
-        $tab ??= collect(self::TABS)->first(fn ($t) => $totales[$t] > 0) ?? 'registros';
+        $tab ??= collect(self::TABS)->first(fn ($t) => count($ids[$t]) > 0) ?? 'registros';
 
-        $pagina = max(1, (int) $request->query('page', 1));
+        // Áreas presentes en la pestaña actual (antes de filtrar), para los chips "¿De qué área?".
+        $conteoAreas = array_count_values(array_filter(array_map(fn ($id) => $areaDe[$tab][$id] ?? null, $ids[$tab])));
+        $areas = $this->areas()->filter(fn ($a) => isset($conteoAreas[$a->id]))
+            ->each(fn ($a) => $a->resultados = $conteoAreas[$a->id])->values();
+
+        // El filtro de área se aplica a todas las pestañas, así sus conteos cuentan lo mismo.
+        $area = (int) $request->query('area', 0);
+        $area = $this->areas()->contains('id', $area) ? $area : null;
+        if ($area) {
+            foreach ($ids as $t => $lista) {
+                $ids[$t] = array_values(array_filter($lista, fn ($id) => ($areaDe[$t][$id] ?? null) === $area));
+            }
+        }
+        $totales = array_map('count', $ids);
+
+        // Una página fuera de rango (enlace viejo, filtro que achicó la lista) muestra la última.
+        $pagina = min(max(1, (int) $request->query('page', 1)), max(1, (int) ceil($totales[$tab] / self::POR_PAGINA)));
         $idsPagina = array_slice($ids[$tab], ($pagina - 1) * self::POR_PAGINA, self::POR_PAGINA);
 
         $items = match ($tab) {
@@ -70,10 +99,10 @@ class BusquedaController extends Controller
 
         $resultados = new LengthAwarePaginator($items, $totales[$tab], self::POR_PAGINA, $pagina, [
             'path' => $request->url(),
-            'query' => ['q' => $q, 'tab' => $tab],
+            'query' => array_filter(['q' => $q, 'tab' => $tab, 'area' => $area]),
         ]);
 
-        $sinResultados = array_sum($totales) === 0;
+        $sinResultados = array_sum(array_map('count', $candidatos)) === 0;
         if ($sinResultados) {
             $this->registrarSinResultados($q);
         }
@@ -85,7 +114,82 @@ class BusquedaController extends Controller
             'totales' => $totales,
             'resultados' => $resultados,
             'temas' => $sinResultados ? $this->temasPrincipales() : collect(),
+            'areas' => $areas,
+            'area' => $area,
+            'areaDe' => $areaDe[$tab] ?? [],
+            'areasPorId' => $this->areas()->keyBy('id'),
         ]);
+    }
+
+    /**
+     * Las áreas del saber (registros raíz) con su color fijo, tomado de tintes andinos.
+     * El color sigue el orden del área, no su id, para que no cambie si se recrean.
+     */
+    private function areas(): Collection
+    {
+        return $this->areasCache ??= Category::query()
+            ->whereNull('parent_id')->where('is_active', true)->orderBy('order')
+            ->get(['id', 'name'])
+            ->values()
+            ->each(function ($a, $i) {
+                $a->nombre = self::nombre($a->name, true);
+                $a->color = self::COLORES_AREA[$i % count(self::COLORES_AREA)];
+            });
+    }
+
+    private ?Collection $areasCache = null;
+
+    /** Verde chilca, ocre, q'olle, cochinilla, naranja, tuna, añil, agua, maíz morado, oliva, tierra. */
+    public const COLORES_AREA = ['#3f7d4e', '#8a5a2b', '#8f6410', '#9c3d2e', '#a9521f', '#a8466b', '#3b4f8f', '#2f7470', '#6b5b95', '#5f6b3a', '#7a4a3a'];
+
+    /** [id de registro => id de su área raíz], con una sola consulta liviana (~1.500 filas). */
+    private function mapaDeRaices(): array
+    {
+        $padre = Category::query()->pluck('parent_id', 'id')->all();
+        $raiz = [];
+        foreach ($padre as $id => $p) {
+            $cur = $id;
+            for ($guard = 0; ($padre[$cur] ?? null) && $guard < 12; $guard++) {
+                $cur = $padre[$cur];
+            }
+            $raiz[$id] = $cur;
+        }
+
+        return $raiz;
+    }
+
+    /**
+     * Nombre legible para la búsqueda: corrige entidades HTML guardadas sin ";" (p. ej.
+     * "Comunicaci&oacuten") y, en las áreas, quita el numeral romano ("VII. Cosmovisión").
+     */
+    public static function nombre(?string $nombre, bool $esArea = false): string
+    {
+        $n = Category::stripLegacyOntologyPrefix((string) $nombre);
+        $n = preg_replace('/&([aeiouAEIOU]acute|[nN]tilde|[uU]uml)(?!;)/', '&$1;', $n);
+        $n = html_entity_decode($n, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        return $esArea ? (preg_replace('/^[IVXLC]+\.\s*/u', '', $n) ?: $n) : $n;
+    }
+
+    /** Área raíz de un registro con sus ancestros cargados. */
+    public static function raiz(?Category $category): ?Category
+    {
+        for ($guard = 0; $category && $category->parent && $guard < 10; $guard++) {
+            $category = $category->parent;
+        }
+
+        return $category;
+    }
+
+    /** Ruta "Padre › Hijo" sin el área raíz (que ya se muestra en su chip de color). */
+    public static function rutaSinArea(?Category $category): string
+    {
+        $partes = [];
+        for ($c = $category, $guard = 0; $c && $c->parent && $guard < 10; $c = $c->parent, $guard++) {
+            array_unshift($partes, self::nombre($c->name));
+        }
+
+        return implode(' › ', $partes);
     }
 
     /** Sugerencias mientras se escribe (JSON liviano: 6 registros + 3 materiales). */
@@ -131,7 +235,7 @@ class BusquedaController extends Controller
     {
         $partes = [];
         for ($c = $category, $guard = 0; $c && $guard < 10; $c = $c->parent, $guard++) {
-            array_unshift($partes, $c->display_name);
+            array_unshift($partes, self::nombre($c->name, $c->parent_id === null));
         }
 
         return implode(' › ', $partes);
@@ -139,7 +243,8 @@ class BusquedaController extends Controller
 
     /**
      * Resalta las palabras buscadas (sin importar tildes ni mayúsculas) en un texto ya
-     * escapado para HTML. Devuelve HTML seguro.
+     * escapado para HTML. Marca la palabra completa que empieza con lo buscado ("Aguas",
+     * no "Agua"+"s") y no marca pedazos en medio de otra palabra. Devuelve HTML seguro.
      */
     public static function resaltar(?string $texto, array $palabras): string
     {
@@ -156,7 +261,7 @@ class BusquedaController extends Controller
             ));
         }, $palabras);
 
-        return preg_replace('/('.implode('|', $patrones).')/iu', '<mark>$1</mark>', $html) ?? $html;
+        return preg_replace('/(?<![\p{L}\p{N}])((?:'.implode('|', $patrones).')[\p{L}\p{N}]*)/iu', '<mark>$1</mark>', $html) ?? $html;
     }
 
     /** Recorte de ~160 caracteres de un texto largo (HTML del editor) alrededor de la primera coincidencia. */
@@ -181,7 +286,7 @@ class BusquedaController extends Controller
         return ($inicio > 0 ? '…' : '').$recorte.($inicio + $largo < mb_strlen($plano) ? '…' : '');
     }
 
-    /* ── Candidatos: [id => [texto principal, texto secundario]] ─────────── */
+    /* ── Candidatos: [id => [texto principal, texto secundario, id del registro]] ── */
 
     private function candidatosRegistros(array $palabras): array
     {
@@ -189,7 +294,7 @@ class BusquedaController extends Controller
             ->where('is_active', true)
             ->where(fn (Builder $q) => $this->cadaPalabra($q, $palabras, ['name', 'description']))
             ->get(['id', 'name', 'description'])
-            ->mapWithKeys(fn ($c) => [$c->id => [$c->display_name, (string) $c->description]])
+            ->mapWithKeys(fn ($c) => [$c->id => [$c->display_name, (string) $c->description, $c->id]])
             ->all();
     }
 
@@ -198,8 +303,8 @@ class BusquedaController extends Controller
         return CategoryFile::query()
             ->whereHas('category', fn ($c) => $c->where('is_active', true))
             ->where(fn (Builder $q) => $this->cadaPalabra($q, $palabras, ['nombre_original']))
-            ->get(['id', 'nombre_original'])
-            ->mapWithKeys(fn ($f) => [$f->id => [(string) $f->nombre_original, '']])
+            ->get(['id', 'nombre_original', 'category_id'])
+            ->mapWithKeys(fn ($f) => [$f->id => [(string) $f->nombre_original, '', $f->category_id]])
             ->all();
     }
 
@@ -208,8 +313,8 @@ class BusquedaController extends Controller
         return Aportacion::query()
             ->where('is_approved', true)
             ->where(fn (Builder $q) => $this->cadaPalabra($q, $palabras, ['titulo', 'detalle', 'nombre_ol', 'institucion', 'ubicacion']))
-            ->get(['id', 'titulo', 'nombre_ol', 'detalle'])
-            ->mapWithKeys(fn ($a) => [$a->id => [(string) ($a->titulo ?: $a->nombre_ol), strip_tags((string) $a->detalle)]])
+            ->get(['id', 'titulo', 'nombre_ol', 'detalle', 'category_id'])
+            ->mapWithKeys(fn ($a) => [$a->id => [(string) ($a->titulo ?: $a->nombre_ol), strip_tags((string) $a->detalle), $a->category_id]])
             ->all();
     }
 
@@ -298,7 +403,7 @@ class BusquedaController extends Controller
 
         return Aportacion::query()
             ->whereIn('id', $ids)
-            ->with(['category:id,name,parent_id', 'category.parent:id,name,parent_id', 'archivos:id,aportacion_id,tipo'])
+            ->with(['category.'.self::ANCESTROS => fn ($q) => $q->select('id', 'name', 'parent_id'), 'category:id,name,parent_id', 'archivos:id,aportacion_id,tipo'])
             ->get()
             ->sortBy(fn ($a) => array_search($a->id, $ids, true))
             ->values();
