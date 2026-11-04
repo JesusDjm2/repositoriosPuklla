@@ -216,6 +216,9 @@ class EnlacesController extends Controller
 
         $deAportaciones = AportacionArchivo::query()
             ->where('tipo', $tipo)
+            // Recién subidos siguen en cola (SubirArchivoAportacionJob) o fallaron:
+            // aún no tienen drive_id y no hay nada que previsualizar.
+            ->whereNotNull('drive_id')
             ->whereHas('aportacion', fn ($q) => $q->where('is_approved', true))
             ->with(['aportacion.category.parent.parent'])
             ->latest()
