@@ -193,6 +193,16 @@ Route::get('sisipedia/registros', [CategoryController::class, 'registros'])->nam
 Route::get('sisipedia/categorias', [CategoryController::class, 'publicIndex'])->name('public.categoria.sisi');
 Route::get('sisipedia/search', [CategoryController::class, 'search'])->name('sisipedia.search');
 
+// Búsqueda propia de Sisipedia (la global de la Asociación es la del pie de página).
+Route::get('sisipedia/buscar', [\App\Http\Controllers\sisipedia\BusquedaController::class, 'index'])
+    ->middleware('throttle:60,1')->name('sisipedia.buscar');
+Route::get('sisipedia/buscar/sugerencias', [\App\Http\Controllers\sisipedia\BusquedaController::class, 'sugerencias'])
+    ->middleware('throttle:120,1')->name('sisipedia.buscar.sugerencias');
+Route::get('sisipedia/busquedas-sin-resultados', [\App\Http\Controllers\sisipedia\BusquedaController::class, 'sinResultados'])
+    ->middleware(['auth', 'role:admin|sisicha'])->name('sisipedia.busquedas.sin-resultados');
+// Árbol de registros: los niveles profundos se cargan al abrirlos (ver sisichakuna.tree).
+Route::get('sisipedia/registros/{category}/hijos', [CategoryController::class, 'hijos'])->name('sisipedia.registros.hijos');
+
 // Páginas estáticas de Sisipedia (menú simplificado: Inicio/Nosotros/Contáctanos).
 Route::get('sisipedia/nosotros', fn () => view('sisichakuna.nosotros'))->name('sisipedia.nosotros');
 Route::get('sisipedia/contacto', fn () => view('sisichakuna.contacto'))->name('sisipedia.contacto');

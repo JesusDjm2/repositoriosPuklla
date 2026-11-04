@@ -1,6 +1,6 @@
 {{--
     Barra de navegación Sisipedia (panel administrativo).
-    $active: 'home' | 'categories' | 'aportaciones'
+    $active: 'home' | 'categories' | 'aportaciones' | 'busquedas'
 --}}
 @php
     $active = $active ?? 'categories';
@@ -17,6 +17,10 @@
                 <a href="{{ route('sisipedia.aportaciones.index') }}"
                     class="btn btn-sm {{ $active === 'aportaciones' ? 'btn-primary' : 'btn-outline-secondary' }}">
                     <i class="fa fa-users mr-1"></i>Aportaciones
+                </a>
+                <a href="{{ route('sisipedia.busquedas.sin-resultados') }}"
+                    class="btn btn-sm {{ $active === 'busquedas' ? 'btn-primary' : 'btn-outline-secondary' }}">
+                    <i class="fa fa-search mr-1"></i>Búsquedas sin resultados
                 </a>
             </div>
             <a href="{{ route('public.categoria.sisi') }}" target="_blank" rel="noopener"

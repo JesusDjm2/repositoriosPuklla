@@ -169,20 +169,49 @@ class CategoryController extends Controller
             ->with('success', 'Categoría creada exitosamente.');
     }
 
+    /**
+     * Raíces del árbol público + su primer nivel. Los niveles más profundos se piden al
+     * abrir cada carpeta (hijos()). Antes se renderizaba el árbol entero (~1.500 nodos,
+     * ~3,8 MB de HTML y una consulta de conteo por nodo) en cada visita.
+     */
+    private function treeRoots()
+    {
+        return $this->nodosArbol()
+            ->whereNull('parent_id')
+            ->with(['children' => fn ($q) => $this->nodosArbol($q)])
+            ->get();
+    }
+
+    /** Consulta base de un nivel del árbol público, con lo que pinta sisichakuna.tree. */
+    private function nodosArbol($query = null)
+    {
+        return ($query ?? Category::query())
+            ->where('is_active', true)
+            ->select('id', 'name', 'slug', 'description', 'parent_id', 'order')
+            ->withCount([
+                'children as public_children_count' => fn ($q) => $q->where('is_active', true),
+                'aportaciones' => fn ($q) => $q->where('is_approved', true),
+            ])
+            ->with('files:id,category_id,tipo')
+            ->orderBy('order');
+    }
+
+    /** HTML de los hijos de un nodo del árbol (se inserta al expandirlo). */
+    public function hijos(Request $request, Category $category)
+    {
+        abort_unless($category->is_active, 404);
+
+        $hijos = $this->nodosArbol()->where('parent_id', $category->id)->get();
+        $level = min(10, max(1, (int) $request->query('level', 1)));
+
+        return response()
+            ->view('sisichakuna.tree-children', compact('hijos', 'level'))
+            ->header('Cache-Control', 'public, max-age=300');
+    }
+
     public function publicIndex()
     {
-        $tree = Category::with([
-            'children.children.children.children',
-            'children.files',
-            'children.children.files',
-            'children.children.children.files',
-            'children.children.children.children.files',
-        ])
-            ->withCount('aportaciones')
-            ->whereNull('parent_id')
-            ->where('is_active', true)
-            ->orderBy('order')
-            ->get();
+        $tree = $this->treeRoots();
 
         $aportacionesSueltas = Aportacion::with('archivos')
             ->whereNull('category_id')
@@ -344,18 +373,13 @@ class CategoryController extends Controller
             return view('sisichakuna.show', compact('archivos', 'tipo', 'archivoCounts', 'q'));
         }
 
-        $tree = Category::with([
-            'children.children.children.children',
-            'children.files',
-            'children.children.files',
-            'children.children.children.files',
-            'children.children.children.children.files',
-        ])
-            ->withCount('aportaciones')
-            ->whereNull('parent_id')
-            ->where('is_active', true)
-            ->orderBy('order')
-            ->get();
+        // Enlaces viejos (?buscar=) apuntaban al filtro del árbol: ahora hay búsqueda propia.
+        $buscar = trim((string) $request->get('buscar', ''));
+        if ($buscar !== '') {
+            return redirect()->route('sisipedia.buscar', ['q' => $buscar], 301);
+        }
+
+        $tree = $this->treeRoots();
 
         $aportacionesSueltas = Aportacion::with('archivos')
             ->whereNull('category_id')
@@ -364,9 +388,7 @@ class CategoryController extends Controller
             ->limit(20)
             ->get();
 
-        $buscarInicial = trim((string) $request->get('buscar', ''));
-
-        return view('sisichakuna.show', compact('tree', 'aportacionesSueltas', 'archivoCounts', 'buscarInicial'));
+        return view('sisichakuna.show', compact('tree', 'aportacionesSueltas', 'archivoCounts'));
     }
 
     public function edit(Category $category)

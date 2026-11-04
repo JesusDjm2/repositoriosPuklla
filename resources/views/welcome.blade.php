@@ -21,20 +21,22 @@
             </p>
 
             {{-- Busca solo dentro de Sisipedia; la búsqueda de toda la Asociación es la del pie de página. --}}
-            <form action="{{ route('public.sisi') }}" method="GET" role="search"
+            <form action="{{ route('sisipedia.buscar') }}" method="GET" role="search"
                 class="sisipedia-hero-search mx-auto sisipedia-hero-anim">
                 <div class="input-group shadow">
                     <span class="input-group-text bg-white">
                         <i class="fa fa-search"></i>
                     </span>
-                    <input type="search" name="buscar" class="form-control" aria-label="Buscar en Sisipedia"
-                        placeholder="Busca un tema: plantas medicinales, fiestas, tejido..." value="{{ request('buscar') }}"
-                        minlength="3" maxlength="120" autocomplete="off" required>
+                    <input type="search" name="q" class="form-control" aria-label="Buscar en Sisipedia" data-sisi-suggest
+                        placeholder="Busca un tema: plantas medicinales, fiestas, tejido..." value="{{ request('q') }}"
+                        minlength="2" maxlength="120" autocomplete="off" required>
                     <button class="btn fw-semibold px-4 text-white" type="submit">
                         Buscar
                     </button>
                 </div>
             </form>
+
+            @include('sisichakuna.partials.buscar-sugerencias')
 
             <p class="sisipedia-hero-formats-label sisipedia-hero-anim">O explora por formato</p>
             <div class="sisipedia-hero-formats sisipedia-hero-anim">

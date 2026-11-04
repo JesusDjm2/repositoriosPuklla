@@ -48,6 +48,7 @@ class ProyectoDetector
             'public.sisi',
             'public.categoria.sisi',
             'sisipedia.search',
+            'sisipedia.buscar',
             'sisipedia.categories.show',
             'sisipedia.nosotros',
             'sisipedia.contacto',

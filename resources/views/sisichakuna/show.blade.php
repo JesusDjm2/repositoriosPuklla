@@ -89,49 +89,42 @@
      ════════════════════════════════════════════════════════════ --}}
     <div class="row mt-2 mt-md-4">
         <div class="col-12 mb-3">
+            {{-- Buscar ya no filtra este árbol en el navegador: va a la página de resultados. --}}
             <div class="d-flex flex-column flex-sm-row gap-2">
-                <div class="input-group flex-grow-1">
+                <form action="{{ route('sisipedia.buscar') }}" method="GET" role="search" class="input-group flex-grow-1">
                     <span class="input-group-text bg-white">
                         <i class="fa fa-search text-muted"></i>
                     </span>
-                    <input type="text" id="searchCategory" class="form-control"
-                        placeholder="Buscar categoría por nombre o descripción..."
-                        value="{{ $buscarInicial ?? '' }}">
-                    <button class="btn btn-outline-secondary" type="button" id="clearSearch">
-                        <i class="fa fa-times"></i>
-                    </button>
-                </div>
-                <div class="d-flex gap-2 flex-shrink-0">
-                    <button class="btn btn-sm btn-outline-secondary" id="expandAll" title="Expandir todo">
-                        <i class="fa fa-expand me-1"></i>
-                        <span class="d-none d-sm-inline">Expandir</span>
-                    </button>
-                    <button class="btn btn-sm btn-outline-secondary" id="collapseAll" title="Colapsar todo">
-                        <i class="fa fa-compress me-1"></i>
-                        <span class="d-none d-sm-inline">Colapsar</span>
-                    </button>
-                </div>
+                    <input type="search" name="q" class="form-control" data-sisi-suggest
+                        aria-label="Buscar en Sisipedia" placeholder="Buscar un tema, audio o documento…"
+                        minlength="2" maxlength="120" autocomplete="off" required>
+                    <button class="btn btn-primary" type="submit">Buscar</button>
+                </form>
+                <button class="btn btn-sm btn-outline-secondary flex-shrink-0" id="collapseAll" type="button" title="Cerrar todas las carpetas">
+                    <i class="fa fa-compress me-1"></i>
+                    <span class="d-none d-sm-inline">Cerrar todo</span>
+                </button>
             </div>
             <div class="d-flex flex-wrap gap-2 mt-2">
                 <small class="text-muted me-1">Contiene:</small>
                 <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger" style="font-size:.65rem;">
-                    <i class="fa fa-file-pdf-o me-1"></i>PDF
+                    <i class="fa fa-file-pdf me-1"></i>PDF
                 </span>
                 <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success" style="font-size:.65rem;">
                     <i class="fa fa-music me-1"></i>Audio
                 </span>
                 <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary" style="font-size:.65rem;">
-                    <i class="fa fa-video-camera me-1"></i>Video
+                    <i class="fa fa-video me-1"></i>Video
                 </span>
                 <span class="badge rounded-pill bg-warning bg-opacity-10 text-warning border border-warning" style="font-size:.65rem;">
-                    <i class="fa fa-users me-1"></i>Aportaciones
+                    <i class="fa fa-users me-1"></i>Aportes
                 </span>
                 <span class="badge rounded-pill bg-light text-secondary border" style="font-size:.65rem;">
-                    <i class="fa fa-folder-open me-1"></i>Sub-registros
+                    <i class="fa fa-folder-open me-1"></i>Subtemas
                 </span>
             </div>
             <small class="text-muted mt-1 d-block">
-                <i class="fa fa-info-circle"></i> Busca y navega por herencias de forma rápida.
+                <i class="fa fa-info-circle"></i> Toca la flecha <i class="fa fa-chevron-right"></i> para ver los subtemas de cada tema.
             </small>
         </div>
         <div class="col-12">
@@ -153,9 +146,6 @@
                                 <p class="text-muted mb-0">No hay categorías disponibles</p>
                             </div>
                         @endif
-                    </div>
-                    <div id="noResults" class="alert alert-light border text-center mt-3 mb-0 d-none">
-                        <i class="fa fa-search me-1"></i>No se encontraron categorías con ese término.
                     </div>
                 </div>
             </div>
@@ -934,114 +924,52 @@ document.addEventListener('DOMContentLoaded', function () {
 @endif
 
 @if(!isset($tipo))
-{{-- ── Scripts del árbol ──────────────────────────────────── --}}
+{{-- ── Scripts del árbol ──────────────────────────────────────
+     Los subtemas profundos llegan vacíos (data-lazy-url) y se piden al abrirlos.
+     Delegado en document: también cubre los nodos insertados después. ── --}}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const searchInput    = document.getElementById('searchCategory');
-    const clearButton    = document.getElementById('clearSearch');
-    const expandAllBtn   = document.getElementById('expandAll');
-    const collapseAllBtn = document.getElementById('collapseAll');
-    const noResults      = document.getElementById('noResults');
-
-    if (!searchInput) return;
-
-    function allCollapses() {
-        return Array.from(document.querySelectorAll('[data-tree-children]'));
-    }
-    function setToggleIcon(btn, expanded) {
+    function setToggleIcon(list, expanded) {
+        const btn = document.querySelector('[data-bs-target="#' + list.id + '"]');
         const icon = btn ? btn.querySelector('.toggle-icon') : null;
         if (!icon) return;
         icon.classList.toggle('fa-chevron-right', !expanded);
-        icon.classList.toggle('fa-chevron-down',   expanded);
-    }
-    function expandCollapse(list, expand) {
-        list.classList.toggle('show', expand);
-        const btn = document.querySelector(`[data-bs-target="#${list.id}"]`);
-        setToggleIcon(btn, expand);
-        if (btn) btn.setAttribute('aria-expanded', expand);
+        icon.classList.toggle('fa-chevron-down', expanded);
     }
 
-    if (expandAllBtn)   expandAllBtn.addEventListener('click',   () => allCollapses().forEach(l => expandCollapse(l, true)));
-    if (collapseAllBtn) collapseAllBtn.addEventListener('click', () => allCollapses().forEach(l => expandCollapse(l, false)));
+    function cargarHijos(list) {
+        const url = list.dataset.lazyUrl;
+        if (!url || list.dataset.loaded) return;
+        list.dataset.loaded = '1';
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+            .then(function (html) { list.innerHTML = html; })
+            .catch(function () {
+                delete list.dataset.loaded;
+                list.innerHTML = '<li class="text-danger small ps-4 py-2">No se pudo cargar. ' +
+                    '<button type="button" class="btn btn-link btn-sm p-0 align-baseline" data-tree-retry>Intentar de nuevo</button></li>';
+            });
+    }
 
-    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function (btn) {
-        const target = document.querySelector(btn.getAttribute('data-bs-target'));
-        if (!target) return;
-        target.addEventListener('show.bs.collapse', () => setToggleIcon(btn, true));
-        target.addEventListener('hide.bs.collapse', () => setToggleIcon(btn, false));
+    document.addEventListener('show.bs.collapse', function (e) {
+        if (!e.target.matches('[data-tree-children]')) return;
+        setToggleIcon(e.target, true);
+        cargarHijos(e.target);
+    });
+    document.addEventListener('hide.bs.collapse', function (e) {
+        if (e.target.matches('[data-tree-children]')) setToggleIcon(e.target, false);
+    });
+    document.addEventListener('click', function (e) {
+        const retry = e.target.closest('[data-tree-retry]');
+        if (retry) cargarHijos(retry.closest('[data-tree-children]'));
     });
 
-    function highlight(el, term) {
-        if (!el) return;
-        if (!el.dataset.origHtml) el.dataset.origHtml = el.innerHTML;
-        const esc = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        el.innerHTML = el.dataset.origHtml.replace(
-            new RegExp(`(${esc})`, 'gi'),
-            '<mark style="background:#fff176;padding:0 2px;border-radius:3px;font-weight:inherit;">$1</mark>'
-        );
-    }
-    function clearHighlights() {
-        document.querySelectorAll('[data-orig-html]').forEach(el => {
-            el.innerHTML = el.dataset.origHtml;
-            delete el.dataset.origHtml;
+    const collapseAllBtn = document.getElementById('collapseAll');
+    if (collapseAllBtn) collapseAllBtn.addEventListener('click', function () {
+        document.querySelectorAll('[data-tree-children].show').forEach(function (list) {
+            bootstrap.Collapse.getOrCreateInstance(list, { toggle: false }).hide();
         });
-    }
-    function showAll() {
-        clearHighlights();
-        document.querySelectorAll('[data-category-item]').forEach(node => {
-            const row = node.closest('.category-node');
-            if (row) row.classList.remove('d-none');
-        });
-        allCollapses().forEach(l => expandCollapse(l, false));
-        if (noResults) noResults.classList.add('d-none');
-    }
-    function filterCategories(term) {
-        // Sin tildes, igual que data-searchable (Str::ascii en tree.blade): "cosmovision" encuentra "Cosmovisión"
-        const search = term.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-        if (!search) { showAll(); return; }
-        clearHighlights();
-        allCollapses().forEach(l => l.classList.remove('show'));
-        let matches = 0;
-        document.querySelectorAll('[data-category-item]').forEach(node => {
-            const row = node.closest('.category-node');
-            if (!row) return;
-            const isMatch = (node.dataset.searchable || '').includes(search);
-            row.classList.toggle('d-none', !isMatch);
-            if (isMatch) {
-                matches++;
-                highlight(node.querySelector('.fw-semibold'), term.trim());
-                highlight(node.querySelector('small.text-muted'), term.trim());
-                let ancestor = row.parentElement?.closest('.category-node');
-                while (ancestor) {
-                    ancestor.classList.remove('d-none');
-                    const childList = ancestor.querySelector('[data-tree-children]');
-                    if (childList) expandCollapse(childList, true);
-                    ancestor = ancestor.parentElement?.closest('.category-node');
-                }
-            }
-        });
-        if (noResults) noResults.classList.toggle('d-none', matches > 0);
-    }
-
-    let debounce = null;
-    searchInput.addEventListener('input', function (e) {
-        clearTimeout(debounce);
-        debounce = setTimeout(() => filterCategories(e.target.value), 200);
     });
-    if (clearButton) clearButton.addEventListener('click', function () {
-        searchInput.value = '';
-        showAll();
-        searchInput.focus();
-    });
-
-    // ── Búsqueda inicial (llega desde la portada vía ?buscar=) ──
-    if (searchInput.value.trim()) {
-        filterCategories(searchInput.value);
-        const treeCard = document.getElementById('treeCard');
-        if (treeCard) {
-            treeCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    }
 });
 </script>
 @endif
