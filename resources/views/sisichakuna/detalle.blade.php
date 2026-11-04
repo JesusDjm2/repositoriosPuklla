@@ -119,88 +119,132 @@
                     </nav>
                 </section>
 
-                {{-- Archivos del registro (curados por el equipo) --}}
+                {{-- Materiales del registro (curados por el equipo).
+                     Lista compacta: una fila por archivo, aunque el registro tenga 20+.
+                     El reproductor de audio solo se abre al tocar "Escuchar" (uno a la vez);
+                     con muchos archivos aparecen filtros por tipo, buscador y "Mostrar más". --}}
                 @if ($category->files->isNotEmpty())
-                    <section class="sisi-card sisi-gap sisipedia-reveal-onload" id="sisi-files" aria-labelledby="sisi-files-title">
+                    @php
+                        $filesPorTipo = $category->files->groupBy('tipo');
+                        $plural = ['pdf' => 'PDF', 'doc' => 'Word', 'audio' => 'Audios', 'video' => 'Videos', 'imagen' => 'Imágenes'];
+                        $mostrarInicial = 8;
+                    @endphp
+                    <section class="sisi-card sisi-gap sisipedia-reveal-onload" id="sisi-files" aria-labelledby="sisi-files-title"
+                             data-sisi-files data-visible="{{ $mostrarInicial }}">
                         <h2 class="sisi-section-title" id="sisi-files-title">
                             <i class="fa fa-paperclip" aria-hidden="true"></i>Materiales
                             <span class="sisi-count">{{ $nFiles }}</span>
                         </h2>
-                        <p class="sisi-help">Toca <strong>Ver</strong> para mirarlo aquí o <strong>Descargar</strong> para guardarlo en tu equipo.</p>
-                        <div class="row g-2 g-md-3">
+                        <p class="sisi-help">
+                            Toca <strong>Escuchar</strong> o <strong>Ver</strong> para abrirlo aquí, o
+                            <i class="fa fa-download" aria-hidden="true"></i><span class="visually-hidden">el botón de descarga</span>
+                            para guardarlo en tu equipo.
+                        </p>
+
+                        @if ($filesPorTipo->count() > 1 || $nFiles > $mostrarInicial)
+                            <div class="sisi-files__tools">
+                                @if ($filesPorTipo->count() > 1)
+                                    <div class="sisi-files__filters" role="group" aria-label="Filtrar por tipo">
+                                        <button type="button" class="is-active" data-filter="" aria-pressed="true">
+                                            Todos <span>{{ $nFiles }}</span>
+                                        </button>
+                                        @foreach ($filesPorTipo as $tipo => $grupo)
+                                            @php $tm = $tipoMeta[$tipo] ?? ['icon' => 'fa-file', 'color' => 'secondary']; @endphp
+                                            <button type="button" data-filter="{{ $tipo }}" aria-pressed="false">
+                                                <i class="fa {{ $tm['icon'] }} text-{{ $tm['color'] }}" aria-hidden="true"></i>
+                                                {{ $plural[$tipo] ?? ucfirst($tipo) }} <span>{{ $grupo->count() }}</span>
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                @endif
+                                @if ($nFiles > $mostrarInicial)
+                                    <label class="sisi-files__search">
+                                        <i class="fa fa-search" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Buscar material por nombre</span>
+                                        <input type="search" placeholder="Buscar por nombre…" data-search autocomplete="off">
+                                    </label>
+                                @endif
+                            </div>
+                        @endif
+
+                        <ul class="sisi-files" data-list>
                             @foreach ($category->files as $archivo)
                                 @php
                                     $m = $tipoMeta[$archivo->tipo] ?? ['label' => ucfirst($archivo->tipo), 'color' => 'secondary', 'icon' => 'fa-file'];
+                                    $nombre = $archivo->nombre_display;
                                     $driveUrl = \App\Services\GoogleDriveService::getUrl($archivo->drive_id);
                                     $downloadUrl = \App\Services\GoogleDriveService::getEmbedUrl($archivo->drive_id);
-                                    $previewUrl = \App\Services\GoogleDriveService::getPreviewUrl($archivo->drive_id);
+                                    $thumb = in_array($archivo->tipo, ['imagen', 'video'], true)
+                                        ? \App\Services\GoogleDriveService::getThumbnailUrl($archivo->drive_id, 120)
+                                        : null;
                                 @endphp
-                                <div class="{{ $archivo->tipo === 'audio' ? 'col-12' : 'col-12 col-sm-6' }}">
-                                    <div class="sisipedia-file-card">
-                                        @if ($archivo->tipo === 'imagen')
-                                            <button type="button" class="sisipedia-file-card__media sisipedia-img-preview-trigger"
-                                                    data-full-url="{{ \App\Services\GoogleDriveService::getThumbnailUrl($archivo->drive_id, 1400) }}"
-                                                    data-nombre="{{ $archivo->nombre_display }}"
-                                                    aria-label="Ampliar {{ $archivo->nombre_display }}">
-                                                <img src="{{ \App\Services\GoogleDriveService::getThumbnailUrl($archivo->drive_id, 500) }}"
-                                                     alt="{{ $archivo->nombre_display }}" loading="lazy"
-                                                     onerror="this.style.display='none'">
-                                            </button>
-                                        @elseif ($archivo->tipo === 'video')
-                                            <div class="sisipedia-file-card__media sisipedia-file-card__media--video sisipedia-file-video-wrap"
-                                                 role="button" tabindex="0"
-                                                 aria-label="Reproducir {{ $archivo->nombre_display }}"
-                                                 onclick="abrirVistaPreviaVideo({{ \Illuminate\Support\Js::from(route('sisipedia.video.stream', $archivo)) }}, {{ \Illuminate\Support\Js::from($archivo->nombre_display) }}, {{ \Illuminate\Support\Js::from($driveUrl) }})"
-                                                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
-                                                <img src="{{ \App\Services\GoogleDriveService::getThumbnailUrl($archivo->drive_id, 400) }}"
-                                                     alt="{{ $archivo->nombre_display }}" loading="lazy"
-                                                     onerror="this.style.display='none'">
-                                                <span class="sisipedia-load-category-video" aria-hidden="true"><i class="fa fa-play"></i></span>
-                                            </div>
-                                        @elseif ($archivo->tipo === 'audio')
-                                            <div class="p-2">
-                                                @include('partials.audio-player', [
-                                                    'src' => route('sisipedia.audio.stream', $archivo),
-                                                    'title' => $archivo->nombre_display,
-                                                    'driveUrl' => $driveUrl,
-                                                    'downloadUrl' => $downloadUrl,
-                                                ])
-                                            </div>
-                                        @endif
-
-                                        <div class="sisipedia-file-card__body">
-                                            <span class="sisipedia-file-card__icon bg-{{ $m['color'] }} bg-opacity-10 text-{{ $m['color'] }}" aria-hidden="true">
-                                                <i class="fa {{ $m['icon'] }}"></i>
-                                            </span>
-                                            <div class="sisi-min-0 flex-grow-1">
-                                                <div class="sisipedia-file-card__name" title="{{ $archivo->nombre_display }}">{{ $archivo->nombre_display }}</div>
-                                                <div class="sisipedia-file-card__type">{{ $m['label'] }}</div>
-                                            </div>
-                                        </div>
-                                        <div class="sisipedia-file-card__actions">
-                                            @if ($archivo->tipo === 'pdf')
-                                                <button type="button" class="btn btn-sm btn-outline-{{ $m['color'] }} sisipedia-open-preview-modal"
-                                                        data-preview="{{ $previewUrl }}" data-nombre="{{ $archivo->nombre_display }}"
-                                                        data-drive="{{ $driveUrl }}" data-download="{{ $downloadUrl }}"
-                                                        aria-label="Ver {{ $archivo->nombre_display }}">
-                                                    <i class="fa fa-eye me-1" aria-hidden="true"></i>Ver
+                                <li class="sisi-file" data-tipo="{{ $archivo->tipo }}" data-nombre="{{ mb_strtolower(\Illuminate\Support\Str::ascii($nombre)) }}">
+                                    <div class="sisi-file__row">
+                                        <span class="sisi-file__icon bg-{{ $m['color'] }} bg-opacity-10 text-{{ $m['color'] }}" aria-hidden="true">
+                                            @if ($thumb)
+                                                <img src="{{ $thumb }}" alt="" loading="lazy" onerror="this.remove()">
+                                            @endif
+                                            <i class="fa {{ $m['icon'] }}"></i>
+                                        </span>
+                                        <span class="sisi-file__text">
+                                            <span class="sisi-file__name" title="{{ $nombre }}">{{ $nombre }}</span>
+                                            <span class="sisi-file__type">{{ $m['label'] }}</span>
+                                        </span>
+                                        <span class="sisi-file__actions">
+                                            @if ($archivo->tipo === 'audio')
+                                                <button type="button" class="btn btn-sm btn-outline-{{ $m['color'] }}" data-play
+                                                        aria-expanded="false" aria-label="Escuchar {{ $nombre }}">
+                                                    <i class="fa fa-play" aria-hidden="true"></i><span class="sisi-file__lbl">Escuchar</span>
                                                 </button>
-                                            @elseif (! in_array($archivo->tipo, ['imagen', 'video', 'audio'], true))
-                                                <a href="{{ $driveUrl }}" target="_blank" rel="noopener"
-                                                   class="btn btn-sm btn-outline-{{ $m['color'] }}"
-                                                   aria-label="Abrir {{ $archivo->nombre_display }}">
-                                                    <i class="fa fa-external-link-alt me-1" aria-hidden="true"></i>Abrir
+                                            @elseif ($archivo->tipo === 'pdf')
+                                                <button type="button" class="btn btn-sm btn-outline-{{ $m['color'] }} sisipedia-open-preview-modal"
+                                                        data-preview="{{ \App\Services\GoogleDriveService::getPreviewUrl($archivo->drive_id) }}"
+                                                        data-nombre="{{ $nombre }}" data-drive="{{ $driveUrl }}" data-download="{{ $downloadUrl }}"
+                                                        aria-label="Ver {{ $nombre }}">
+                                                    <i class="fa fa-eye" aria-hidden="true"></i><span class="sisi-file__lbl">Ver</span>
+                                                </button>
+                                            @elseif ($archivo->tipo === 'imagen')
+                                                <button type="button" class="btn btn-sm btn-outline-{{ $m['color'] }} sisipedia-img-preview-trigger"
+                                                        data-full-url="{{ \App\Services\GoogleDriveService::getThumbnailUrl($archivo->drive_id, 1400) }}"
+                                                        data-nombre="{{ $nombre }}" aria-label="Ver {{ $nombre }}">
+                                                    <i class="fa fa-eye" aria-hidden="true"></i><span class="sisi-file__lbl">Ver</span>
+                                                </button>
+                                            @elseif ($archivo->tipo === 'video')
+                                                <button type="button" class="btn btn-sm btn-outline-{{ $m['color'] }}"
+                                                        onclick="abrirVistaPreviaVideo({{ \Illuminate\Support\Js::from(route('sisipedia.video.stream', $archivo)) }}, {{ \Illuminate\Support\Js::from($nombre) }}, {{ \Illuminate\Support\Js::from($driveUrl) }})"
+                                                        aria-label="Ver video {{ $nombre }}">
+                                                    <i class="fa fa-play" aria-hidden="true"></i><span class="sisi-file__lbl">Ver</span>
+                                                </button>
+                                            @else
+                                                <a href="{{ $driveUrl }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-{{ $m['color'] }}"
+                                                   aria-label="Abrir {{ $nombre }}">
+                                                    <i class="fa fa-external-link-alt" aria-hidden="true"></i><span class="sisi-file__lbl">Abrir</span>
                                                 </a>
                                             @endif
                                             <a href="{{ $downloadUrl }}" class="btn btn-sm btn-{{ $m['color'] }}"
-                                               aria-label="Descargar {{ $archivo->nombre_display }}">
-                                                <i class="fa fa-download me-1" aria-hidden="true"></i>Descargar
+                                               title="Descargar" aria-label="Descargar {{ $nombre }}">
+                                                <i class="fa fa-download" aria-hidden="true"></i>
                                             </a>
-                                        </div>
+                                        </span>
                                     </div>
-                                </div>
+                                    @if ($archivo->tipo === 'audio')
+                                        <div class="sisi-file__player" hidden>
+                                            @include('partials.audio-player', [
+                                                'src' => route('sisipedia.audio.stream', $archivo),
+                                                'title' => $nombre,
+                                                'driveUrl' => $driveUrl,
+                                                'downloadUrl' => $downloadUrl,
+                                            ])
+                                        </div>
+                                    @endif
+                                </li>
                             @endforeach
-                        </div>
+                        </ul>
+
+                        <p class="sisi-files__none" data-none hidden>No hay materiales con ese nombre.</p>
+                        @if ($nFiles > $mostrarInicial)
+                            <button type="button" class="btn btn-light w-100 sisi-files__more" data-more></button>
+                        @endif
                     </section>
                 @endif
             </div>
@@ -530,6 +574,87 @@
             };
         });
 
+        /** Materiales: filtro por tipo, búsqueda, "Mostrar más" y reproductor bajo demanda */
+        document.querySelectorAll('[data-sisi-files]').forEach(function (box) {
+            var items = Array.from(box.querySelectorAll('.sisi-file'));
+            var limit = parseInt(box.getAttribute('data-visible'), 10) || items.length;
+            var moreBtn = box.querySelector('[data-more]');
+            var none = box.querySelector('[data-none]');
+            var search = box.querySelector('[data-search]');
+            var state = { tipo: '', q: '', all: false };
+
+            function norm(s) {
+                return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+            }
+
+            function render() {
+                var matches = items.filter(function (li) {
+                    return (!state.tipo || li.dataset.tipo === state.tipo)
+                        && (!state.q || li.dataset.nombre.indexOf(state.q) !== -1);
+                });
+                // Al filtrar o buscar se muestra todo lo que coincide; el recorte solo aplica a "Todos".
+                var cap = (state.all || state.tipo || state.q) ? Infinity : limit;
+                items.forEach(function (li) { li.hidden = true; });
+                matches.forEach(function (li, i) { li.hidden = i >= cap; });
+                if (none) none.hidden = matches.length > 0;
+                if (moreBtn) {
+                    var rest = matches.length - Math.min(cap, matches.length);
+                    moreBtn.hidden = rest <= 0;
+                    moreBtn.innerHTML = '<i class="fa fa-chevron-down me-1" aria-hidden="true"></i>Mostrar ' +
+                        (rest === 1 ? 'el material restante' : 'los ' + rest + ' materiales restantes');
+                }
+            }
+
+            box.querySelectorAll('[data-filter]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    state.tipo = btn.dataset.filter;
+                    box.querySelectorAll('[data-filter]').forEach(function (b) {
+                        b.classList.toggle('is-active', b === btn);
+                        b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+                    });
+                    render();
+                });
+            });
+            if (search) {
+                search.addEventListener('input', function () { state.q = norm(search.value.trim()); render(); });
+            }
+            if (moreBtn) {
+                moreBtn.addEventListener('click', function () { state.all = true; render(); });
+            }
+
+            // "Escuchar": abre el reproductor de esa fila y lo inicia; cierra el que estuviera abierto.
+            box.addEventListener('click', function (e) {
+                var btn = e.target.closest('[data-play]');
+                if (!btn) return;
+                var li = btn.closest('.sisi-file');
+                var player = li.querySelector('.sisi-file__player');
+                var abierto = !player.hidden;
+                box.querySelectorAll('.sisi-file__player').forEach(function (p) {
+                    if (p === player) return;
+                    if (!p.hidden) {
+                        var a = p.querySelector('audio');
+                        if (a) a.pause();
+                        p.hidden = true;
+                        var b = p.closest('.sisi-file').querySelector('[data-play]');
+                        b.setAttribute('aria-expanded', 'false');
+                        b.classList.remove('active');
+                    }
+                });
+                var toggle = player.querySelector('.audio-player-toggle');
+                if (abierto) {
+                    // Segundo toque: el botón funciona como play/pausa del reproductor abierto.
+                    if (toggle) toggle.click();
+                    return;
+                }
+                player.hidden = false;
+                btn.setAttribute('aria-expanded', 'true');
+                btn.classList.add('active');
+                if (toggle) toggle.click();
+            });
+
+            render();
+        });
+
         /** Imágenes (registro y aportaciones): miniatura + modal, nunca iframe */
         document.addEventListener('click', function (e) {
             var trigger = e.target.closest('.sisipedia-img-preview-trigger');
@@ -568,7 +693,7 @@
             if (onloadTargets.length) {
                 ensureGsap(function () {
                     gsap.from(onloadTargets, { opacity: 0, y: 18, duration: 0.55, stagger: 0.1, ease: 'power2.out', clearProps: 'all' });
-                    var cards = document.querySelectorAll('.sisipedia-file-card, .sisipedia-child-card');
+                    var cards = document.querySelectorAll('.sisipedia-child-card');
                     if (cards.length) {
                         gsap.from(cards, { opacity: 0, y: 14, duration: 0.4, stagger: 0.05, ease: 'power2.out', delay: 0.25, clearProps: 'all' });
                     }
@@ -666,34 +791,49 @@
         .sisi-reg__jump a:hover, .sisi-reg__jump a:focus-visible { background: rgba(13,110,253,.16); }
         .sisi-reg__jump a.is-empty { background: #f1f3f5; color: #868e96; border-color: transparent; pointer-events: none; }
 
-        /* ── Archivos del registro ────────────────────────────── */
-        .sisipedia-file-card {
-            height: 100%; border: 1px solid var(--sisi-line); border-radius: .75rem; overflow: hidden;
-            background: #fff; transition: transform .2s ease, box-shadow .2s ease;
-            display: flex; flex-direction: column;
+        /* ── Materiales: lista compacta ───────────────────────── */
+        .sisi-files__tools { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .75rem; }
+        .sisi-files__filters { display: flex; gap: .4rem; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+        .sisi-files__filters::-webkit-scrollbar { display: none; }
+        .sisi-files__filters button {
+            flex-shrink: 0; display: inline-flex; align-items: center; gap: .35rem; min-height: 2.25rem;
+            padding: .3rem .8rem; border-radius: 99px; border: 1px solid var(--sisi-line);
+            background: #fff; color: #495057; font-size: .825rem; font-weight: 600;
         }
-        .sisipedia-file-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(16,24,40,.1); }
-        .sisipedia-file-card__media {
-            position: relative; display: block; width: 100%; aspect-ratio: 16 / 10;
-            padding: 0; border: 0; background: #f1f3f5; overflow: hidden; cursor: zoom-in;
+        .sisi-files__filters button span { color: #868e96; font-weight: 700; }
+        .sisi-files__filters button.is-active { background: #0d6efd; border-color: #0d6efd; color: #fff; }
+        .sisi-files__filters button.is-active i, .sisi-files__filters button.is-active span { color: #fff !important; }
+        .sisi-files__search {
+            flex: 1 1 12rem; display: flex; align-items: center; gap: .5rem; min-height: 2.25rem; margin: 0;
+            padding: 0 .75rem; border: 1px solid var(--sisi-line); border-radius: 99px; color: #868e96;
         }
-        .sisipedia-file-card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .3s ease; }
-        .sisipedia-file-card__media:hover img { transform: scale(1.04); }
-        .sisipedia-file-card__media--video { background: #212529; cursor: pointer; }
-        .sisipedia-file-card__media--video img { object-fit: contain; opacity: .85; }
-        .sisipedia-file-card__body { display: flex; align-items: center; gap: .65rem; padding: .65rem .75rem .5rem; }
-        .sisipedia-file-card__icon {
-            flex-shrink: 0; width: 2.25rem; height: 2.25rem; border-radius: .6rem;
+        .sisi-files__search:focus-within { border-color: #86b7fe; box-shadow: 0 0 0 .2rem rgba(13,110,253,.15); }
+        .sisi-files__search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: .875rem; }
+        .sisi-files { list-style: none; margin: 0; padding: 0; border: 1px solid var(--sisi-line); border-radius: .75rem; overflow: hidden; }
+        .sisi-file + .sisi-file { border-top: 1px solid var(--sisi-line); }
+        .sisi-file[hidden] { display: none; }
+        .sisi-file__row { display: flex; align-items: center; gap: .65rem; padding: .5rem .65rem; }
+        .sisi-file:hover .sisi-file__row { background: #f8f9fa; }
+        .sisi-file__icon {
+            position: relative; flex-shrink: 0; width: 2.25rem; height: 2.25rem; border-radius: .55rem; overflow: hidden;
             display: inline-flex; align-items: center; justify-content: center;
         }
-        /* Nombre en hasta 2 líneas: completo es más fácil de reconocer que cortado con "…" */
-        .sisipedia-file-card__name {
-            font-size: .875rem; font-weight: 600; color: #212529; overflow-wrap: anywhere;
+        .sisi-file__icon img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        .sisi-file__text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+        .sisi-file__name {
+            font-size: .85rem; font-weight: 600; color: #212529; line-height: 1.3; overflow-wrap: anywhere;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
         }
-        .sisipedia-file-card__type { font-size: .72rem; color: #868e96; }
-        .sisipedia-file-card__actions { display: flex; gap: .4rem; padding: 0 .75rem .75rem; margin-top: auto; }
-        .sisipedia-file-card__actions .btn { flex: 1 1 0; min-height: 2.4rem; display: inline-flex; align-items: center; justify-content: center; }
+        .sisi-file__type { font-size: .7rem; color: #868e96; }
+        .sisi-file__actions { display: flex; gap: .35rem; flex-shrink: 0; }
+        .sisi-file__actions .btn { min-height: 2.25rem; min-width: 2.25rem; display: inline-flex; align-items: center; justify-content: center; gap: .35rem; }
+        /* En pantallas muy angostas el botón principal queda solo con ícono; la ayuda de arriba lo explica */
+        @media (max-width: 359.98px) { .sisi-file__lbl { display: none; } }
+        .sisi-file__player { padding: 0 .65rem .6rem; background: #f8f9fa; }
+        .sisi-file__player[hidden] { display: none; }
+        .sisi-files__none { text-align: center; color: #868e96; font-size: .875rem; padding: 1rem 0 0; margin: 0; }
+        .sisi-files__more { margin-top: .65rem; font-weight: 600; border: 1px solid var(--sisi-line); }
+        .sisi-files__more[hidden] { display: none; }
 
         /* Botón de play compartido (archivos del registro y aportaciones) */
         .sisipedia-load-category-video,
