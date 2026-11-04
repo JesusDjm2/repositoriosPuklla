@@ -162,7 +162,7 @@
                                 // La extensión sobra: el formato ya se dice en palabras ("Audio", "PDF").
                                 $nombreVisible = preg_replace('/\.(mp3|m4a|wav|ogg|pdf|docx?|jpe?g|png|webp|mp4|mov)$/i', '', $nombre) ?: $nombre;
                                 $driveUrl = \App\Services\GoogleDriveService::getUrl($item->drive_id);
-                                $downloadUrl = \App\Services\GoogleDriveService::getEmbedUrl($item->drive_id);
+                                $downloadUrl = route('sisipedia.descargar.material', $item);
                                 $ruta = $item->category ? $Busqueda::rutaSinArea($item->category) : '';
                             @endphp
                             <li class="sisi-sr-row sisi-sr-file" @if ($ar) style="--area: {{ $ar->color }}" @endif>

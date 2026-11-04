@@ -87,7 +87,7 @@
                     // la tarjeta solo muestra el aviso de "Procesando"/"No se pudo subir".
                     $listo = (bool) $archivo->drive_id;
                     $driveUrl = $listo ? $archivo->getUrl() : null;
-                    $downloadUrl = $listo ? \App\Services\GoogleDriveService::getEmbedUrl($archivo->drive_id) : null;
+                    $downloadUrl = $listo ? route('sisipedia.descargar.aporte', $archivo) : null; // descarga contada
                     $previewUrl = $listo ? $archivo->getPreviewUrl() : null;
                     $thumbUrl = ($listo && in_array($archivo->tipo, ['imagen', 'video'], true))
                         ? \App\Services\GoogleDriveService::getThumbnailUrl($archivo->drive_id, 400)

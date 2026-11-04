@@ -384,7 +384,7 @@
                             'src' => route('sisipedia.audio.stream', $archivo),
                             'title' => $archivo->nombre_original ?? 'Audio sin nombre',
                             'driveUrl' => \App\Services\GoogleDriveService::getUrl($archivo->drive_id),
-                            'downloadUrl' => \App\Services\GoogleDriveService::getEmbedUrl($archivo->drive_id),
+                            'downloadUrl' => route('sisipedia.descargar.material', $archivo),
                         ])
                     </div>
                 </div>
@@ -474,7 +474,7 @@
                 $ancestorPath = count($pathParts) > 1 ? implode(' › ', array_slice($pathParts, 0, -1)) : null;
                 $previewUrl  = \App\Services\GoogleDriveService::getPreviewUrl($archivo->drive_id);
                 $driveUrl    = \App\Services\GoogleDriveService::getUrl($archivo->drive_id);
-                $downloadUrl = \App\Services\GoogleDriveService::getEmbedUrl($archivo->drive_id);
+                $downloadUrl = route('sisipedia.descargar.material', $archivo);
                 $thumbUrl    = \App\Services\GoogleDriveService::getThumbnailUrl($archivo->drive_id, 400);
             @endphp
             <div class="col-12 col-sm-6 col-md-4 col-lg-3 media-item">
@@ -545,7 +545,7 @@
                 $ancestorPath = count($pathParts) > 1 ? implode(' › ', array_slice($pathParts, 0, -1)) : null;
                 $driveUrl    = \App\Services\GoogleDriveService::getUrl($archivo->drive_id);
                 $previewUrl  = \App\Services\GoogleDriveService::getPreviewUrl($archivo->drive_id);
-                $downloadUrl = \App\Services\GoogleDriveService::getEmbedUrl($archivo->drive_id);
+                $downloadUrl = route('sisipedia.descargar.material', $archivo);
             @endphp
             <div class="col-12 col-sm-6 col-md-4 col-lg-3 media-item">
                 <div class="card border-0 shadow-sm rounded-3 h-100 sisipedia-pdf-card">

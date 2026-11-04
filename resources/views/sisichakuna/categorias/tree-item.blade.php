@@ -74,6 +74,17 @@
                     </span>
                 @endif
 
+                {{-- Contadores (solo si la columna ya existe en esta base) --}}
+                @if (array_key_exists('visitas', $category->getAttributes()))
+                    @php $descMat = (int) $catFiles->sum('descargas'); @endphp
+                    <span class="category-order" title="Visitas a la página pública del registro">
+                        <i class="fa fa-eye"></i> {{ \App\Services\ContadorSisipedia::formato((int) $category->visitas) }}
+                    </span>
+                    <span class="category-order" title="Descargas de los materiales de este registro">
+                        <i class="fa fa-download"></i> {{ \App\Services\ContadorSisipedia::formato($descMat) }}
+                    </span>
+                @endif
+
                 <span class="category-order">
                     <i class="fas fa-sort-numeric-down"></i> Orden: {{ $category->order }}
                 </span>

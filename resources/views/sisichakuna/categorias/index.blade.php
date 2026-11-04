@@ -3,6 +3,52 @@
 @section('contenido')
     @include('sisichakuna.partials.sisipedia-admin-nav', ['active' => 'categories'])
     <div class="container-fluid py-0 px-0">
+        {{-- Lo más visto y descargado: ayuda a decidir qué temas ampliar --}}
+        @if ($masVistos->isNotEmpty() || $masDescargados->isNotEmpty())
+            <div class="row mb-2">
+                <div class="col-lg-6 mb-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white py-2">
+                            <h6 class="mb-0 font-weight-bold"><i class="fa fa-eye text-primary mr-1"></i>Registros más visitados</h6>
+                        </div>
+                        <ol class="list-group list-group-flush small mb-0">
+                            @forelse ($masVistos as $c)
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                    <a href="{{ route('sisipedia.categories.show', $c) }}" target="_blank" rel="noopener" class="text-truncate mr-2">{{ $loop->iteration }}. {{ $c->display_name }}</a>
+                                    <span class="badge badge-primary badge-pill">{{ \App\Services\ContadorSisipedia::formato((int) $c->visitas) }}</span>
+                                </li>
+                            @empty
+                                <li class="list-group-item text-muted py-3">Aún no hay visitas registradas.</li>
+                            @endforelse
+                        </ol>
+                    </div>
+                </div>
+                <div class="col-lg-6 mb-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white py-2">
+                            <h6 class="mb-0 font-weight-bold"><i class="fa fa-download text-success mr-1"></i>Materiales más descargados</h6>
+                        </div>
+                        <ol class="list-group list-group-flush small mb-0">
+                            @forelse ($masDescargados as $f)
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                    <span class="text-truncate mr-2">
+                                        {{ $loop->iteration }}. <span class="text-uppercase text-muted">{{ $f->tipo }}</span>
+                                        @if ($f->category)
+                                            <a href="{{ route('sisipedia.categories.show', $f->category) }}" target="_blank" rel="noopener">{{ $f->category->display_name }}</a>
+                                        @endif
+                                        <span class="text-muted">· {{ \Illuminate\Support\Str::limit($f->nombre_original, 40) }}</span>
+                                    </span>
+                                    <span class="badge badge-success badge-pill">{{ \App\Services\ContadorSisipedia::formato((int) $f->descargas) }}</span>
+                                </li>
+                            @empty
+                                <li class="list-group-item text-muted py-3">Aún no hay descargas registradas.</li>
+                            @endforelse
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white py-3">
                 <div class="d-flex justify-content-between align-items-center">

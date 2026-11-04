@@ -184,6 +184,12 @@ Route::prefix('sisipedia')->name('sisipedia.')->group(function () {
     Route::get('video/aportacion/{aportacionArchivo}/stream', [VideoStreamController::class, 'aportacionArchivo'])
         ->name('video.aportacion.stream');
 
+    // Descargas contadas (suman y redirigen a Google Drive)
+    Route::get('descargar/material/{categoryFile}', [\App\Http\Controllers\sisipedia\DescargaController::class, 'material'])
+        ->middleware('throttle:60,1')->name('descargar.material');
+    Route::get('descargar/aporte/{aportacionArchivo}', [\App\Http\Controllers\sisipedia\DescargaController::class, 'aporte'])
+        ->middleware('throttle:60,1')->name('descargar.aporte');
+
     // Detalle público al final (wildcard {category} no captura rutas fijas de arriba)
     Route::get('categories/{category}', [CategoryController::class, 'show'])
         ->name('categories.show');

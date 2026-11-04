@@ -207,6 +207,7 @@ class EnlacesController extends Controller
                 'fecha' => $f->updated_at,
                 'category' => $f->category,
                 'aportante' => null,
+                'download_url' => route('sisipedia.descargar.material', $f),
                 'stream_url' => match ($f->tipo) {
                     'audio' => route('sisipedia.audio.stream', $f),
                     'video' => route('sisipedia.video.stream', $f),
@@ -231,6 +232,7 @@ class EnlacesController extends Controller
                 'fecha' => $f->created_at,
                 'category' => $f->aportacion?->category,
                 'aportante' => $f->aportacion?->nombre_ol,
+                'download_url' => route('sisipedia.descargar.aporte', $f),
                 'stream_url' => match ($f->tipo) {
                     'audio' => route('sisipedia.audio.aportacion.stream', $f),
                     'video' => route('sisipedia.video.aportacion.stream', $f),

@@ -44,7 +44,16 @@ class CategoryController extends Controller
             ->groupBy('tipo')
             ->pluck('total', 'tipo');
 
-        return view('sisichakuna.categorias.index', compact('categories', 'tree', 'aportCounts', 'fileTypeCounts'));
+        // Lo más visto y descargado (vacío hasta que exista la columna en esta base).
+        $masVistos = collect();
+        $masDescargados = collect();
+        if (\Illuminate\Support\Facades\Schema::hasColumn('categories', 'visitas')) {
+            $masVistos = Category::where('visitas', '>', 0)->orderByDesc('visitas')->take(10)->get(['id', 'name', 'slug', 'visitas']);
+            $masDescargados = CategoryFile::where('descargas', '>', 0)->with('category:id,name,slug')
+                ->orderByDesc('descargas')->take(10)->get(['id', 'category_id', 'tipo', 'nombre_original', 'descargas']);
+        }
+
+        return view('sisichakuna.categorias.index', compact('categories', 'tree', 'aportCounts', 'fileTypeCounts', 'masVistos', 'masDescargados'));
     }
 
     public function export()
@@ -253,6 +262,9 @@ class CategoryController extends Controller
             $breadcrumbs->prepend($current);
             $current = $current->parent;
         }
+
+        // Una visita por persona y sesión; no cuenta robots (ver ContadorSisipedia).
+        \App\Services\ContadorSisipedia::visita($category, request());
 
         return view('sisichakuna.detalle', compact('category', 'breadcrumbs'));
     }

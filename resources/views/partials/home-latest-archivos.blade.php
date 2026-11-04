@@ -40,7 +40,8 @@
                     $nombreMostrar = $item->nombre ?? ($tc['label'].' sin nombre');
                     $previewUrl = \App\Services\GoogleDriveService::getPreviewUrl($item->drive_id);
                     $driveUrl = \App\Services\GoogleDriveService::getUrl($item->drive_id);
-                    $downloadUrl = \App\Services\GoogleDriveService::getEmbedUrl($item->drive_id);
+                    // Descarga contada (download_url la arma EnlacesController); si falta, directo a Drive.
+                    $downloadUrl = $item->download_url ?? \App\Services\GoogleDriveService::getEmbedUrl($item->drive_id);
                     $registroUrl = $cat ? route('sisipedia.categories.show', $cat) : null;
                     $thumbUrl = $conThumbnail
                         ? \App\Services\GoogleDriveService::getThumbnailUrl($item->drive_id, $tipo === 'video' ? 600 : 400)

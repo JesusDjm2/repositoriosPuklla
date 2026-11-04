@@ -32,9 +32,21 @@
         if ($descripcion !== '' && mb_strtolower(\App\Models\sisipedia\Category::stripLegacyOntologyPrefix($descripcion)) === mb_strtolower($category->display_name)) {
             $descripcion = '';
         }
-        $nFiles = $category->files->count();
+        // El PDF del registro es su documento principal (la ficha): se destaca arriba y
+        // el resto (audios, imágenes…) queda como "Otros materiales".
+        $docPrincipal = $category->files->firstWhere('tipo', 'pdf');
+        $otrosFiles = $docPrincipal
+            ? $category->files->reject(fn ($f) => $f->id === $docPrincipal->id)->values()
+            : $category->files;
+        $nFiles = $otrosFiles->count();
         $nSubs = $subRegistros->count();
         $nAps = $aportaciones->count();
+
+        // Contadores: solo si la columna ya existe en esta base (en producción, tras el .sql).
+        $Contador = \App\Services\ContadorSisipedia::class;
+        $hayContadores = array_key_exists('visitas', $category->getAttributes());
+        $descargasTotal = (int) $category->files->sum('descargas')
+            + (int) $aportaciones->flatMap->archivos->sum('descargas');
     @endphp
 
     @include('partials.lib-hero', [
@@ -102,11 +114,23 @@
                         </ul>
                     @endif
 
+                    @if ($hayContadores)
+                        <p class="sisi-reg__stats">
+                            <span><i class="fa fa-eye" aria-hidden="true"></i><strong>{{ $Contador::formato((int) $category->visitas) }}</strong> {{ (int) $category->visitas === 1 ? 'visita' : 'visitas' }}</span>
+                            <span><i class="fa fa-download" aria-hidden="true"></i><strong>{{ $Contador::formato($descargasTotal) }}</strong> {{ $descargasTotal === 1 ? 'descarga' : 'descargas' }}</span>
+                        </p>
+                    @endif
+
                     {{-- Resumen en palabras simples; cada etiqueta lleva a su sección --}}
                     <nav class="sisi-reg__jump" aria-label="En este registro">
+                        @if ($docPrincipal)
+                            <a href="#sisi-doc">
+                                <i class="fa fa-file-pdf" aria-hidden="true"></i><strong>Documento</strong>
+                            </a>
+                        @endif
                         <a href="#sisi-files" class="{{ $nFiles ? '' : 'is-empty' }}">
                             <i class="fa fa-paperclip" aria-hidden="true"></i>
-                            <strong>{{ $nFiles }}</strong> {{ $nFiles === 1 ? 'material' : 'materiales' }}
+                            <strong>{{ $nFiles }}</strong> {{ $docPrincipal ? ($nFiles === 1 ? 'material más' : 'materiales más') : ($nFiles === 1 ? 'material' : 'materiales') }}
                         </a>
                         <a href="#sisi-subs" class="{{ $nSubs ? '' : 'is-empty' }}">
                             <i class="fa fa-folder" aria-hidden="true"></i>
@@ -119,20 +143,62 @@
                     </nav>
                 </section>
 
+                {{-- Documento principal: el PDF del registro, alrededor del cual gira todo lo demás.
+                     Miniatura de su primera página + leer aquí mismo o descargar (descarga contada). --}}
+                @if ($docPrincipal)
+                    @php
+                        $docNombre = $docPrincipal->nombre_display;
+                        $docDrive = \App\Services\GoogleDriveService::getUrl($docPrincipal->drive_id);
+                        $docDescarga = route('sisipedia.descargar.material', $docPrincipal);
+                        $docDescargas = (int) $docPrincipal->descargas;
+                    @endphp
+                    <section class="sisi-card sisi-gap sisi-doc sisipedia-reveal-onload" id="sisi-doc" aria-labelledby="sisi-doc-title">
+                        <button type="button" class="sisi-doc__thumb sisipedia-open-preview-modal"
+                                data-preview="{{ \App\Services\GoogleDriveService::getPreviewUrl($docPrincipal->drive_id) }}"
+                                data-nombre="{{ $docNombre }}" data-drive="{{ $docDrive }}" data-download="{{ $docDescarga }}"
+                                aria-label="Leer {{ $docNombre }}">
+                            <img src="{{ \App\Services\GoogleDriveService::getThumbnailUrl($docPrincipal->drive_id, 400) }}"
+                                 alt="" loading="lazy" onerror="this.remove()">
+                            <i class="fa fa-file-pdf" aria-hidden="true"></i>
+                        </button>
+                        <div class="sisi-doc__body">
+                            <h2 class="sisi-doc__title" id="sisi-doc-title">Documento principal</h2>
+                            {{-- El nombre del archivo suele ser un código de escaneo ("Ocra022004"): se muestra el del registro --}}
+                            <p class="sisi-doc__name">{{ $category->display_name }}</p>
+                            <p class="sisi-doc__hint">
+                                Aquí está la información completa de este tema.
+                                @if ($hayContadores && $docDescargas > 0)
+                                    <span class="sisi-doc__count">Descargado {{ $Contador::formato($docDescargas) }} {{ $docDescargas === 1 ? 'vez' : 'veces' }}.</span>
+                                @endif
+                            </p>
+                            <div class="sisi-doc__actions">
+                                <button type="button" class="btn btn-danger sisipedia-open-preview-modal"
+                                        data-preview="{{ \App\Services\GoogleDriveService::getPreviewUrl($docPrincipal->drive_id) }}"
+                                        data-nombre="{{ $docNombre }}" data-drive="{{ $docDrive }}" data-download="{{ $docDescarga }}">
+                                    <i class="fa fa-book-open" aria-hidden="true"></i>Leer el documento
+                                </button>
+                                <a href="{{ $docDescarga }}" class="btn btn-outline-danger">
+                                    <i class="fa fa-download" aria-hidden="true"></i>Descargar PDF
+                                </a>
+                            </div>
+                        </div>
+                    </section>
+                @endif
+
                 {{-- Materiales del registro (curados por el equipo).
                      Lista compacta: una fila por archivo, aunque el registro tenga 20+.
                      El reproductor de audio solo se abre al tocar "Escuchar" (uno a la vez);
                      con muchos archivos aparecen filtros por tipo, buscador y "Mostrar más". --}}
-                @if ($category->files->isNotEmpty())
+                @if ($otrosFiles->isNotEmpty())
                     @php
-                        $filesPorTipo = $category->files->groupBy('tipo');
+                        $filesPorTipo = $otrosFiles->groupBy('tipo');
                         $plural = ['pdf' => 'PDF', 'doc' => 'Word', 'audio' => 'Audios', 'video' => 'Videos', 'imagen' => 'Imágenes'];
                         $mostrarInicial = 8;
                     @endphp
                     <section class="sisi-card sisi-gap sisipedia-reveal-onload" id="sisi-files" aria-labelledby="sisi-files-title"
                              data-sisi-files data-visible="{{ $mostrarInicial }}">
                         <h2 class="sisi-section-title" id="sisi-files-title">
-                            <i class="fa fa-paperclip" aria-hidden="true"></i>Materiales
+                            <i class="fa fa-paperclip" aria-hidden="true"></i>{{ $docPrincipal ? 'Otros materiales' : 'Materiales' }}
                             <span class="sisi-count">{{ $nFiles }}</span>
                         </h2>
                         <p class="sisi-help">
@@ -168,12 +234,12 @@
                         @endif
 
                         <ul class="sisi-files" data-list>
-                            @foreach ($category->files as $archivo)
+                            @foreach ($otrosFiles as $archivo)
                                 @php
                                     $m = $tipoMeta[$archivo->tipo] ?? ['label' => ucfirst($archivo->tipo), 'color' => 'secondary', 'icon' => 'fa-file'];
                                     $nombre = $archivo->nombre_display;
                                     $driveUrl = \App\Services\GoogleDriveService::getUrl($archivo->drive_id);
-                                    $downloadUrl = \App\Services\GoogleDriveService::getEmbedUrl($archivo->drive_id);
+                                    $downloadUrl = route('sisipedia.descargar.material', $archivo);
                                     $thumb = in_array($archivo->tipo, ['imagen', 'video'], true)
                                         ? \App\Services\GoogleDriveService::getThumbnailUrl($archivo->drive_id, 120)
                                         : null;
@@ -188,7 +254,9 @@
                                         </span>
                                         <span class="sisi-file__text">
                                             <span class="sisi-file__name" title="{{ $nombre }}">{{ $nombre }}</span>
-                                            <span class="sisi-file__type">{{ $m['label'] }}</span>
+                                            <span class="sisi-file__type">
+                                                {{ $m['label'] }}@if ($hayContadores && (int) $archivo->descargas > 0), {{ $Contador::formato((int) $archivo->descargas) }} {{ (int) $archivo->descargas === 1 ? 'descarga' : 'descargas' }}@endif
+                                            </span>
                                         </span>
                                         <span class="sisi-file__actions">
                                             @if ($archivo->tipo === 'audio')
@@ -790,6 +858,36 @@
         }
         .sisi-reg__jump a:hover, .sisi-reg__jump a:focus-visible { background: rgba(13,110,253,.16); }
         .sisi-reg__jump a.is-empty { background: #f1f3f5; color: #868e96; border-color: transparent; pointer-events: none; }
+
+        /* Contadores: discretos, debajo de los datos del registro */
+        .sisi-reg__stats { display: flex; flex-wrap: wrap; gap: .25rem 1.1rem; margin: .85rem 0 0; font-size: .875rem; color: #6c757d; }
+        .sisi-reg__stats span { display: inline-flex; align-items: center; gap: .4rem; }
+        .sisi-reg__stats strong { color: #212529; }
+
+        /* ── Documento principal: lo primero y lo más grande del registro ── */
+        .sisi-doc { display: flex; gap: 1.1rem; align-items: stretch; border-left: 5px solid #dc3545; }
+        .sisi-doc__thumb {
+            position: relative; flex: 0 0 auto; width: 7.5rem; aspect-ratio: 3 / 4; padding: 0; overflow: hidden;
+            border: 1px solid var(--sisi-line); border-radius: .6rem; background: #fdf2f3; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .sisi-doc__thumb > i { font-size: 2.25rem; color: #dc3545; }
+        .sisi-doc__thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; background: #fff; }
+        .sisi-doc__thumb:focus-visible { outline: 2px solid #dc3545; outline-offset: 2px; }
+        @media (hover: hover) { .sisi-doc__thumb:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(16,24,40,.14); } }
+        .sisi-doc__body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+        .sisi-doc__title { font-size: .9rem; font-weight: 700; color: #dc3545; margin: 0 0 .2rem; }
+        .sisi-doc__name { font-size: 1.1rem; font-weight: 700; line-height: 1.3; margin: 0 0 .35rem; overflow-wrap: anywhere; }
+        .sisi-doc__hint { font-size: .875rem; color: #6c757d; margin: 0 0 .85rem; }
+        .sisi-doc__count { white-space: nowrap; }
+        .sisi-doc__actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: auto; }
+        .sisi-doc__actions .btn { min-height: 2.75rem; display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; }
+        @media (max-width: 479.98px) {
+            .sisi-doc { gap: .85rem; }
+            .sisi-doc__thumb { width: 5.5rem; }
+            .sisi-doc__actions .btn { flex: 1 1 100%; justify-content: center; }
+        }
 
         /* ── Materiales: lista compacta ───────────────────────── */
         .sisi-files__tools { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .75rem; }
