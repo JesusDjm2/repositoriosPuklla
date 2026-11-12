@@ -100,6 +100,30 @@ class KawsayTemaController extends Controller
         return redirect()->route('kawsaytemas.index')->with('success', 'Tema eliminado.');
     }
 
+    /**
+     * "Tema del mes" de la portada: solo uno a la vez. Marcar uno desmarca el
+     * anterior; volver a pulsarlo en el destacado lo quita.
+     */
+    public function destacar(KawsayTema $tema)
+    {
+        if (! \App\Services\Contador::columnaExiste('kawsay_temas', 'destacado')) {
+            return back()->with('error', 'Falta ejecutar el SQL de Kawsay en la base de datos para poder destacar temas.');
+        }
+
+        if ($tema->destacado) {
+            $tema->update(['destacado' => false]);
+
+            return back()->with('success', '"' . $tema->titulo . '" ya no es el tema del mes.');
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($tema) {
+            KawsayTema::where('destacado', true)->update(['destacado' => false]);
+            $tema->update(['destacado' => true]);
+        });
+
+        return back()->with('success', '"' . $tema->titulo . '" es ahora el tema del mes en la portada de Kawsay.');
+    }
+
     public function destroyComentario(KawsayTema $tema, KawsayTemaComentario $comentario)
     {
         if ($comentario->kawsay_tema_id !== $tema->id) {

@@ -16,7 +16,7 @@
                 </div>
             @endif
         </div>
-        <div style="border-bottom: 1px dashed rgb(74, 113, 138); width: 100%;" class="mt-2"></div>
+        <hr class="adm-divider-dashed mt-2">
     </div>
     <div class="row">
         <div class="col-lg-12">
@@ -56,6 +56,7 @@
                         </div>
                     @endforeach
                 </div>
+                @include('kawsay.partials.selector-tema', ['temasPorArea' => $temasPorArea, 'seleccionado' => null])
                 <button type="submit" class="btn btn-sm btn-primary">Guardar</button>
             </form>
         </div>

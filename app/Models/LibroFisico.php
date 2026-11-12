@@ -24,6 +24,8 @@ class LibroFisico extends Model
         'numero_paginas',
         'codigo',
         'cantidad_ejemplares',
+        'etiquetas_ejemplares',
+        'categoria_fisica_id',
         'tipo_material',
         'ubicacion',
     ];
@@ -32,7 +34,13 @@ class LibroFisico extends Model
         'anio_publicacion' => 'integer',
         'numero_paginas' => 'integer',
         'cantidad_ejemplares' => 'integer',
+        'etiquetas_ejemplares' => 'array',
     ];
+
+    public function categoriaFisica()
+    {
+        return $this->belongsTo(CategoriaFisica::class, 'categoria_fisica_id');
+    }
 
     public function categoriasFisicas()
     {
@@ -70,5 +78,54 @@ class LibroFisico extends Model
     public static function nombreParaUbicacion(?string $ubicacion): ?string
     {
         return $ubicacion ? (self::UBICACIONES[$ubicacion] ?? $ubicacion) : null;
+    }
+
+    /**
+     * Normaliza una lista de etiquetas a exactamente $cantidad elementos.
+     */
+    public static function normalizarEtiquetasEjemplares(int $cantidad, array $etiquetas): array
+    {
+        $normalizadas = [];
+
+        for ($i = 0; $i < $cantidad; $i++) {
+            $etiqueta = trim((string) ($etiquetas[$i] ?? ''));
+            $normalizadas[] = $etiqueta !== '' ? $etiqueta : (string) ($i + 1);
+        }
+
+        return $normalizadas;
+    }
+
+    /**
+     * Etiquetas de cada ejemplar físico (1 por copia).
+     */
+    public function getEtiquetasEjemplaresListaAttribute(): array
+    {
+        return self::normalizarEtiquetasEjemplares($this->cantidad_ejemplares, $this->etiquetas_ejemplares ?? []);
+    }
+
+    /**
+     * Etiquetas de ejemplar actualmente en préstamo.
+     */
+    public function getEtiquetasEjemplaresOcupadasAttribute(): array
+    {
+        return $this->prestamosActivos()
+            ->whereNotNull('numero_ejemplar')
+            ->pluck('numero_ejemplar')
+            ->all();
+    }
+
+    /**
+     * Etiquetas de ejemplar libres para prestar.
+     */
+    public function getEtiquetasEjemplaresDisponiblesAttribute(): array
+    {
+        if ($this->cantidad_ejemplares <= 1) {
+            return [];
+        }
+
+        return collect($this->etiquetas_ejemplares_lista)
+            ->diff($this->etiquetas_ejemplares_ocupadas)
+            ->values()
+            ->all();
     }
 }

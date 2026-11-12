@@ -2,11 +2,14 @@
     Tarjeta de video de Drive con reproductor propio, al estilo de las tarjetas
     de audio de Radio: cabecera de color con título y logo de Drive, y debajo
     un <video controls> que pasa por la ruta de streaming (con soporte de Range).
-    Recibe: $src (ruta de streaming), $titulo, $driveId, $meta (opcional), $descripcion (opcional).
+    Recibe: $src (ruta de streaming), $titulo, $driveId, $meta (opcional), $descripcion (opcional),
+    $poster (opcional: portada propia; si no, la miniatura de Drive), $vistaUrl (opcional: contador al reproducir).
 --}}
 @php
     $meta = $meta ?? null;
     $descripcion = $descripcion ?? null;
+    $poster = $poster ?? \App\Services\GoogleDriveService::getThumbnailUrl($driveId, 700);
+    $vistaUrl = $vistaUrl ?? null;
 @endphp
 <div class="kawsay-video-card h-100">
     <div class="kawsay-video-card__head">
@@ -20,7 +23,8 @@
     </div>
     <div class="ratio ratio-16x9 kawsay-video-card__player">
         <video controls playsinline preload="none" class="kawsay-video-el"
-            poster="{{ \App\Services\GoogleDriveService::getThumbnailUrl($driveId, 700) }}"
+            poster="{{ $poster }}"
+            @if ($vistaUrl) data-kawsay-vista="{{ $vistaUrl }}" @endif
             src="{{ $src }}" aria-label="{{ $titulo }}"></video>
     </div>
     @if ($descripcion)

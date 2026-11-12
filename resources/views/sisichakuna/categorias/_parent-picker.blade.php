@@ -59,73 +59,7 @@
 </div>
 
 @once
-<style>
-    .bv-parent-picker { position: relative; }
-    .bv-parent-picker__toggle {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: .5rem;
-        padding: .375rem .75rem;
-        background: #fff;
-        border: 1px solid #ced4da;
-        border-radius: .25rem;
-        text-align: left;
-        font-size: 1rem;
-    }
-    .bv-parent-picker__toggle:focus { outline: none; border-color: #80bdff; box-shadow: 0 0 0 .2rem rgba(0,123,255,.25); }
-    .bv-parent-picker__panel {
-        position: absolute;
-        z-index: 20;
-        top: calc(100% + .25rem);
-        left: 0;
-        right: 0;
-        max-height: 360px;
-        overflow-y: auto;
-        background: #fff;
-        border: 1px solid #ced4da;
-        border-radius: .375rem;
-        box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.15);
-        padding: .4rem;
-    }
-    .bv-parent-picker__empty { margin: .5rem; color: #6c757d; font-size: .85rem; }
-    .bv-parent-picker__tree, .bv-parent-picker__tree ul {
-        list-style: none;
-        margin: 0;
-        padding-left: 1.15rem;
-    }
-    .bv-parent-picker__tree { padding-left: 0; }
-    .bv-parent-picker__row {
-        display: flex;
-        align-items: center;
-        gap: .4rem;
-        padding: .35rem .5rem;
-        border-radius: .3rem;
-        cursor: pointer;
-    }
-    .bv-parent-picker__row:hover { background: #f1f3f5; }
-    .bv-parent-picker__row.is-selected { background: rgba(0,123,255,.1); font-weight: 600; }
-    .bv-parent-picker__row--root { margin-bottom: .3rem; border-bottom: 1px solid #e9ecef; padding-bottom: .5rem; }
-    .bv-parent-picker__expand, .bv-parent-picker__expand-spacer {
-        width: 22px;
-        height: 22px;
-        flex-shrink: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border: none;
-        background: transparent;
-        color: #6c757d;
-        border-radius: .25rem;
-    }
-    .bv-parent-picker__expand:hover { background: #e9ecef; }
-    .bv-parent-picker__expand i { transition: transform .15s ease; font-size: .75rem; }
-    .bv-parent-picker__expand.is-open i { transform: rotate(90deg); }
-    .bv-parent-picker__option-label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .bv-parent-picker__check { display: none; color: #007bff; }
-    .bv-parent-picker__row.is-selected .bv-parent-picker__check { display: inline-block; }
-</style>
+{{-- Estilos: resources/sass/admin/modules/_sisipedia.scss (.bv-parent-picker) --}}
 <script>
 (function () {
     function initParentPicker(root) {

@@ -135,24 +135,90 @@ function showFlashNotifications() {
     }
 }
 
+// Único manejador del tema claro/oscuro. Cualquier botón con
+// [data-theme-toggle] (barra superior y menú lateral) cambia el tema y todos
+// quedan sincronizados. La preferencia se guarda en una sola clave
+// ('adminTheme'); el <head> de layouts/app la aplica antes de pintar.
+const THEME_KEY = 'adminTheme';
+
 function initDarkMode() {
-    const btn = document.getElementById('darkModeToggle');
-    const icon = document.getElementById('darkModeIcon');
-    if (!btn || !icon) return;
+    const buttons = document.querySelectorAll('[data-theme-toggle]');
+    if (!buttons.length) return;
 
     const applyTheme = (theme) => {
         document.documentElement.setAttribute('data-theme', theme);
-        icon.className = theme === 'dark' ? 'fa fa-sun-o' : 'fa fa-moon-o';
-        btn.setAttribute('aria-label', theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+        const label = theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro';
+        buttons.forEach((btn) => {
+            btn.setAttribute('aria-label', label);
+            btn.setAttribute('title', label);
+            btn.setAttribute('aria-pressed', String(theme === 'dark'));
+            const icon = btn.querySelector('[data-theme-icon-auto]');
+            if (icon) icon.className = theme === 'dark' ? 'fa fa-sun-o' : 'fa fa-moon-o';
+        });
     };
 
-    applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
+    applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
 
-    btn.addEventListener('click', () => {
-        const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        localStorage.setItem('adminTheme', next);
-        applyTheme(next);
-    });
+    buttons.forEach((btn) => btn.addEventListener('click', (event) => {
+        const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+
+        try {
+            localStorage.setItem(THEME_KEY, next);
+        } catch (e) {
+            // Navegación privada / almacenamiento bloqueado
+        }
+
+        // Micro-animación elástica y feedback táctil en el botón
+        btn.classList.add('theme-toggle--animating');
+        setTimeout(() => btn.classList.remove('theme-toggle--animating'), 600);
+
+        const icon = btn.querySelector('[data-theme-icon-auto]') || btn.querySelector('i');
+        if (icon && !prefersReducedMotion && typeof gsap !== 'undefined') {
+            gsap.fromTo(icon,
+                { rotate: -180, scale: 0.25, opacity: 0 },
+                { rotate: 0, scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(2.2)' }
+            );
+        }
+
+        // Transición de cambio de tema Senior: Expansión circular líquida (View Transitions API)
+        if (!document.startViewTransition || prefersReducedMotion) {
+            applyTheme(next);
+            if (!prefersReducedMotion && typeof gsap !== 'undefined') {
+                gsap.fromTo('body', { opacity: 0.92 }, { opacity: 1, duration: 0.25, ease: 'power2.out' });
+            }
+            return;
+        }
+
+        const rect = btn.getBoundingClientRect();
+        const x = event.clientX || (rect.left + rect.width / 2);
+        const y = event.clientY || (rect.top + rect.height / 2);
+
+        const endRadius = Math.hypot(
+            Math.max(x, window.innerWidth - x),
+            Math.max(y, window.innerHeight - y)
+        );
+
+        const transition = document.startViewTransition(() => {
+            applyTheme(next);
+        });
+
+        transition.ready.then(() => {
+            document.documentElement.animate(
+                {
+                    clipPath: [
+                        `circle(0px at ${x}px ${y}px)`,
+                        `circle(${endRadius}px at ${x}px ${y}px)`
+                    ]
+                },
+                {
+                    duration: 540,
+                    easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                    pseudoElement: '::view-transition-new(root)'
+                }
+            );
+        });
+    }));
 }
 
 function initSidebarToggle() {

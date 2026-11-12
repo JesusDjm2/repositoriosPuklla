@@ -148,6 +148,25 @@
         video.play().catch(function () {});
     }
 
+    /** Video de YouTube en el mismo modal (Kawsay). youtube-nocookie: sin cookies hasta que se reproduce. */
+    function abrirVistaPreviaYoutube(youtubeId, nombre) {
+        var modal = document.getElementById('libroPreviewModal');
+        if (!modal || !youtubeId) return;
+        pausarLibroPreviewVideo();
+        document.getElementById('libroPreviewVideo').classList.add('d-none');
+        var frame = document.getElementById('libroPreviewFrame');
+        frame.classList.remove('d-none');
+        frame.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen');
+        frame.setAttribute('allowfullscreen', '');
+        frame.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(youtubeId) + '?autoplay=1&rel=0&playsinline=1';
+        document.querySelector('#libroPreviewModal .lpm-box').classList.add('lpm-box--video');
+        document.getElementById('libroPreviewTitulo').textContent = nombre || 'Video';
+        document.getElementById('libroPreviewFullLabel').textContent = 'Abrir en YouTube';
+        document.getElementById('libroPreviewFullLink').href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(youtubeId);
+        modal.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+    }
+
     function pausarLibroPreviewVideo() {
         var video = document.getElementById('libroPreviewVideo');
         if (!video) return;

@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('titulo', 'Editar Categoría')
 @section('contenido')
+    @include('sisichakuna.partials.sisipedia-hero')
     @include('sisichakuna.partials.sisipedia-admin-nav', ['active' => 'categories'])
     <div class="container-fluid py-4 px-0">
         <div class="row">
@@ -63,7 +64,7 @@
                             <!-- Vista previa de numeración después de cambio -->
                             <div class="form-group mb-3" id="previewNumbering" style="display: none;">
                                 <div class="alert alert-warning">
-                                    <i class="fa fa-sort-numeric-up-alt me-2"></i>
+                                    <i class="fa fa-sort-numeric-asc me-2"></i>
                                     Después de guardar, esta categoría tendrá la numeración: <strong id="previewNumberingValue"></strong>
                                 </div>
                             </div>
@@ -144,7 +145,7 @@
 
                         <div class="card-footer">
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Actualizar
+                                <i class="fa fa-floppy-o"></i> Actualizar
                             </button>
                             <a href="{{ route('sisipedia.categories.index') }}" class="btn btn-secondary">
                                 Cancelar

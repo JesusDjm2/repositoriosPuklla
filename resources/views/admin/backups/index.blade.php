@@ -1,9 +1,6 @@
 @extends('layouts.app')
 @section('titulo', '- Backups')
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('css/biblioteca-crud.css') }}?v={{ file_exists(public_path('css/biblioteca-crud.css')) ? filemtime(public_path('css/biblioteca-crud.css')) : 1 }}">
-@endpush
 
 @section('contenido')
 

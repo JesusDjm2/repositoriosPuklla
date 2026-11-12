@@ -1,6 +1,9 @@
 @extends('layouts.app')
-@section('titulo', 'Categorías')
+@section('titulo', '- Panel Sisichakunay')
 @section('contenido')
+    {{-- Encabezado (Hero) persistente de Radio & Sisipedia --}}
+    @include('sisichakuna.partials.sisipedia-hero')
+
     @include('sisichakuna.partials.sisipedia-admin-nav', ['active' => 'categories'])
     <div class="container-fluid py-0 px-0">
         {{-- Lo más visto y descargado: ayuda a decidir qué temas ampliar --}}
@@ -50,18 +53,16 @@
         @endif
 
         <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h4 class="card-title mb-1">
+            <div class="card-body py-3">
+                <div class="adm-page-head">
+                    <div class="adm-page-head__title">
+                        <h1 class="h4">
                             <i class="fa fa-sitemap mr-2 text-primary"></i>Registros Sisipedia
-                        </h4>
+                        </h1>
                         <small class="text-muted">Estructura jerárquica de registros y sub-registros</small>
                     </div>
-                    <div>
-                        <a href="{{ route('sisipedia.categories.export') }}" class="btn btn-outline-success btn-sm mr-2">
-                            <i class="fa fa-file-excel-o mr-1"></i>Exportar CSV
-                        </a>
+                    {{-- "Exportar CSV" vive en la barra superior (layouts/app), visible en todo Sisipedia. --}}
+                    <div class="adm-page-head__actions">
                         <a href="{{ route('sisipedia.categories.create') }}" class="btn btn-primary btn-sm">
                             <i class="fa fa-plus mr-1"></i>Nuevo registro
                         </a>
@@ -74,66 +75,57 @@
             <div class="card-body">
                 <!-- Buscador + controles -->
                 <div class="mb-4">
-                    <div class="d-flex flex-wrap" style="gap:.5rem;">
-                        <div class="input-group flex-grow-1" style="min-width:200px;">
-                            <span class="input-group-text bg-white">
-                                <i class="fa fa-search text-muted"></i>
-                            </span>
-                            <input type="text" id="searchCategory" class="form-control form-control-sm"
-                                placeholder="Buscar categoría por nombre o slug...">
-                            <button class="btn btn-outline-secondary" type="button" id="clearSearch">
-                                <i class="fa fa-times"></i>
-                            </button>
+                    <div class="adm-toolbar">
+                        <div class="input-group adm-toolbar__grow">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fa fa-search"></i></span>
+                            </div>
+                            <input type="search" id="searchCategory" class="form-control"
+                                placeholder="Busca un registro por nombre o slug" aria-label="Buscar registro">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="clearSearch" aria-label="Limpiar búsqueda">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
                         </div>
-                        <button class="btn btn-sm btn-outline-secondary" id="expandAll" title="Expandir todo">
-                            <i class="fa fa-expand mr-1"></i> Expandir
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="expandAll">
+                            <i class="fa fa-expand mr-1"></i> Expandir todo
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary" id="collapseAll" title="Colapsar todo">
-                            <i class="fa fa-compress mr-1"></i> Colapsar
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="collapseAll">
+                            <i class="fa fa-compress mr-1"></i> Colapsar todo
                         </button>
                     </div>
                     @php
-                        $totalPdf    = $fileTypeCounts['pdf']   ?? 0;
-                        $totalDoc    = $fileTypeCounts['doc']   ?? 0;
-                        $totalAudio  = $fileTypeCounts['audio'] ?? 0;
-                        $totalVideo  = $fileTypeCounts['video'] ?? 0;
+                        $totalPdf    = $fileTypeCounts['pdf']    ?? 0;
+                        $totalDoc    = $fileTypeCounts['doc']    ?? 0;
+                        $totalAudio  = $fileTypeCounts['audio']  ?? 0;
+                        $totalVideo  = $fileTypeCounts['video']  ?? 0;
+                        $totalImagen = $fileTypeCounts['imagen'] ?? 0;
                         $totalAport  = $aportCounts->sum();
                     @endphp
-                    <div class="d-flex flex-wrap mt-2 align-items-center" style="gap:.4rem;">
-                        <small class="text-muted mr-1">Contiene:</small>
-                        @if($totalPdf > 0)
-                        <span class="badge badge-danger" style="font-size:.65rem;">
-                            <i class="fa fa-file-pdf-o mr-1"></i>PDF
-                            <span class="badge badge-light ml-1 px-1" style="font-size:.6rem;color:#721c24;">{{ $totalPdf }}</span>
-                        </span>
+                    <div class="sisi-tree-summary">
+                        <small class="text-muted">Contiene:</small>
+                        @if ($totalPdf > 0)
+                            <span class="adm-chip adm-chip--pdf"><i class="fa fa-file-pdf-o"></i>PDF <span class="adm-chip__count">{{ $totalPdf }}</span></span>
                         @endif
-                        @if($totalDoc > 0)
-                        <span class="badge badge-secondary" style="font-size:.65rem;">
-                            <i class="fa fa-file-word-o mr-1"></i>Doc
-                            <span class="badge badge-light ml-1 px-1" style="font-size:.6rem;color:#383d41;">{{ $totalDoc }}</span>
-                        </span>
+                        @if ($totalDoc > 0)
+                            <span class="adm-chip adm-chip--doc"><i class="fa fa-file-word-o"></i>Doc <span class="adm-chip__count">{{ $totalDoc }}</span></span>
                         @endif
-                        @if($totalAudio > 0)
-                        <span class="badge badge-success" style="font-size:.65rem;">
-                            <i class="fa fa-music mr-1"></i>Audio
-                            <span class="badge badge-light ml-1 px-1" style="font-size:.6rem;color:#155724;">{{ $totalAudio }}</span>
-                        </span>
+                        @if ($totalAudio > 0)
+                            <span class="adm-chip adm-chip--audio"><i class="fa fa-music"></i>Audio <span class="adm-chip__count">{{ $totalAudio }}</span></span>
                         @endif
-                        @if($totalVideo > 0)
-                        <span class="badge badge-primary" style="font-size:.65rem;">
-                            <i class="fa fa-video-camera mr-1"></i>Video
-                            <span class="badge badge-light ml-1 px-1" style="font-size:.6rem;color:#004085;">{{ $totalVideo }}</span>
-                        </span>
+                        @if ($totalVideo > 0)
+                            <span class="adm-chip adm-chip--video"><i class="fa fa-video-camera"></i>Video <span class="adm-chip__count">{{ $totalVideo }}</span></span>
                         @endif
-                        @if($totalAport > 0)
-                        <span class="badge badge-warning text-dark" style="font-size:.65rem;">
-                            <i class="fa fa-users mr-1"></i>Aportaciones
-                            <span class="badge badge-light ml-1 px-1" style="font-size:.6rem;color:#856404;">{{ $totalAport }}</span>
-                        </span>
+                        @if ($totalImagen > 0)
+                            <span class="adm-chip adm-chip--imagen"><i class="fa fa-picture-o"></i>Imágenes <span class="adm-chip__count">{{ $totalImagen }}</span></span>
+                        @endif
+                        @if ($totalAport > 0)
+                            <span class="adm-chip adm-chip--aporte"><i class="fa fa-users"></i>Aportaciones <span class="adm-chip__count">{{ $totalAport }}</span></span>
                         @endif
                     </div>
-                    <small class="text-muted mt-1 d-block">
-                        <i class="fa fa-info-circle"></i> La búsqueda filtrará categorías, resaltará coincidencias y mostrará su jerarquía
+                    <small class="text-muted mt-2 d-block">
+                        <i class="fa fa-info-circle"></i> Al buscar se muestran solo los registros que coinciden, con su jerarquía abierta.
                     </small>
                 </div>
                 <!-- Estructura jerárquica de categorías -->
@@ -161,170 +153,6 @@
         </div>
     </div>
 
-    <style>
-        .category-tree ul {
-            padding-left: 2rem;
-            list-style: none;
-            margin-top: 0.5rem;
-        }
-
-        .category-tree li {
-            position: relative;
-            margin-bottom: 0.5rem;
-        }
-
-        .category-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem;
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.5rem;
-            transition: all 0.2s;
-        }
-
-        .category-item:hover {
-            background: #f9fafb;
-            border-color: #d1d5db;
-        }
-
-        .category-item.has-search-match {
-            background: #fef3c7;
-            border-color: #f59e0b;
-        }
-
-        .category-info {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            flex: 1;
-        }
-
-        .category-image {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            background: #f3f4f6;
-        }
-
-        .category-image-placeholder {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #9ca3af;
-        }
-
-        .category-details {
-            flex: 1;
-        }
-
-        .category-name {
-            font-weight: 600;
-            color: #111827;
-            margin-bottom: 0.25rem;
-        }
-
-        .category-slug {
-            font-size: 0.75rem;
-            color: #6b7280;
-            font-family: monospace;
-        }
-
-        .category-meta {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .category-parent {
-            font-size: 0.75rem;
-            color: #6b7280;
-        }
-
-        .category-parent i {
-            margin-right: 0.25rem;
-        }
-
-        .category-order {
-            font-size: 0.75rem;
-            color: #6b7280;
-            background: #f3f4f6;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-        }
-
-        .category-status {
-            font-size: 0.75rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            font-weight: 500;
-        }
-
-        .status-active {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .status-inactive {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .category-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .btn-icon {
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-        }
-
-        .expand-btn {
-            background: none;
-            border: none;
-            width: 28px;
-            height: 28px;
-            border-radius: 0.375rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: #6b7280;
-            transition: all 0.2s;
-        }
-
-        .expand-btn:hover {
-            background: #e5e7eb;
-            color: #374151;
-        }
-
-        .expand-btn i {
-            font-size: 0.875rem;
-        }
-
-        .tree-line {
-            position: absolute;
-            left: -1rem;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: #e5e7eb;
-        }
-
-        .no-results {
-            text-align: center;
-            padding: 3rem;
-            color: #6b7280;
-        }
-    </style>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
@@ -353,15 +181,20 @@
                 document.querySelectorAll('.category-tree ul[id]').forEach(ul => setUlState(ul, false));
             });
 
+            // Escapa texto antes de insertarlo como HTML (búsqueda y nombres).
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
             // ── Word highlight ─────────────────────────────────────────
+            // Trabaja sobre el texto escapado: el término no puede inyectar HTML.
             function highlight(el, term) {
                 if (!el) return;
                 if (!el.dataset.origHtml) el.dataset.origHtml = el.innerHTML;
-                const esc = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                el.innerHTML = el.dataset.origHtml.replace(
-                    new RegExp(`(${esc})`, 'gi'),
-                    '<mark style="background:#fff176;padding:0 2px;border-radius:3px;font-weight:inherit;">$1</mark>'
-                );
+                const esc = escapeHtml(term).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                el.innerHTML = el.dataset.origHtml.replace(new RegExp(`(${esc})`, 'gi'), '<mark>$1</mark>');
             }
 
             function clearHighlights() {
@@ -456,13 +289,13 @@
                         const div = document.createElement('div');
                         div.className = 'no-results';
                         div.innerHTML = `<i class="fa fa-search fa-3x mb-3"></i>
-                            <p>No se encontraron categorías con "<strong>${searchTerm}</strong>"</p>
-                            <small class="text-muted">Intenta con otro término de búsqueda</small>`;
+                            <p>No hay registros con «<strong>${escapeHtml(searchTerm)}</strong>»</p>
+                            <small class="text-muted">Prueba con otra palabra o revisa la ortografía.</small>`;
                         document.getElementById('categoryTree').appendChild(div);
                     } else {
                         existingNoResults.innerHTML = `<i class="fa fa-search fa-3x mb-3"></i>
-                            <p>No se encontraron categorías con "<strong>${searchTerm}</strong>"</p>
-                            <small class="text-muted">Intenta con otro término de búsqueda</small>`;
+                            <p>No hay registros con «<strong>${escapeHtml(searchTerm)}</strong>»</p>
+                            <small class="text-muted">Prueba con otra palabra o revisa la ortografía.</small>`;
                         existingNoResults.style.display = '';
                     }
                 } else if (existingNoResults) {
@@ -527,7 +360,7 @@
                     const simpleText =
                         `¿Eliminar «${categoryName}»? Esta acción no se puede deshacer.`;
                     const cascadeHtml =
-                        `<p class="mb-2">Vas a eliminar <strong>«${categoryName}»</strong> y <strong>toda su ontología</strong> (sub-registros, nietos, etc.).</p>` +
+                        `<p class="mb-2">Vas a eliminar <strong>«${escapeHtml(categoryName)}»</strong> y <strong>toda su ontología</strong> (sub-registros, nietos, etc.).</p>` +
                         `<p class="mb-0"><strong>${subtreeSize}</strong> registro(s) en total, con sus archivos en Drive y aportaciones vinculadas. <span class="text-danger">No se puede deshacer.</span></p>`;
 
                     const swalOpts = {

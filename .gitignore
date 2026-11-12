@@ -29,3 +29,4 @@ yarn-error.log
 
 # Respaldos comprimidos del proyecto (GitHub no acepta >100 MB)
 *.zip
+/database/backup_*.sql

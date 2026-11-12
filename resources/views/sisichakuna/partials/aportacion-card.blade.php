@@ -72,8 +72,9 @@
     @endif
 
     @if ($aportacion->detalle)
-        {{-- Viene del editor enriquecido (summernote): puede traer <p>, listas, enlaces. --}}
-        <div class="sisi-ap__detalle">{!! $aportacion->detalle !!}</div>
+        {{-- Viene del editor enriquecido (summernote): puede traer <p>, listas, enlaces.
+             Se limpia también aquí para cubrir aportes guardados antes del filtro. --}}
+        <div class="sisi-ap__detalle">{!! \App\Services\HtmlSeguro::limpiar($aportacion->detalle) !!}</div>
     @endif
 
     @if ($archivos->isNotEmpty())

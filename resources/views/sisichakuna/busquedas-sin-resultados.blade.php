@@ -2,6 +2,7 @@
 @section('titulo', '- Búsquedas sin resultados')
 
 @section('contenido')
+@include('sisichakuna.partials.sisipedia-hero')
 @include('sisichakuna.partials.sisipedia-admin-nav', ['active' => 'busquedas'])
 
 <div class="card border-0 shadow-sm mb-4">

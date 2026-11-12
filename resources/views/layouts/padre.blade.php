@@ -4,6 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    {{-- Para peticiones desde JS (p. ej. contador de vistas de Kawsay, public/js/kawsay.js) --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Sisipedia @yield('titulo')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -51,14 +53,24 @@
         </div>
     </div>
     <script>
-    window.addEventListener('load', function () {
-        var l = document.getElementById('puklla-loader');
-        if (!l) return;
-        setTimeout(function () {
-            l.classList.add('out');
-            setTimeout(function () { l.remove(); }, 500);
-        }, 180);
-    });
+    (function () {
+        // Se quita al terminar de cargar la página, pero NUNCA después de 2,5 s
+        // de tener el contenido listo: 'load' espera también a las miniaturas
+        // de Google Drive (lentas con datos móviles) y dejaba la página tapada.
+        var hecho = false;
+        function ocultarLoader() {
+            if (hecho) return;
+            hecho = true;
+            var l = document.getElementById('puklla-loader');
+            if (!l) return;
+            setTimeout(function () {
+                l.classList.add('out');
+                setTimeout(function () { l.remove(); }, 500);
+            }, 180);
+        }
+        window.addEventListener('load', ocultarLoader);
+        document.addEventListener('DOMContentLoaded', function () { setTimeout(ocultarLoader, 2500); });
+    })();
     </script>
 
     @livewire('menu')

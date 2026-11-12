@@ -6,10 +6,8 @@ use App\Models\Canciones;
 use App\Models\Categoria;
 use App\Models\CategoriaFisica;
 use App\Models\KawsayArea;
-use App\Models\KawsayCategoria;
 use App\Models\KawsayLibro;
 use App\Models\KawsayVideo;
-use App\Models\KawsayVideoCategoria;
 use App\Models\Libro;
 use App\Models\LibroFisico;
 use App\Models\Proyecto;
@@ -144,23 +142,28 @@ class EnlacesController extends Controller
     }
 
     /** Portada pública del repositorio Kawsay. */
-    public function kawsay()
+    public function kawsay(\App\Services\KawsayPortada $portada)
     {
-        $libros = KawsayLibro::latest()->take(8)->get();
-        $videos = KawsayVideo::latest()->take(8)->get();
+        // Últimas publicaciones: un carrusel por formato (videos, fotos, documentos, libros).
+        $carruseles = $portada->carruseles();
+        $fotosVisor = $portada->fotosParaVisor($carruseles);
+        $temaDelMes = $portada->temaDelMes();
 
-        $categoriasVirtuales = KawsayCategoria::withCount('libros')
-            ->has('libros')
-            ->orderBy('nombre')
-            ->get();
-        $categoriasVideos = KawsayVideoCategoria::withCount('videos')
-            ->has('videos')
-            ->orderBy('nombre')
+        // Áreas con sus temas: mosaico del hero y menú lateral "Áreas y temas".
+        $areas = KawsayArea::orderBy('orden')
+            ->with(['temas' => fn ($q) => $q->orderBy('orden')->select('id', 'kawsay_area_id', 'titulo', 'slug')])
             ->get();
 
-        $areas = KawsayArea::orderBy('orden')->get();
+        // Hero: temas con más material, como atajos "Empieza por…" (enlaces reales a
+        // temas, mejor que sugerir búsquedas que podrían no dar resultados).
+        $temasSugeridos = \App\Models\KawsayTema::with('area:id,slug')
+            ->withCount('archivos')
+            ->having('archivos_count', '>', 0)
+            ->orderByDesc('archivos_count')
+            ->take(3)
+            ->get(['id', 'kawsay_area_id', 'titulo', 'slug']);
 
-        return view('kawsay', compact('libros', 'videos', 'categoriasVirtuales', 'categoriasVideos', 'areas'));
+        return view('kawsay', compact('carruseles', 'fotosVisor', 'temaDelMes', 'temasSugeridos', 'areas'));
     }
 
     public function index()

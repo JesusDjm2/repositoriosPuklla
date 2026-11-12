@@ -39,12 +39,12 @@ class VideoStreamController extends Controller
         return $this->streamDriveFile($request, $aportacionArchivo->drive_id, $aportacionArchivo->nombre_original);
     }
 
-    /** Videos subidos a un Tema de Kawsay (KawsayArchivo). */
+    /** Videos y audios subidos a un Tema de Kawsay (KawsayArchivo). Los de YouTube no pasan por aquí. */
     public function kawsayArchivo(Request $request, KawsayArchivo $archivo): StreamedResponse
     {
-        abort_unless($archivo->tipo === 'video' && $archivo->drive_id, 404);
+        abort_unless(in_array($archivo->tipo, ['video', 'audio'], true) && $archivo->drive_id, 404);
 
-        return $this->streamDriveFile($request, $archivo->drive_id, $archivo->nombre_original);
+        return $this->streamDriveFile($request, $archivo->drive_id, $archivo->nombre_original, $archivo->tipo === 'audio');
     }
 
     /** Catálogo de Videos de Radio Pukllasunchis. */
@@ -69,7 +69,7 @@ class VideoStreamController extends Controller
      * archivo. Evita depender del iframe público de Drive (controles pobres, sin
      * pantalla completa fiable) y evita cargar el archivo completo en memoria de PHP.
      */
-    private function streamDriveFile(Request $request, string $driveId, ?string $nombreOriginal): StreamedResponse
+    private function streamDriveFile(Request $request, string $driveId, ?string $nombreOriginal, bool $esAudio = false): StreamedResponse
     {
         $driveResponse = $this->drive->getMediaStream($driveId, $request->header('Range'));
 
@@ -79,7 +79,7 @@ class VideoStreamController extends Controller
         $headers = [
             // Drive no siempre reporta el mimetype correcto; se deduce por la
             // extensión del nombre original cuando está disponible.
-            'Content-Type' => $this->mimeFromNombre($nombreOriginal),
+            'Content-Type' => $this->mimeFromNombre($nombreOriginal, $esAudio),
             'Accept-Ranges' => 'bytes',
             'Cache-Control' => 'public, max-age=86400',
         ];
@@ -101,9 +101,18 @@ class VideoStreamController extends Controller
         }, $status, $headers);
     }
 
-    private function mimeFromNombre(?string $nombreOriginal): string
+    private function mimeFromNombre(?string $nombreOriginal, bool $esAudio = false): string
     {
         $ext = $nombreOriginal ? strtolower(pathinfo($nombreOriginal, PATHINFO_EXTENSION)) : '';
+
+        if ($esAudio) {
+            return match ($ext) {
+                'm4a', 'aac' => 'audio/mp4',
+                'ogg', 'oga' => 'audio/ogg',
+                'wav' => 'audio/wav',
+                default => 'audio/mpeg',
+            };
+        }
 
         return match ($ext) {
             'webm' => 'video/webm',

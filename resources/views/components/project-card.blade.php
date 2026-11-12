@@ -7,7 +7,7 @@
     // (Fase 2 rediseñará estas vistas; por ahora solo se enlaza a lo que ya existe.)
     $panelRoute = match ($proyecto->slug) {
         'eesp-pukllasunchis' => 'bibliotecario',
-        'radio-pukllasunchis' => 'adminSisicha',
+        'radio-pukllasunchis' => 'adminRadio',
         'kawsay' => 'adminKawsay',
         default => null,
     };

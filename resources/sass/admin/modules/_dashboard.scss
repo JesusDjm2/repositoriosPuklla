@@ -1,0 +1,133 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// TARJETAS DE DASHBOARD (.dash-card)
+// Componente unificado para los dashboards de todos los roles (Admin, Biblioteca,
+// Kawsay, Radio/Sisicha, Videos, Audios) y la vista Hub personal (home).
+//
+// Los íconos y contadores usan tokens semánticos --adm-* del sistema en vez
+// de clases aisladas de Bootstrap: legibles y contrastados en ambos temas.
+// ═══════════════════════════════════════════════════════════════════════════
+
+.dash-card-link {
+    text-decoration: none !important;
+    color: inherit !important;
+    display: block;
+    height: 100%;
+    outline: none;
+
+    &:focus-visible .dash-card {
+        border-color: var(--adm-accent);
+        box-shadow: var(--adm-focus-ring), var(--adm-shadow-lg) !important;
+        transform: translateY(-3px);
+    }
+}
+
+.dash-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    border: 1px solid var(--adm-border);
+    border-radius: var(--adm-radius-lg);
+    background: var(--adm-surface);
+    transition: transform 0.28s var(--adm-ease), box-shadow 0.28s var(--adm-ease), border-color 0.28s var(--adm-ease);
+}
+
+@media (hover: hover) {
+    .dash-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--adm-accent);
+        box-shadow: var(--adm-shadow-lg) !important;
+    }
+}
+
+.dash-card__title {
+    color: var(--adm-text);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.35rem;
+}
+
+.dash-card__desc {
+    color: var(--adm-text-muted);
+    font-size: 0.85rem;
+    line-height: 1.45;
+    margin-bottom: 0.85rem;
+}
+
+.dash-icon-circle {
+    --_c: var(--adm-text-muted);
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    margin-bottom: 0.5rem;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--_c) 14%, transparent);
+    color: var(--_c);
+    font-size: 1.15rem;
+    transition: transform 0.25s var(--adm-ease);
+}
+
+.dash-card:hover .dash-icon-circle {
+    transform: scale(1.06);
+}
+
+// Variantes de íconos por subsistema / entidad
+.icon-virtual     { --_c: var(--adm-info); }
+.icon-fisica      { --_c: var(--adm-text-muted); }
+.icon-prestamos   { --_c: var(--adm-accent-strong); }
+.icon-material    { --_c: var(--adm-warning); }
+.icon-taqe        { --_c: var(--adm-success); }
+.icon-videos      { --_c: var(--adm-link); }
+.icon-canciones   { --_c: var(--adm-success); }
+.icon-usuarios    { --_c: var(--adm-info); }
+.icon-kawsay      { --_c: var(--kw-accent, #2d6a4f); }
+.icon-areas       { --_c: var(--kw-accent, #2d6a4f); }
+.icon-temas       { --_c: var(--adm-accent-strong); }
+.icon-archivos    { --_c: var(--adm-info); }
+.icon-comentarios { --_c: var(--adm-warning); }
+.icon-sisicha     { --_c: var(--adm-primary); }
+.icon-radio       { --_c: var(--adm-primary); }
+.icon-aportaciones{ --_c: var(--adm-success); }
+.icon-busquedas   { --_c: var(--adm-info); }
+
+// Píldoras métricas inferiores
+.dash-card__badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.35rem;
+}
+
+.stat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    margin: 0;
+    padding: 0.18rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+
+    i {
+        font-size: 0.7rem;
+    }
+}
+
+.badge-secciones  { background: var(--adm-info-soft); color: var(--adm-info); }
+.badge-categorias { background: var(--adm-warning-soft); color: var(--adm-warning); }
+.badge-registros  { background: var(--adm-success-soft); color: var(--adm-success); }
+.badge-atrasados  { background: var(--adm-danger-soft); color: var(--adm-danger); font-weight: 600; }
+.badge-taqe       { background: var(--adm-accent-soft); color: var(--adm-accent-strong); }
+.badge-kawsay     { background: color-mix(in srgb, var(--kw-accent, #2d6a4f) 14%, transparent); color: var(--kw-accent, #2d6a4f); }
+.badge-radio      { background: var(--adm-primary-soft); color: var(--adm-primary); }
+.badge-info       { background: var(--adm-info-soft); color: var(--adm-info); }
+.badge-pdf        { background: var(--adm-danger-soft); color: var(--adm-danger); }
+.badge-audio      { background: var(--adm-success-soft); color: var(--adm-success); }
+.badge-imagen     { background: var(--adm-info-soft); color: var(--adm-info); }
+.badge-muted      { background: var(--adm-surface-3); color: var(--adm-text-muted); }

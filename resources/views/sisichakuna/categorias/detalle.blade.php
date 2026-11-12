@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('titulo', 'Detalle de registro')
 @section('contenido')
+    @include('sisichakuna.partials.sisipedia-hero')
     @include('sisichakuna.partials.sisipedia-admin-nav', ['active' => 'categories'])
     <div class="container-fluid py-4 px-0">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">

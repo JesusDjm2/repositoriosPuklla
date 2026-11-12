@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('titulo', 'Nueva Categoría')
 @section('contenido')
+    @include('sisichakuna.partials.sisipedia-hero')
     @include('sisichakuna.partials.sisipedia-admin-nav', ['active' => 'categories'])
     <div class="container-fluid py-4 px-0">
         <div class="row">
@@ -53,7 +54,7 @@
                             <!-- Vista previa de numeración -->
                             <div class="form-group mb-3" id="previewNumbering" style="display: none;">
                                 <div class="alert alert-info">
-                                    <i class="fa fa-sort-numeric-up-alt me-2"></i>
+                                    <i class="fa fa-sort-numeric-asc me-2"></i>
                                     Esta categoría tendrá la numeración: <strong id="previewNumberingValue"></strong>
                                 </div>
                             </div>
@@ -133,7 +134,7 @@
 
                         <div class="card-footer">
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Guardar
+                                <i class="fa fa-floppy-o"></i> Guardar
                             </button>
                             <a href="{{ route('sisipedia.categories.index') }}" class="btn btn-secondary">
                                 Cancelar

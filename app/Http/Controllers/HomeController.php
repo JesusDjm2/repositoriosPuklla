@@ -27,7 +27,7 @@ class HomeController extends Controller
         }
 
         if (auth()->user()->hasRole('sisicha')) {
-            return redirect()->route('sisipedia.categories.index');
+            return redirect()->route('adminRadio');
         }
 
         if (auth()->user()->hasRole('biblioteca')) {

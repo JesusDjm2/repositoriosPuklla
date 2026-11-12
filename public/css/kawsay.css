@@ -1,0 +1,2019 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   KAWSAY — hoja de estilos del sitio público (portada, área, tema, contenido,
+   búsqueda y nosotros). La carga resources/views/kawsay/partials/estilos.blade.php
+   (una sola vez por página) y la portada desde su <head>.
+
+   1. Estilos compartidos (antes un <style> de ~500 líneas dentro de la vista)
+   2. Portada: carruseles por formato y menú "Explorar"
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ═══ 1. COMPARTIDOS ═════════════════════════════════════════════════════════ */
+/* ── Portada: hero en mosaico (.khero) ─────────────────────────────────────
+   Izquierda: qué es Kawsay y cómo empezar (buscar / formato / tema sugerido).
+   Derecha: las 4 áreas en mosaico 2×2 con sus pinturas A COLOR.
+   - Sin velo oscuro sobre toda la foto: solo un degradado detrás del texto
+     (izquierda en escritorio, arriba/abajo en celular) y otro arriba para que
+     el menú transparente del sitio se lea.
+   - Los nombres de las áreas van sobre una franja sólida de su color, nunca
+     directo sobre la pintura.
+   - Un solo flujo, sin márgenes negativos por ancho de pantalla. */
+.khero {
+    position: relative;
+    overflow: hidden;
+    /* Sube detrás del menú del sitio (que es sticky y no reserva hueco fijo) */
+    margin-top: calc(var(--nav-height) * -1);
+    padding: calc(var(--nav-height) + 2.75rem) 0 clamp(4rem, 3rem + 3vw, 5.5rem);
+    background: #1d2113;
+    color: #fff;
+}
+
+.khero__fondo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 40%;
+}
+
+/* Degradados de lectura: arriba (menú) + izquierda (texto) */
+.khero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(to bottom, rgba(12, 14, 6, 0.55) 0, rgba(12, 14, 6, 0) 9rem),
+        linear-gradient(to top, rgba(12, 14, 6, 0.5) 0, rgba(12, 14, 6, 0) 10rem),
+        linear-gradient(90deg, rgba(18, 20, 10, 0.86) 0%, rgba(18, 20, 10, 0.62) 40%, rgba(18, 20, 10, 0.22) 72%, rgba(18, 20, 10, 0.12) 100%);
+}
+
+/* Borde inferior: un horizonte orgánico (como una loma del territorio) del
+   color de la página, en vez del degradado a gris que dejaba una franja
+   lechosa sobre la pintura y cortaba las tarjetas. SVG en línea: 0 peticiones. */
+.khero::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 -1px;
+    height: clamp(2.25rem, 4vw, 3.5rem);
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 80' preserveAspectRatio='none'%3E%3Cpath fill='%23f2f2f2' d='M0 54 C 180 30 330 26 520 40 C 700 54 820 70 1010 58 C 1180 47 1310 22 1440 30 L1440 80 L0 80 Z'/%3E%3Cpath fill='%23f2f2f2' fill-opacity='.45' d='M0 40 C 220 18 400 22 600 34 C 790 46 930 58 1120 44 C 1270 33 1360 16 1440 18 L1440 80 L0 80 Z'/%3E%3C/svg%3E") center bottom / 100% 100% no-repeat;
+    pointer-events: none;
+}
+
+.khero__grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    /* minmax(0, 1fr): sin esto, la fila deslizable de atajos (nowrap) ensancha
+       la columna y en celular todo el hero queda más ancho que la pantalla. */
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+    align-items: center;
+}
+
+@media (min-width: 992px) {
+    .khero__grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+        gap: 3rem;
+    }
+}
+
+/* ── Texto ── */
+.khero__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0 0 0.6rem;
+    color: #e6dcae;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.khero__eyebrow::before {
+    content: "";
+    width: 2rem;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+}
+
+.khero__titulo {
+    margin: 0 0 0.5rem;
+    color: #fff;
+    font-family: "EB Garamond", Georgia, serif;
+    font-size: clamp(2.75rem, 1.7rem + 4.2vw, 4.5rem);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+}
+
+.khero__lema {
+    max-width: 30ch;
+    margin: 0 0 1.5rem;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.3rem);
+    line-height: 1.4;
+}
+
+/* Buscador: la acción principal, grande y clara */
+.khero__buscar {
+    position: relative;
+    display: flex;
+    max-width: 32rem;
+    margin-bottom: 1rem;
+    padding: 0.3rem;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+}
+
+.khero__buscar:focus-within {
+    outline: 3px solid rgba(255, 255, 255, 0.55);
+    outline-offset: 3px;
+}
+
+.khero__buscar-icono {
+    position: absolute;
+    top: 50%;
+    left: 1.15rem;
+    color: #7a8070;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.khero__buscar input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0 0.75rem 0 2.75rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #24281c;
+    font-size: 16px; /* evita el zoom automático en iOS */
+}
+
+.khero__buscar input:focus { outline: none; }
+.khero__buscar input::placeholder { color: #7a8070; }
+
+.khero__buscar button {
+    flex-shrink: 0;
+    min-height: 48px;
+    padding: 0 1.5rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--kp-accent);
+    color: #fff;
+    font-weight: 700;
+    transition: background-color 0.18s var(--kp-ease), transform 0.18s var(--kp-ease);
+}
+
+@media (hover: hover) {
+    .khero__buscar button:hover { background: color-mix(in srgb, var(--kp-accent) 82%, black); }
+}
+
+.khero__buscar button:active { transform: scale(0.97); }
+
+/* Atajos por formato: un toque, sin escribir */
+.khero__atajos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.khero__atajo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 44px;
+    padding: 0.45rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 0.92rem;
+    font-weight: 600;
+    text-decoration: none;
+    backdrop-filter: blur(4px);
+    transition: background-color 0.18s var(--kp-ease), color 0.18s var(--kp-ease), transform 0.18s var(--kp-ease);
+}
+
+@media (hover: hover) {
+    .khero__atajo:hover {
+        background: #fff;
+        color: #24281c;
+        transform: translateY(-1px);
+    }
+}
+
+.khero__atajo:active { transform: scale(0.97); }
+
+.khero__sugerencias {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.9rem;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.9rem;
+}
+
+.khero__sugerencias a {
+    color: #fff;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.45);
+    text-underline-offset: 3px;
+}
+
+.khero__sugerencias a:hover { text-decoration-color: #fff; }
+
+/* ── Mosaico de áreas ── */
+.khero__areas-titulo {
+    margin: 0 0 0.75rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.khero__mosaico {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.khero-area {
+    --area-color: var(--kp-accent);
+
+    position: relative;
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 18px;
+    background: var(--area-color);
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+    transition: transform 0.3s var(--kp-ease), box-shadow 0.3s var(--kp-ease);
+}
+
+@media (hover: hover) {
+    .khero-area:hover {
+        color: #fff;
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .khero-area:hover .khero-area__media img { transform: scale(1.06); }
+    .khero-area:hover .khero-area__meta i { transform: translateX(4px); }
+}
+
+.khero-area:active { transform: scale(0.98); }
+
+.khero-area:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 3px;
+}
+
+.khero-area__media {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+}
+
+.khero-area__media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s var(--kp-ease);
+}
+
+.khero-area__media img[data-foco="abajo"] { object-position: center 78%; }
+
+/* Franja sólida del color del área: el nombre siempre se lee */
+.khero-area__pie {
+    position: absolute;
+    inset: auto 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.65rem 0.9rem 0.7rem;
+    background: color-mix(in srgb, var(--area-color) 90%, black);
+}
+
+.khero-area__nombre {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.2;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.khero-area__meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.khero-area__meta i {
+    font-size: 0.75rem;
+    transition: transform 0.2s var(--kp-ease);
+}
+
+/* ── Tablet y celular ── */
+@media (max-width: 991.98px) {
+    .khero {
+        padding: calc(var(--nav-height) + 1.75rem) 0 3.5rem;
+    }
+
+    /* El texto ocupa todo el ancho: degradado de arriba hacia abajo */
+    .khero::before {
+        background: linear-gradient(to bottom, rgba(14, 16, 8, 0.78) 0%, rgba(14, 16, 8, 0.6) 55%, rgba(14, 16, 8, 0.82) 100%);
+    }
+
+    .khero__lema { max-width: none; }
+
+    /* Atajos en una fila deslizable para no ocupar dos o tres renglones */
+    .khero__atajos {
+        flex-wrap: nowrap;
+        margin-right: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+        padding-right: calc(var(--bs-gutter-x, 1.5rem) * 0.5);
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .khero__atajos::-webkit-scrollbar { display: none; }
+    .khero__atajo { flex-shrink: 0; }
+}
+
+@media (max-width: 575.98px) {
+    .khero__grid { gap: 1.5rem; }
+    .khero__lema { margin-bottom: 1.1rem; }
+    .khero__buscar button { padding: 0 1.1rem; }
+    .khero__mosaico { gap: 0.6rem; }
+    .khero-area { aspect-ratio: 1 / 1; border-radius: 14px; }
+    .khero-area__pie { padding: 0.5rem 0.65rem 0.55rem; }
+    .khero-area__nombre { font-size: 0.88rem; }
+    .khero-area__meta { font-size: 0.74rem; }
+}
+
+
+/* El borde/acento del avatar y el ícono de respaldo de la tarjeta de tema
+   usan el color propio del área (KawsayArea::color, hex libre elegido
+   desde el admin) como estilo inline en la vista — ya no clases fijas
+   por nombre, porque ahora las áreas son registros de BD y no un set
+   cerrado de 4 nombres. */
+
+/* Header de las vistas Área/Tema/Contenido (a las que llevan los óvalos
+   de la portada): mismo fondo fotográfico y mismo velo para las 3 —
+   usa el color base del proyecto Kawsay (--project-accent, ya vale
+   #6e7d1e en toda página de Kawsay) en vez de variar por área, para que
+   las 3 vistas se sientan parte de una misma identidad. */
+.kawsay-area-header {
+    color: #fff;
+    position: relative;
+    background-image:
+        linear-gradient(135deg, color-mix(in srgb, var(--project-accent) 88%, black), color-mix(in srgb, var(--project-accent) 55%, white 20%)),
+        url('../img/kawsay/hero-secciones.jpg');
+    background-size: cover;
+    background-position: center;
+}
+
+/* Buscador sutil dentro del header — mucho más chico que el buscador
+   grande de la portada, alineado a la derecha del bloque de título. */
+.kawsay-header-search {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 260px;
+    background: rgba(255, 255, 255, .16);
+    border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: 999px;
+    padding: .3rem .3rem .3rem 1rem;
+    backdrop-filter: blur(2px);
+}
+.kawsay-header-search input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: .85rem;
+    min-width: 0;
+}
+.kawsay-header-search input::placeholder { color: rgba(255, 255, 255, .7); }
+.kawsay-header-search input:focus { outline: none; }
+.kawsay-header-search button {
+    background: rgba(255, 255, 255, .92);
+    color: #2a2f36;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .8rem;
+}
+@media (max-width: 767.98px) {
+    .kawsay-header-search { max-width: none; }
+}
+
+/* Compartir: fila de botones redondos junto al título del tema. */
+.kawsay-share {
+    display: flex;
+    gap: .5rem;
+    margin-top: 1rem;
+}
+.kawsay-share a, .kawsay-share button {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255, 255, 255, .16);
+    border: 1px solid rgba(255, 255, 255, .35);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .95rem;
+    transition: background .15s ease;
+}
+.kawsay-share a:hover, .kawsay-share button:hover { background: rgba(255, 255, 255, .3); color: #fff; }
+.kawsay-share button.is-copiado { background: rgba(255, 255, 255, .92); color: #2a2f36; }
+
+/* ── Comentarios del tema ─────────────────────────────────────────── */
+.kcom { margin-top: 3.5rem; max-width: 780px; scroll-margin-top: 6rem; }
+.kcom__head {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+    padding-bottom: 1rem; margin-bottom: 1.25rem;
+    border-bottom: 2px solid color-mix(in srgb, var(--project-accent) 22%, transparent);
+}
+.kcom__title { font-size: 1.35rem; font-weight: 800; color: #2a2f26; margin: 0 0 .15rem; }
+.kcom__sub { margin: 0; color: #6b7264; font-size: .9rem; }
+.kcom__count {
+    min-width: 2.2rem; height: 2.2rem; padding: 0 .6rem; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 999px; font-weight: 800; font-size: .9rem;
+    background: var(--project-accent); color: #fff;
+}
+
+.kcom__alert {
+    display: flex; align-items: flex-start; gap: .6rem;
+    padding: .8rem 1rem; border-radius: 12px; margin-bottom: 1rem;
+    font-size: .9rem; line-height: 1.4;
+}
+.kcom__alert i { margin-top: .15rem; }
+.kcom__alert--ok { background: #eaf5e4; color: #2f5a1f; border: 1px solid #cfe6c4; }
+.kcom__alert--error { background: #fdecec; color: #8a2222; border: 1px solid #f3c9c9; }
+
+.kcom__form {
+    background: #fff; border: 1px solid #e6e9df; border-radius: 16px;
+    padding: 1.25rem; margin-bottom: 2rem;
+    box-shadow: 0 1px 2px rgba(20, 30, 10, .04), 0 10px 24px rgba(20, 30, 10, .05);
+}
+.kcom__field { margin-bottom: 1rem; }
+.kcom__field label { display: block; font-size: .78rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: #5a6353; margin-bottom: .35rem; }
+.kcom__field input, .kcom__field textarea {
+    width: 100%; border: 1.5px solid #dfe3d6; border-radius: 10px; background: #fbfcf8;
+    padding: .65rem .85rem; font-size: .95rem; color: #2a2f26; font-family: inherit;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.kcom__field textarea { min-height: 7.5rem; resize: vertical; line-height: 1.5; }
+.kcom__field input:focus, .kcom__field textarea:focus {
+    outline: none; background: #fff; border-color: var(--project-accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--project-accent) 18%, transparent);
+}
+.kcom__field .is-invalid { border-color: #d64545; background: #fff8f8; }
+.kcom__error { color: #b42525; font-size: .8rem; margin-top: .3rem; }
+
+/* Campo trampa para bots: fuera de pantalla, no display:none (algunos bots lo detectan). */
+.kcom__trampa { position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+
+.kcom__foot { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.kcom__nota { margin: 0; font-size: .78rem; color: #7a8171; display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; flex: 1 1 260px; }
+.kcom__nota i { color: var(--project-accent); }
+.kcom__contador { margin-left: .25rem; font-variant-numeric: tabular-nums; color: #9aa190; }
+.kcom__contador.is-limite { color: #b42525; font-weight: 700; }
+.kcom__btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    border: 0; cursor: pointer; padding: .7rem 1.4rem; border-radius: 999px;
+    background: var(--project-accent); color: #fff; font-weight: 700; font-size: .9rem;
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--project-accent) 32%, transparent);
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.kcom__btn:hover { background: color-mix(in srgb, var(--project-accent) 82%, black); transform: translateY(-1px); }
+.kcom__btn:disabled { opacity: .65; cursor: wait; transform: none; }
+
+.kcom__lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .9rem; }
+.kcom__item {
+    display: flex; gap: .9rem; align-items: flex-start;
+    background: #fff; border: 1px solid #eceee6; border-radius: 14px; padding: 1rem 1.1rem;
+    animation: kcomEntrada .35s ease both;
+}
+.kcom__item.is-oculto { display: none; }
+.kcom__avatar {
+    width: 2.6rem; height: 2.6rem; flex-shrink: 0; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 1.05rem;
+}
+.kcom__cuerpo { min-width: 0; flex: 1; }
+.kcom__meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: .25rem .65rem; margin-bottom: .25rem; }
+.kcom__autor { color: #2a2f26; font-size: .95rem; }
+.kcom__meta time { color: #8b9282; font-size: .78rem; }
+.kcom__texto { margin: 0; color: #3d4437; font-size: .95rem; line-height: 1.6; overflow-wrap: anywhere; }
+
+.kcom__mas {
+    display: flex; align-items: center; justify-content: center; gap: .4rem;
+    width: 100%; margin-top: 1rem; padding: .7rem; cursor: pointer;
+    background: transparent; color: var(--project-accent); font-weight: 700; font-size: .9rem;
+    border: 1.5px dashed color-mix(in srgb, var(--project-accent) 45%, transparent); border-radius: 12px;
+    transition: background .15s ease;
+}
+.kcom__mas:hover { background: color-mix(in srgb, var(--project-accent) 8%, transparent); }
+
+.kcom__vacio {
+    text-align: center; padding: 2rem 1rem; color: #7a8171;
+    background: #fafbf6; border: 1.5px dashed #dfe3d6; border-radius: 14px;
+}
+.kcom__vacio i { font-size: 2rem; color: var(--project-accent); opacity: .45; margin-bottom: .5rem; }
+.kcom__vacio p { margin: 0; line-height: 1.5; }
+
+@keyframes kcomEntrada { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .kcom__item { animation: none; } .kcom__btn { transition: none; } }
+@media (max-width: 575.98px) {
+    .kcom__form { padding: 1rem; }
+    .kcom__btn { width: 100%; }
+    .kcom__item { padding: .85rem; gap: .7rem; }
+    .kcom__avatar { width: 2.2rem; height: 2.2rem; font-size: .95rem; }
+}
+
+/* Portada del tema: foto principal en la cabecera de la vista del tema
+   (a la izquierda del texto en desktop; arriba del título en mobile). */
+/* Rejilla de la cabecera del tema: volver + contenido a la izquierda y el
+   buscador en la derecha, centrado en vertical respecto a TODA la cabecera.
+   En mobile se apila: volver, buscador, foto y texto. */
+.kawsay-tema-header {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "back search" "hero search";
+    column-gap: 2rem; row-gap: 1rem;
+}
+.kawsay-tema-header__back { grid-area: back; justify-self: start; }
+.kawsay-tema-header__search { grid-area: search; align-self: center; width: 260px; }
+.kawsay-tema-header > .kawsay-tema-hero { grid-area: hero; }
+@media (max-width: 767.98px) {
+    .kawsay-tema-header { grid-template-columns: minmax(0, 1fr); grid-template-areas: "back" "search" "hero"; }
+    .kawsay-tema-header__search { align-self: stretch; width: auto; }
+}
+.kawsay-tema-hero { display: flex; align-items: center; gap: 2.5rem; }
+.kawsay-tema-hero__texto { flex: 1; min-width: 0; }
+.kawsay-tema-hero__foto {
+    flex: 0 0 min(32%, 340px); margin: 0; aspect-ratio: 4 / 3;
+    border-radius: 16px; overflow: hidden;
+    border: 3px solid rgba(255, 255, 255, .35);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, .3);
+}
+.kawsay-tema-hero__foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (max-width: 767.98px) {
+    .kawsay-tema-hero { flex-direction: column; align-items: stretch; gap: 1.1rem; }
+    .kawsay-tema-hero__foto { flex: none; aspect-ratio: 16 / 9; }
+}
+
+.kawsay-back-link { color: rgba(255, 255, 255, .85); text-decoration: none; font-size: .85rem; font-weight: 600; }
+.kawsay-back-link:hover { color: #fff; text-decoration: underline; }
+
+.kawsay-area-header__icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: rgba(255, 255, 255, .18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; flex-shrink: 0;
+}
+.kawsay-area-header__title { font-size: 1.6rem; font-weight: 800; margin-bottom: .1rem; }
+.kawsay-area-header__subtitle { opacity: .85; font-size: .9rem; margin-bottom: 0; }
+.kawsay-area-header__desc { max-width: 640px; margin: 1rem 0 0; opacity: .92; }
+
+.kawsay-tema-card {
+    display: flex; flex-direction: column; align-items: center; gap: .6rem;
+    text-align: center; text-decoration: none; color: #2a2f36;
+    background: #fff; border: 1px solid #e9ecef; border-radius: 14px;
+    padding: 1.4rem 1rem; height: 100%; position: relative;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.kawsay-tema-card:hover { transform: translateY(-4px); box-shadow: 0 10px 26px rgba(0, 0, 0, .1); color: #2a2f36; text-decoration: none; }
+.kawsay-tema-card__title { font-weight: 600; font-size: .9rem; }
+/* Sin foto: solo el título, con una franja del color del área arriba. */
+.kawsay-tema-card--texto {
+    justify-content: center; min-height: 7rem;
+    border-top: 4px solid var(--area-color, #6e7d1e);
+}
+.kawsay-tema-card--texto .kawsay-tema-card__title { font-size: 1rem; line-height: 1.3; }
+/* Variante con foto: la imagen ocupa la parte de arriba de la tarjeta. */
+.kawsay-tema-card--foto { padding: 0; gap: 0; overflow: hidden; align-items: stretch; }
+.kawsay-tema-card__foto {
+    display: block; aspect-ratio: 16 / 10;
+    background-size: cover; background-position: center; background-color: #f0ebe4;
+    transition: transform .35s ease;
+}
+.kawsay-tema-card--foto:hover .kawsay-tema-card__foto { transform: scale(1.04); }
+.kawsay-tema-card--foto .kawsay-tema-card__title { padding: .8rem .9rem; position: relative; background: #fff; }
+.kawsay-tema-card--foto .kawsay-tema-card__badge { background: rgba(255, 255, 255, .92); box-shadow: 0 1px 4px rgba(0, 0, 0, .15); }
+.kawsay-tema-card__badge {
+    position: absolute; top: .6rem; right: .6rem;
+    background: #f1f3f5; color: #495057; border-radius: 999px;
+    font-size: .7rem; font-weight: 700; padding: .1rem .45rem;
+}
+
+.kawsay-tipo-card {
+    display: flex; flex-direction: column; align-items: center; gap: .6rem;
+    text-align: center; text-decoration: none; color: #2a2f36;
+    background: #fff; border: 1px solid #e9ecef; border-radius: 14px;
+    padding: 1.4rem 1rem; height: 100%; position: relative;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.kawsay-tipo-card:hover { transform: translateY(-4px); box-shadow: 0 10px 26px rgba(0, 0, 0, .1); color: #2a2f36; text-decoration: none; }
+button.kawsay-tipo-card { width: 100%; font: inherit; cursor: pointer; }
+.kawsay-tipo-card--vacio { opacity: .45; cursor: default; pointer-events: none; }
+.kawsay-tipo-card__icon {
+    width: 48px; height: 48px; border-radius: 50%; background: #f1f3f5; color: #495057;
+    display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
+}
+.kawsay-tipo-card__title { font-weight: 600; font-size: .88rem; }
+.kawsay-tipo-card__count { font-size: .72rem; color: #868e96; }
+
+.kawsay-archivo-card {
+    display: flex; align-items: center; gap: .9rem;
+    background: #fff; border: 1px solid #e9ecef; border-radius: 12px;
+    padding: .9rem 1.1rem; margin-bottom: .75rem;
+}
+.kawsay-archivo-card__icon {
+    width: 42px; height: 42px; border-radius: 10px; background: #f1f3f5; color: #495057;
+    display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+}
+/* PDF como tarjeta con portada (reusa .lib-book-card de la Escuela): en
+   táctil no hay hover, así que la portada entera es el botón de vista previa. */
+.kawsay-pdf-cover { cursor: pointer; aspect-ratio: 15 / 16; }
+.kawsay-pdf-cover img { object-position: top; }
+.kawsay-pdf-cover__ph {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 2.6rem; color: var(--project-accent); opacity: .35;
+}
+.kawsay-pdf-cover img { position: relative; }
+.kawsay-pdf-cover:focus-visible { outline: 3px solid var(--project-accent); outline-offset: -3px; }
+.kawsay-pdf-card__actions {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: auto; padding-top: .35rem; font-size: .76rem;
+}
+.kawsay-pdf-card__actions a { color: var(--project-accent); text-decoration: none; font-weight: 600; }
+.kawsay-pdf-card__actions a:hover { text-decoration: underline; }
+.kawsay-archivo-card__actions { display: flex; gap: .4rem; flex-shrink: 0; }
+@media (max-width: 575.98px) {
+    .kawsay-archivo-card { flex-wrap: wrap; }
+    .kawsay-archivo-card__actions { width: 100%; }
+    .kawsay-archivo-card__actions .btn { flex: 1 1 0; white-space: nowrap; }
+    .kawsay-archivo-card__actions .btn-primary { flex: 2 1 0; }
+}
+.kawsay-archivo-card__title { font-weight: 600; font-size: .92rem; margin-bottom: .1rem; }
+.kawsay-archivo-card__meta { font-size: .75rem; color: #868e96; }
+
+/* ═══ 2. PORTADA ════════════════════════════════════════════════════════════ */
+
+/* En body (no en :root): --project-accent de Kawsay se define en body.is-kawsay
+   (public/css/estilos.css); declarado en :root tomaría el valor por defecto. */
+body {
+    --kp-accent: var(--project-accent, #6e7d1e);
+    --kp-accent-soft: color-mix(in srgb, var(--kp-accent) 12%, transparent);
+    --kp-ink: #24281c;
+    --kp-muted: #5f6655;            /* 5.9:1 sobre blanco */
+    --kp-surface: #ffffff;
+    --kp-surface-2: #f6f5ef;
+    --kp-border: rgba(36, 40, 28, 0.1);
+    --kp-radius: 16px;
+    --kp-shadow: 0 1px 2px rgba(30, 34, 20, 0.06), 0 10px 24px rgba(30, 34, 20, 0.08);
+    --kp-shadow-hover: 0 2px 4px rgba(30, 34, 20, 0.08), 0 18px 36px rgba(30, 34, 20, 0.16);
+    --kp-ease: var(--puklla-ease, cubic-bezier(0.4, 0, 0.2, 1));
+    --kp-sticky-top: calc(var(--puklla-nav-h, 5rem) + 1rem);
+}
+
+/* ─── Encabezado de la sección ───────────────────────────────────────────── */
+/* position/z-index: por si una imagen o degradado del hero se extiende detrás del
+   contenido con un degradé; sin esto, el encabezado queda tapado por ella. */
+.kport-head,
+.kport-chips,
+.kcar,
+.kexp,
+.kport-vacio {
+    position: relative;
+    z-index: 1;
+}
+
+.kport-head {
+    margin-bottom: 1.5rem;
+}
+
+.kport-head__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0 0 0.35rem;
+    color: var(--kp-accent);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.kport-head__eyebrow::before {
+    content: "";
+    width: 1.5rem;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+}
+
+.kport-head__title {
+    margin: 0 0 0.35rem;
+    color: var(--kp-ink);
+    font-family: "EB Garamond", Georgia, serif;
+    font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.kport-head__sub {
+    max-width: 52ch;
+    margin: 0;
+    color: var(--kp-muted);
+    font-size: 0.98rem;
+}
+
+/* Atajos por formato (solo celular/tablet) */
+.kport-chips {
+    display: flex;
+    gap: 0.5rem;
+    /* Hasta el borde de la pantalla: el medianil de la columna de Bootstrap (.75rem) */
+    margin: 0 calc(var(--bs-gutter-x, 1.5rem) * -0.5) 1.5rem;
+    padding: 0 calc(var(--bs-gutter-x, 1.5rem) * 0.5) 0.25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.kport-chips::-webkit-scrollbar { display: none; }
+
+.kport-chip {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 44px;
+    padding: 0.45rem 0.95rem;
+    border: 1px solid var(--kp-border);
+    border-radius: 999px;
+    background: var(--kp-surface);
+    color: var(--kp-ink);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 1px 2px rgba(30, 34, 20, 0.05);
+}
+
+.kport-chip i { color: var(--kp-accent); }
+
+.kport-chip__count {
+    padding: 0.05rem 0.5rem;
+    border-radius: 999px;
+    background: var(--kp-accent-soft);
+    color: var(--kp-accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.kport-chip:active { transform: scale(0.97); }
+
+.kport-vacio {
+    padding: 3rem 1.5rem;
+    border: 2px dashed var(--kp-border);
+    border-radius: var(--kp-radius);
+    color: var(--kp-muted);
+    text-align: center;
+}
+
+.kport-vacio i {
+    margin-bottom: 0.75rem;
+    color: var(--kp-accent);
+    font-size: 2.25rem;
+}
+
+/* ─── Carrusel ───────────────────────────────────────────────────────────── */
+.kcar {
+    position: relative;
+    margin-bottom: 2.75rem;
+    scroll-margin-top: var(--kp-sticky-top);
+}
+
+.kcar__head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.kcar__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: linear-gradient(145deg, var(--kp-accent), color-mix(in srgb, var(--kp-accent) 70%, black));
+    color: #fff;
+    font-size: 1.15rem;
+    box-shadow: 0 6px 14px color-mix(in srgb, var(--kp-accent) 30%, transparent);
+}
+
+.kcar__heading {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.kcar__title {
+    margin: 0;
+    color: var(--kp-ink);
+    font-family: "EB Garamond", Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.15;
+}
+
+.kcar__sub {
+    margin: 0.1rem 0 0;
+    overflow: hidden;
+    color: var(--kp-muted);
+    font-size: 0.88rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.kcar__controls {
+    display: none; /* el JS los muestra solo si hay más tarjetas que ancho */
+    flex-shrink: 0;
+    gap: 0.4rem;
+}
+
+.kcar.has-overflow .kcar__controls { display: flex; }
+
+.kcar__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--kp-border);
+    border-radius: 50%;
+    background: var(--kp-surface);
+    color: var(--kp-ink);
+    box-shadow: 0 1px 2px rgba(30, 34, 20, 0.06);
+    transition: background-color 0.18s var(--kp-ease), color 0.18s var(--kp-ease), transform 0.18s var(--kp-ease), opacity 0.18s;
+}
+
+@media (hover: hover) {
+    .kcar__btn:not(:disabled):hover {
+        background: var(--kp-accent);
+        border-color: var(--kp-accent);
+        color: #fff;
+        transform: translateY(-1px);
+    }
+}
+
+.kcar__btn:active:not(:disabled) { transform: scale(0.94); }
+.kcar__btn:disabled { opacity: 0.35; cursor: default; }
+
+.kcar__btn:focus-visible,
+.kcar__pista:focus-visible,
+.kcar-card__main:focus-visible,
+.kcar-card__tema:focus-visible,
+.kcar__more:focus-visible,
+.kexp a:focus-visible,
+.kexp__summary:focus-visible,
+.kport-chip:focus-visible {
+    outline: 2px solid var(--kp-accent);
+    outline-offset: 2px;
+}
+
+/* Pista: scroll horizontal nativo con "snap" (funciona con dedo, rueda,
+   trackpad y teclado). Se deja asomar la siguiente tarjeta para invitar
+   a deslizar. */
+.kcar__pista {
+    display: flex;
+    gap: 1rem;
+    margin: 0 calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+    padding: 0.25rem calc(var(--bs-gutter-x, 1.5rem) * 0.5) 1rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: calc(var(--bs-gutter-x, 1.5rem) * 0.5);
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.kcar__pista::-webkit-scrollbar { display: none; }
+
+@media (min-width: 992px) {
+    .kcar__pista {
+        margin: 0;
+        padding: 0.25rem 0.25rem 1rem;
+        scroll-padding-inline: 0.25rem;
+        mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+    }
+
+    .kcar.is-at-end .kcar__pista { mask-image: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .kcar__pista { scroll-behavior: smooth; }
+}
+
+.kcar__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 44px;
+    margin-top: 0.25rem;
+    padding: 0.5rem 1.1rem;
+    border: 1px solid color-mix(in srgb, var(--kp-accent) 35%, transparent);
+    border-radius: 999px;
+    color: var(--kp-accent);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background-color 0.18s var(--kp-ease), color 0.18s var(--kp-ease);
+}
+
+@media (hover: hover) {
+    .kcar__more:hover { background: var(--kp-accent); color: #fff; }
+}
+
+/* ─── Tarjeta ────────────────────────────────────────────────────────────── */
+.kcar-card {
+    --area-color: var(--kp-accent);
+    --kcar-w: 78%;
+
+    position: relative;
+    display: flex;
+    flex: 0 0 var(--kcar-w);
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--kp-border);
+    border-radius: var(--kp-radius);
+    background: var(--kp-surface);
+    box-shadow: var(--kp-shadow);
+    scroll-snap-align: start;
+    transition: transform 0.25s var(--kp-ease), box-shadow 0.25s var(--kp-ease);
+}
+
+/* Ancho por formato: horizontales (video/foto) más anchas, verticales
+   (documento/libro, tipo página) más angostas. */
+.kcar-card--documento,
+.kcar-card--libro { --kcar-w: 46%; }
+
+@media (min-width: 576px) {
+    .kcar-card { --kcar-w: 46%; }
+    .kcar-card--documento,
+    .kcar-card--libro { --kcar-w: 30%; }
+}
+
+@media (min-width: 992px) {
+    .kcar-card { --kcar-w: calc((100% - 2rem) / 2.4); }
+    .kcar-card--foto { --kcar-w: calc((100% - 2rem) / 2.8); }
+    .kcar-card--documento,
+    .kcar-card--libro { --kcar-w: calc((100% - 3rem) / 4.25); }
+}
+
+@media (hover: hover) {
+    .kcar-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--kp-shadow-hover);
+    }
+
+    .kcar-card:hover .kcar-card__media img { transform: scale(1.05); }
+    .kcar-card:hover .kcar-card__play { transform: translate(-50%, -50%) scale(1.08); }
+}
+
+/* Franja del color del área: une la tarjeta con su área de un vistazo */
+.kcar-card::before {
+    content: "";
+    position: absolute;
+    z-index: 2;
+    inset: 0 0 auto;
+    height: 4px;
+    background: var(--area-color);
+}
+
+.kcar-card__main {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.kcar-card__main:disabled { cursor: default; }
+
+.kcar-card__media {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    background:
+        radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--area-color) 30%, white), transparent 60%),
+        color-mix(in srgb, var(--area-color) 18%, var(--kp-surface-2));
+}
+
+.kcar-card--foto .kcar-card__media { aspect-ratio: 4 / 3; }
+
+.kcar-card--documento .kcar-card__media,
+.kcar-card--libro .kcar-card__media { aspect-ratio: 3 / 4; }
+
+/* Ícono de respaldo: se ve mientras carga la miniatura o si Drive no la da */
+.kcar-card__ph {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: color-mix(in srgb, var(--area-color) 55%, var(--kp-ink));
+    font-size: 2.25rem;
+    opacity: 0.45;
+}
+
+.kcar-card__media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.45s var(--kp-ease);
+}
+
+.kcar-card--documento .kcar-card__media img,
+.kcar-card--libro .kcar-card__media img { object-position: top center; }
+
+.kcar-card__badge {
+    position: absolute;
+    z-index: 1;
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(20, 22, 14, 0.72);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    backdrop-filter: blur(4px);
+}
+
+.kcar-card__play {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.94);
+    color: var(--kp-ink);
+    font-size: 1.1rem;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+    transform: translate(-50%, -50%);
+    transition: transform 0.25s var(--kp-ease);
+}
+
+.kcar-card__play i { margin-left: 3px; }
+
+.kcar-card__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.85rem 1rem 0.6rem;
+}
+
+.kcar-card__title {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--kp-ink);
+    font-size: 0.98rem;
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.kcar-card__detail,
+.kcar-card__date {
+    overflow: hidden;
+    color: var(--kp-muted);
+    font-size: 0.8rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Foto: el título va sobre la imagen (más "galería") */
+.kcar-card--foto .kcar-card__body {
+    position: absolute;
+    z-index: 1;
+    inset: auto 0 0;
+    padding: 2.5rem 0.9rem 0.75rem;
+    background: linear-gradient(to top, rgba(15, 17, 10, 0.82), transparent);
+    pointer-events: none;
+}
+
+.kcar-card--foto .kcar-card__title { color: #fff; }
+.kcar-card--foto .kcar-card__date { color: rgba(255, 255, 255, 0.78); }
+.kcar-card--foto .kcar-card__main { position: relative; }
+
+/* Enlace al tema de origen, con el color del área */
+.kcar-card__tema {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    margin-top: auto;
+    padding: 0.55rem 1rem;
+    border-top: 1px solid var(--kp-border);
+    color: var(--kp-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.18s var(--kp-ease), color 0.18s var(--kp-ease);
+}
+
+.kcar-card__dot {
+    flex-shrink: 0;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--area-color);
+}
+
+.kcar-card__tema-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.kcar-card__tema .fa-arrow-right {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.18s, transform 0.18s var(--kp-ease);
+}
+
+@media (hover: hover) {
+    .kcar-card__tema:hover {
+        background: color-mix(in srgb, var(--area-color) 10%, transparent);
+        color: var(--kp-ink);
+    }
+
+    .kcar-card__tema:hover .fa-arrow-right { opacity: 1; transform: none; }
+}
+
+/* ─── Menú lateral "Explorar" ───────────────────────────────────────────── */
+.kexp {
+    padding: 1.25rem;
+    border: 1px solid var(--kp-border);
+    border-radius: var(--kp-radius);
+    background: var(--kp-surface);
+    box-shadow: var(--kp-shadow);
+    scroll-margin-top: var(--kp-sticky-top);
+}
+
+@media (min-width: 992px) {
+    .kexp {
+        position: sticky;
+        top: var(--kp-sticky-top);
+        max-height: calc(100vh - var(--kp-sticky-top) - 1rem);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+    }
+}
+
+.kexp__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
+    color: var(--kp-ink);
+    font-family: "EB Garamond", Georgia, serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+}
+
+.kexp__title i { color: var(--kp-accent); font-size: 1.1rem; }
+
+.kexp__label {
+    margin: 1.1rem 0 0.45rem;
+    color: var(--kp-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.kexp__formatos {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.kexp__formato {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 44px;
+    padding: 0.4rem 0.6rem;
+    border-radius: 12px;
+    color: var(--kp-ink);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.18s var(--kp-ease), color 0.18s var(--kp-ease);
+}
+
+.kexp__formato-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--kp-accent-soft);
+    color: var(--kp-accent);
+    transition: background-color 0.18s var(--kp-ease), color 0.18s var(--kp-ease);
+}
+
+.kexp__formato-name { flex: 1 1 auto; }
+
+@media (hover: hover) {
+    .kexp__formato:hover { background: var(--kp-surface-2); }
+}
+
+/* Formato visible en pantalla (lo marca el JS al hacer scroll) */
+.kexp__formato.is-active {
+    background: var(--kp-accent-soft);
+    color: var(--kp-accent);
+}
+
+.kexp__formato.is-active .kexp__formato-icon {
+    background: var(--kp-accent);
+    color: #fff;
+}
+
+.kexp__count {
+    flex-shrink: 0;
+    min-width: 1.9rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    background: var(--kp-surface-2);
+    color: var(--kp-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* Grupos desplegables (<details>) */
+.kexp__grupo {
+    --area-color: var(--kp-accent);
+
+    margin-bottom: 0.35rem;
+    border-radius: 12px;
+    transition: background-color 0.18s var(--kp-ease);
+}
+
+.kexp__grupo[open] { background: var(--kp-surface-2); }
+
+.kexp__summary {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 48px;
+    padding: 0.4rem 0.6rem;
+    border-radius: 12px;
+    color: var(--kp-ink);
+    font-weight: 600;
+    list-style: none;
+    cursor: pointer;
+}
+
+.kexp__summary::-webkit-details-marker { display: none; }
+
+@media (hover: hover) {
+    .kexp__summary:hover { background: var(--kp-surface-2); }
+}
+
+.kexp__avatar {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    overflow: hidden;
+    border: 2px solid var(--area-color);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--area-color) 15%, white);
+    color: var(--area-color);
+}
+
+.kexp__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.kexp__avatar--icon { border-radius: 10px; border-width: 0; background: var(--kp-accent-soft); color: var(--kp-accent); }
+
+.kexp__summary-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    line-height: 1.25;
+}
+
+.kexp__chevron {
+    flex-shrink: 0;
+    color: var(--kp-muted);
+    font-size: 0.75rem;
+    transition: transform 0.2s var(--kp-ease);
+}
+
+.kexp__grupo[open] .kexp__chevron { transform: rotate(180deg); }
+
+.kexp__lista {
+    margin: 0;
+    padding: 0.15rem 0.6rem 0.6rem 3.4rem;
+    list-style: none;
+}
+
+.kexp__lista li { position: relative; }
+
+.kexp__lista li::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -0.95rem;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--area-color);
+    opacity: 0.6;
+    transform: translateY(-50%);
+}
+
+.kexp__lista a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-height: 40px;
+    padding: 0.35rem 0.25rem;
+    color: var(--kp-ink);
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+@media (hover: hover) {
+    .kexp__lista a:hover { color: var(--kp-accent); }
+}
+
+.kexp__lista-count {
+    color: var(--kp-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.kexp__lista-todo::before { display: none; }
+
+.kexp__lista-todo a {
+    color: var(--kp-accent);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+/* ─── Entrada suave de cada carrusel ──────────────────────────────────────
+   El JS marca .is-pending SOLO a los carruseles que aún están fuera de la
+   pantalla (así nada parpadea al cargar) y los revela al acercarse. Sin JS
+   o con movimiento reducido, todo se ve normal desde el inicio. */
+@media (prefers-reduced-motion: no-preference) {
+    .kcar.is-pending {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    .kcar.is-pending.is-visible {
+        opacity: 1;
+        transform: none;
+        transition: opacity 0.55s var(--kp-ease), transform 0.55s var(--kp-ease);
+    }
+}
+
+/* ─── Tema del mes (portada) ─────────────────────────────────────────────── */
+.kdest {
+    --area-color: var(--kp-accent);
+
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow: hidden;
+    margin-bottom: 2.5rem;
+    border: 1px solid var(--kp-border);
+    border-radius: calc(var(--kp-radius) + 4px);
+    background: var(--kp-surface);
+    color: var(--kp-ink);
+    text-decoration: none;
+    box-shadow: var(--kp-shadow);
+    transition: transform 0.3s var(--kp-ease), box-shadow 0.3s var(--kp-ease);
+}
+
+@media (min-width: 768px) {
+    .kdest { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+}
+
+@media (hover: hover) {
+    .kdest:hover {
+        color: var(--kp-ink);
+        transform: translateY(-4px);
+        box-shadow: var(--kp-shadow-hover);
+    }
+
+    .kdest:hover .kdest__media img { transform: scale(1.05); }
+    .kdest:hover .kdest__cta i { transform: translateX(4px); }
+}
+
+.kdest:focus-visible {
+    outline: 2px solid var(--kp-accent);
+    outline-offset: 3px;
+}
+
+.kdest__media {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--area-color) 22%, var(--kp-surface-2));
+    color: var(--area-color);
+    font-size: 3rem;
+}
+
+@media (min-width: 768px) {
+    .kdest__media { aspect-ratio: auto; }
+}
+
+.kdest__media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s var(--kp-ease);
+}
+
+/* Franja con el color del área entre la imagen y el texto */
+.kdest__media::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 5px;
+    background: var(--area-color);
+}
+
+@media (min-width: 768px) {
+    .kdest__media::after { inset: 0 0 0 auto; width: 5px; height: auto; }
+}
+
+.kdest__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1.5rem 1.5rem 1.6rem;
+}
+
+.kdest__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: color-mix(in srgb, var(--area-color) 75%, var(--kp-ink));
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.kdest__eyebrow .fa-star { color: #d9a21b; }
+
+.kdest__title {
+    font-family: "EB Garamond", Georgia, serif;
+    font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.2rem);
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.kdest__desc {
+    color: var(--kp-muted);
+    font-size: 0.95rem;
+    line-height: 1.55;
+}
+
+.kdest__formatos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.kdest__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--area-color) 12%, transparent);
+    color: color-mix(in srgb, var(--area-color) 70%, var(--kp-ink));
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.kdest__cta {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    margin-top: 0.4rem;
+    padding: 0.55rem 1.25rem;
+    border-radius: 999px;
+    background: var(--area-color);
+    color: #fff;
+    font-weight: 700;
+}
+
+.kdest__cta i { transition: transform 0.2s var(--kp-ease); }
+
+.kcar-card__date .fa-eye { margin-right: 0.15rem; }
+
+/* ═══ 3. PÁGINA DE ÁREA (kawsay/areas/show) ════════════════════════════════ */
+.karea-hero {
+    --area-color: var(--kp-accent);
+
+    position: relative;
+    overflow: hidden;
+    /* Sube detrás del menú del sitio, igual que los demás heros */
+    margin-top: calc(var(--nav-height) * -1);
+    padding: calc(var(--nav-height) + 1.75rem) 0 2.25rem;
+    background: color-mix(in srgb, var(--area-color) 82%, black);
+    color: #fff;
+}
+
+/* Foto del área como fondo, teñida con su color para que el texto siempre se lea */
+.karea-hero__fondo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(2px) saturate(1.1);
+    transform: scale(1.06);
+    opacity: 0.45;
+}
+
+.karea-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+        linear-gradient(100deg, color-mix(in srgb, var(--area-color) 88%, black) 15%, color-mix(in srgb, var(--area-color) 55%, transparent) 100%);
+}
+
+.karea-hero__contenido {
+    position: relative;
+    z-index: 1;
+}
+
+.karea-hero__volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 44px;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.karea-hero__volver:hover { color: #fff; }
+
+.karea-hero__fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem 1.75rem;
+    margin: 0.75rem 0 1.5rem;
+}
+
+.karea-hero__avatar {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: clamp(96px, 16vw, 148px);
+    height: clamp(96px, 16vw, 148px);
+    overflow: hidden;
+    border: 4px solid rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--area-color) 30%, white);
+    color: var(--area-color);
+    font-size: 2.5rem;
+    box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.35);
+}
+
+.karea-hero__avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.karea-hero__texto {
+    flex: 1 1 18rem;
+    min-width: 0;
+}
+
+.karea-hero__eyebrow {
+    margin: 0 0 0.2rem;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.karea-hero__titulo {
+    margin: 0 0 0.5rem;
+    color: #fff;
+    font-family: "EB Garamond", Georgia, serif;
+    font-size: clamp(2rem, 1.4rem + 2.4vw, 3rem);
+    font-weight: 700;
+    line-height: 1.05;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.25);
+}
+
+.karea-hero__desc {
+    max-width: 60ch;
+    margin: 0 0 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    line-height: 1.55;
+}
+
+.karea-hero__datos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.karea-hero__datos span {
+    padding: 0.3rem 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    font-size: 0.85rem;
+}
+
+.karea-hero__buscar {
+    display: flex;
+    max-width: 34rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+}
+
+.karea-hero__buscar input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0 1.1rem;
+    border: 0;
+    background: transparent;
+    color: var(--kp-ink);
+    font-size: 16px;
+}
+
+.karea-hero__buscar input:focus { outline: none; }
+.karea-hero__buscar:focus-within { outline: 3px solid rgba(255, 255, 255, 0.6); outline-offset: 2px; }
+
+.karea-hero__buscar button {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0 1.25rem;
+    border: 0;
+    background: var(--area-color);
+    color: #fff;
+    font-weight: 700;
+}
+
+@media (max-width: 420px) {
+    .karea-hero__buscar button span { display: none; }
+}
+
+.karea-seccion {
+    margin: 0 0 1.25rem;
+    color: var(--kp-ink);
+    font-family: "EB Garamond", Georgia, serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.karea-temas {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 15.5rem), 1fr));
+    gap: 1.25rem;
+}
+
+.karea-tema {
+    --area-color: var(--kp-accent);
+
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--kp-border);
+    border-radius: var(--kp-radius);
+    background: var(--kp-surface);
+    color: var(--kp-ink);
+    text-decoration: none;
+    box-shadow: var(--kp-shadow);
+    transition: transform 0.25s var(--kp-ease), box-shadow 0.25s var(--kp-ease);
+}
+
+@media (hover: hover) {
+    .karea-tema:hover {
+        color: var(--kp-ink);
+        transform: translateY(-4px);
+        box-shadow: var(--kp-shadow-hover);
+    }
+
+    .karea-tema:hover .karea-tema__media img { transform: scale(1.05); }
+    .karea-tema:hover .karea-tema__cta i { transform: translateX(4px); }
+}
+
+.karea-tema:focus-visible {
+    outline: 2px solid var(--area-color);
+    outline-offset: 3px;
+}
+
+.karea-tema__media {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-bottom: 4px solid var(--area-color);
+    background:
+        radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--area-color) 28%, white), transparent 60%),
+        color-mix(in srgb, var(--area-color) 16%, var(--kp-surface-2));
+    color: color-mix(in srgb, var(--area-color) 70%, var(--kp-ink));
+    font-size: 2.5rem;
+}
+
+.karea-tema__media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.45s var(--kp-ease);
+}
+
+.karea-tema__pronto {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(20, 22, 14, 0.72);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.karea-tema__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem 1.1rem 1.1rem;
+}
+
+.karea-tema__titulo {
+    font-size: 1.08rem;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.karea-tema__desc {
+    color: var(--kp-muted);
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.karea-tema__formatos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.karea-tema__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--area-color) 12%, transparent);
+    color: color-mix(in srgb, var(--area-color) 70%, var(--kp-ink));
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.karea-tema__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: auto;
+    padding-top: 0.25rem;
+    color: color-mix(in srgb, var(--area-color) 80%, var(--kp-ink));
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.karea-tema__cta i { transition: transform 0.2s var(--kp-ease); }
+
+/* ═══ 4. CATÁLOGO DENTRO DE UN TEMA (kawsay/temas/show) ═══════════════════ */
+.ktema-catalogo {
+    margin-top: 2.5rem;
+}
+
+/* Tema sin imagen propia: foto del área atenuada + ícono encima */
+.karea-tema__media img.karea-tema__media-area {
+    opacity: 0.35;
+    filter: saturate(0.8);
+}
+
+.karea-tema__icono {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    font-size: 1.6rem;
+}
+
+/* Tablet (576–991px): las 4 áreas en una sola fila, para que el contenido
+   empiece dentro de la primera pantalla también en tablets. */
+@media (min-width: 576px) and (max-width: 991.98px) {
+    .khero__mosaico { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.7rem; }
+    .khero-area { aspect-ratio: 4 / 5; }
+    .khero-area__nombre { font-size: 0.88rem; -webkit-line-clamp: 3; }
+}
+
+/* Orden de capas del hero (explícito): foto (0) → degradados de lectura (1) →
+   contenido (2). Sin z-index, la <img> —que va después de ::before en el HTML—
+   quedaba ENCIMA del degradado y lo tapaba: el texto perdía contraste. */
+.khero__fondo { z-index: 0; }
+.khero::before,
+.khero::after { z-index: 1; }
+.khero__grid { z-index: 2; }
+
+/* Textos pequeños sobre la pintura: refuerzo de lectura además del degradado */
+.khero__eyebrow,
+.khero__lema,
+.khero__sugerencias,
+.khero__areas-titulo {
+    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.55);
+}
+
+/* ═══ CONTENIDO INTERACTIVO DEL TEMA (2026-11-11) ═══════════════════════════
+   Miniaturas con visor, audios, videos de YouTube que cargan al pulsar,
+   "para qué sirve" / grado de cada archivo y "Comparte tu experiencia". */
+
+/* Tarjeta de video: mismas reglas que partials/video-card (que solo se imprime
+   si hay un video de Drive en la página; un tema solo con YouTube las necesita igual). */
+.kawsay-video-card {
+    display: flex; flex-direction: column; gap: .75rem;
+    background: var(--project-accent, #6e7d1e); color: #fff;
+    border-radius: 12px; padding: 1rem;
+}
+.kawsay-video-card__head { display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem; }
+.kawsay-video-card__title {
+    color: #fff; font-size: .95rem; line-height: 1.3; margin: 0 0 .2rem;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.kawsay-video-card__meta, .kawsay-video-card__desc { font-size: .78rem; color: rgba(255, 255, 255, .85); margin: 0; }
+.kawsay-video-card__player { background: #000; border-radius: 8px; overflow: hidden; }
+.kawsay-video-card__actions { margin-top: auto; display: flex; gap: 1rem; font-size: .8rem; }
+.kawsay-video-card__actions a { color: rgba(255, 255, 255, .9); text-decoration: none; }
+.kawsay-video-card__actions a:hover { color: #fff; text-decoration: underline; }
+.kawsay-video-card__yt { flex-shrink: 0; font-size: 1.9rem; line-height: 1; color: #fff; }
+
+/* YouTube: solo la miniatura (unos KB) hasta que la persona pulsa */
+/* Va dentro de .ratio, que ya lo posiciona absolute a tamaño completo (no sobrescribir position). */
+.kawsay-yt { display: block; padding: 0; border: 0; background: #000; cursor: pointer; }
+.kawsay-yt img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: .9; transition: opacity .2s ease; }
+.kawsay-yt:hover img, .kawsay-yt:focus-visible img { opacity: 1; }
+.kawsay-yt__play {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 4rem; height: 4rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0, 0, 0, .65); color: #fff; font-size: 1.4rem; padding-left: .2rem;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, .85);
+    transition: transform .15s ease, background .15s ease;
+}
+.kawsay-yt:hover .kawsay-yt__play { transform: translate(-50%, -50%) scale(1.08); background: #c4302b; }
+.kawsay-yt:focus-visible { outline: 3px solid #fff; outline-offset: -5px; }
+.kawsay-yt__frame { width: 100%; height: 100%; border: 0; display: block; }
+
+/* Audios y testimonios */
+.kawsay-audio-card {
+    display: flex; flex-direction: column;
+    background: #fff; border: 1px solid #e6e9df; border-radius: 14px; padding: 1rem 1.1rem;
+}
+.kawsay-audio-card__icon {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+    background: color-mix(in srgb, var(--project-accent, #6e7d1e) 14%, #fff); color: var(--project-accent, #6e7d1e);
+}
+.kawsay-audio-card__title { font-size: 1rem; font-weight: 700; color: #2a2f26; margin: 0 0 .15rem; line-height: 1.3; }
+.kawsay-audio-card__meta { font-size: .76rem; color: #6b7264; }
+/* El reproductor de Radio toma --accent (granate): aquí, el verde de Kawsay. */
+.kawsay-audio-card .audio-player { margin-top: auto; --accent: var(--project-accent, #6e7d1e); }
+
+/* "Para qué sirve" y grado o nivel */
+.kawsay-archivo-desc { font-size: .84rem; color: #4f5649; line-height: 1.45; margin: .35rem 0 .5rem; }
+.kawsay-archivo-desc--corta { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: .78rem; }
+.kawsay-nivel {
+    display: inline-block; margin-top: .3rem; padding: .12rem .55rem; border-radius: 999px;
+    font-size: .7rem; font-weight: 700; letter-spacing: .01em;
+    background: color-mix(in srgb, var(--project-accent, #6e7d1e) 12%, #fff);
+    color: color-mix(in srgb, var(--project-accent, #6e7d1e) 70%, #000);
+}
+
+/* Fotos, mapas y experiencias: miniaturas que abren el visor */
+.kawsay-img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 1rem; }
+.kawsay-img-grid--mapa { grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+.kawsay-img-card { margin: 0; background: #fff; border: 1px solid #e6e9df; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+.kawsay-img-card__btn { position: relative; display: block; width: 100%; padding: 0; border: 0; background: #eef0e8; cursor: zoom-in; aspect-ratio: 4 / 3; overflow: hidden; }
+.kawsay-img-card__btn img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s ease; }
+.kawsay-img-card__btn:hover img { transform: scale(1.04); }
+.kawsay-img-card__btn:focus-visible { outline: 3px solid var(--project-accent, #6e7d1e); outline-offset: -3px; }
+.kawsay-img-card__lupa {
+    position: absolute; right: .6rem; bottom: .6rem; width: 2.2rem; height: 2.2rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0, 0, 0, .6); color: #fff; font-size: .9rem;
+}
+.kawsay-img-card figcaption { padding: .7rem .85rem .8rem; }
+.kawsay-img-card__title { display: block; font-weight: 700; font-size: .9rem; color: #2a2f26; line-height: 1.3; }
+.kawsay-img-card .kawsay-archivo-desc { margin-bottom: 0; }
+

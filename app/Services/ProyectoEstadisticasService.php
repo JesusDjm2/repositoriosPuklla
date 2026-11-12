@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Canciones;
 use App\Models\CancionesCategoria;
 use App\Models\Categoria;
+use App\Models\CategoriaMaterialDidactico;
 use App\Models\KawsayArchivo;
 use App\Models\KawsayArea;
 use App\Models\KawsayCategoria;
@@ -15,9 +16,13 @@ use App\Models\KawsayVideo;
 use App\Models\KawsayVideoCategoria;
 use App\Models\Libro;
 use App\Models\LibroFisico;
+use App\Models\MaterialDidactico;
 use App\Models\Prestamo;
 use App\Models\sisipedia\Aportacion;
 use App\Models\sisipedia\Category as SisipediaCategory;
+use App\Models\sisipedia\CategoryFile;
+use App\Models\TaqeCategoria;
+use App\Models\TaqeTrabajo;
 use App\Models\Video;
 use App\Models\VideoCategoria;
 use Closure;
@@ -40,13 +45,19 @@ class ProyectoEstadisticasService
                 'Categorías' => fn () => Categoria::count(),
                 'Préstamos activos' => fn () => Prestamo::activos()->count(),
                 'Préstamos atrasados' => fn () => Prestamo::atrasados()->count(),
+                'Material didáctico' => fn () => MaterialDidactico::count(),
+                'Taq\'e' => fn () => TaqeTrabajo::count(),
+                'Videos' => fn () => Video::count(),
             ],
             'radio-pukllasunchis' => [
-                'Videos' => fn () => Video::count(),
-                'Categorías de video' => fn () => VideoCategoria::count(),
+                'Registros Sisipedia' => fn () => SisipediaCategory::count(),
+                'Documentos PDF' => fn () => CategoryFile::where('tipo', 'pdf')->count(),
+                'Audios Sisipedia' => fn () => CategoryFile::where('tipo', 'audio')->count(),
+                'Imágenes' => fn () => CategoryFile::where('tipo', 'imagen')->count(),
                 'Canciones' => fn () => Canciones::count(),
                 'Categorías de canciones' => fn () => CancionesCategoria::count(),
-                'Registros Sisipedia' => fn () => SisipediaCategory::count(),
+                'Videos' => fn () => Video::count(),
+                'Categorías de video' => fn () => VideoCategoria::count(),
                 'Aportaciones pendientes' => fn () => Aportacion::where('is_approved', false)->count(),
             ],
             'kawsay' => [
@@ -94,6 +105,9 @@ class ProyectoEstadisticasService
             ],
             'sisicha' => [
                 'Registros Sisipedia' => fn () => SisipediaCategory::count(),
+                'Documentos PDF' => fn () => CategoryFile::where('tipo', 'pdf')->count(),
+                'Audios Sisipedia' => fn () => CategoryFile::where('tipo', 'audio')->count(),
+                'Imágenes' => fn () => CategoryFile::where('tipo', 'imagen')->count(),
                 'Aportaciones pendientes' => fn () => Aportacion::where('is_approved', false)->count(),
             ],
         ];

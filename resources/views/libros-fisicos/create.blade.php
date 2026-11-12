@@ -153,34 +153,42 @@
                         </small>
                     </div>
                 </div>
+
+                <div class="form-group mb-0 mt-2 d-none" id="etiquetasEjemplaresWrap">
+                    <label class="bv-form-label mb-1">
+                        Etiquetas de cada ejemplar
+                        <small class="text-muted font-weight-normal">(opcional — por defecto 1, 2, 3…; puedes usar A, B, Sala, etc.)</small>
+                    </label>
+                    <div class="bv-etiquetas-ejemplares-list" id="etiquetasEjemplaresList"></div>
+                    @error('etiquetas_ejemplares')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
             </div>
 
-            {{-- Sección 2: clasificación --}}
+            {{-- Sección 2: categoría y tipo de material --}}
             <div class="bv-form-card" id="bvCardCats">
                 <div class="bv-form-section-title">
                     <i class="fa fa-tags mr-1"></i>Clasificación
                 </div>
 
                 <div class="form-row">
-                    <div class="form-group col-md-5 mb-md-0">
-                        <label class="bv-form-label">
-                            Categoría Dewey <span class="text-danger">*</span>
-                            <small class="text-muted font-weight-normal">(puede elegir varias)</small>
+                    <div class="form-group col-md-5">
+                        <label class="bv-form-label" for="categoria_fisica_id">
+                            Categoría Dewey
+                            <small class="text-muted font-weight-normal">(materia — opcional)</small>
                         </label>
-                        <div class="bv-cat-pills">
+                        <select name="categoria_fisica_id" id="categoria_fisica_id"
+                            class="form-control form-control-sm @error('categoria_fisica_id') is-invalid @enderror">
+                            <option value="">Sin clasificación Dewey…</option>
                             @foreach ($categoriasFisicas as $cat)
-                                <div class="bv-cat-pill">
-                                    <input type="checkbox" name="categorias_fisicas[]"
-                                        id="catfis_{{ $cat->id }}" value="{{ $cat->id }}"
-                                        {{ is_array(old('categorias_fisicas')) && in_array($cat->id, old('categorias_fisicas')) ? 'checked' : '' }}>
-                                    <label for="catfis_{{ $cat->id }}">{{ $cat->nombre }}</label>
-                                </div>
+                                <option value="{{ $cat->id }}" {{ (int) old('categoria_fisica_id') === $cat->id ? 'selected' : '' }}>
+                                    {{ $cat->nombre }}
+                                </option>
                             @endforeach
-                        </div>
-                        @error('categorias_fisicas')
-                            <div class="text-danger small mt-1">
-                                <i class="fa fa-exclamation-circle mr-1"></i>{{ $message }}
-                            </div>
+                        </select>
+                        @error('categoria_fisica_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="form-group col-md-4">
@@ -188,25 +196,29 @@
                             Tipo de material <span class="text-danger">*</span>
                         </label>
                         <select name="tipo_material" id="tipo_material"
-                            class="form-control form-control-sm @error('tipo_material') is-invalid @enderror" required>
-                            <option value="">Seleccionar…</option>
-                            @foreach (\App\Models\CategoriaFisica::TIPOS_MATERIAL as $valor => $etiqueta)
-                                <option value="{{ $valor }}" @selected(old('tipo_material') === $valor)>{{ $etiqueta }}</option>
+                            class="form-control form-control-sm @error('tipo_material') is-invalid @enderror">
+                            <option value="">Selecciona…</option>
+                            @foreach (\App\Models\CategoriaFisica::TIPOS_MATERIAL as $codigoTipo => $nombreTipo)
+                                <option value="{{ $codigoTipo }}" {{ old('tipo_material') === $codigoTipo ? 'selected' : '' }}>
+                                    {{ $nombreTipo }}
+                                </option>
                             @endforeach
                         </select>
                         @error('tipo_material')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="form-group col-md-3 mb-0">
+                    <div class="form-group col-md-3">
                         <label class="bv-form-label" for="ubicacion">
                             Ubicación <span class="text-danger">*</span>
                         </label>
                         <select name="ubicacion" id="ubicacion"
-                            class="form-control form-control-sm @error('ubicacion') is-invalid @enderror" required>
-                            <option value="">Seleccionar…</option>
-                            @foreach (\App\Models\LibroFisico::UBICACIONES as $valor => $etiqueta)
-                                <option value="{{ $valor }}" @selected(old('ubicacion') === $valor)>{{ $etiqueta }}</option>
+                            class="form-control form-control-sm @error('ubicacion') is-invalid @enderror">
+                            <option value="">Selecciona…</option>
+                            @foreach (\App\Models\LibroFisico::UBICACIONES as $codigoUbicacion => $nombreUbicacion)
+                                <option value="{{ $codigoUbicacion }}" {{ old('ubicacion') === $codigoUbicacion ? 'selected' : '' }}>
+                                    {{ $nombreUbicacion }}
+                                </option>
                             @endforeach
                         </select>
                         @error('ubicacion')
@@ -228,12 +240,72 @@
     @endif
 @endsection
 
+@push('styles')
+@endpush
+
 @push('scripts')
 <script>
     (function () {
+        window.bvPageAnimated = true;
         gsap.from(['#bvCardInfo', '#bvCardCats'], {
             opacity: 0, y: 22, duration: 0.42, stagger: 0.11, ease: 'power2.out'
         });
+
+        // Muestra un input de texto por ejemplar para poder nombrarlo (1, 2… o A, B, "Sala"…)
+        // en vez de solo un correlativo fijo; se regenera al cambiar la cantidad sin perder lo ya escrito.
+        (function () {
+            var cantidadInput = document.getElementById('cantidad_ejemplares');
+            var wrap = document.getElementById('etiquetasEjemplaresWrap');
+            var list = document.getElementById('etiquetasEjemplaresList');
+            var valoresIniciales = @json(old('etiquetas_ejemplares', []));
+
+            function valorActualEn(index) {
+                var existente = list.children[index];
+                if (existente) return existente.querySelector('input').value;
+                return valoresIniciales[index] || '';
+            }
+
+            function render() {
+                var cantidad = parseInt(cantidadInput.value, 10) || 0;
+                if (cantidad <= 1) {
+                    wrap.classList.add('d-none');
+                    list.innerHTML = '';
+                    return;
+                }
+                wrap.classList.remove('d-none');
+
+                var valores = [];
+                for (var i = 0; i < cantidad; i++) valores.push(valorActualEn(i));
+
+                list.innerHTML = '';
+                valores.forEach(function (valor, i) {
+                    var item = document.createElement('div');
+                    item.className = 'input-group input-group-sm';
+
+                    var prependWrap = document.createElement('div');
+                    prependWrap.className = 'input-group-prepend';
+                    var prepend = document.createElement('span');
+                    prepend.className = 'input-group-text';
+                    prepend.textContent = (i + 1) + '.';
+                    prependWrap.appendChild(prepend);
+                    item.appendChild(prependWrap);
+
+                    var input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'form-control';
+                    input.name = 'etiquetas_ejemplares[]';
+                    input.maxLength = 50;
+                    input.value = valor;
+                    input.placeholder = String(i + 1);
+                    item.appendChild(input);
+
+                    list.appendChild(item);
+                });
+            }
+
+            cantidadInput.addEventListener('input', render);
+            render();
+        })();
 
         function attachCounter(inputId, counterId, max) {
             var el = document.getElementById(inputId);
@@ -252,21 +324,17 @@
         attachCounter('nombre', 'nombreCounter', 200);
         attachCounter('autor',  'autorCounter',  150);
 
-        // Botón sugerir código basado en categorías seleccionadas
+        // Botón sugerir código basado en el tipo de material y la categoría Dewey
         var btnSugerir = document.getElementById('btnSugerirCodigo');
-        if (btnSugerir) {
+        var selectCategoria = document.getElementById('categoria_fisica_id');
+        var selectTipoMaterial = document.getElementById('tipo_material');
+        if (btnSugerir && selectCategoria && selectTipoMaterial) {
             btnSugerir.addEventListener('click', function () {
-                // Recoger IDs de categorías marcadas
-                var checked = Array.from(
-                    document.querySelectorAll('input[name="categorias_fisicas[]"]:checked')
-                ).map(function (el) { return el.value; });
+                var params = new URLSearchParams();
+                if (selectTipoMaterial.value) params.set('tipo_material', selectTipoMaterial.value);
+                if (selectCategoria.value) params.set('categoria_fisica_id', selectCategoria.value);
 
-                var url = '{{ route('libros-fisicos.sugerir-codigo') }}';
-                if (checked.length > 0) {
-                    url += '?' + checked.map(function (id) {
-                        return 'categorias[]=' + encodeURIComponent(id);
-                    }).join('&');
-                }
+                var url = '{{ route('libros-fisicos.sugerir-codigo') }}?' + params.toString();
 
                 btnSugerir.disabled = true;
                 btnSugerir.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
@@ -291,15 +359,19 @@
                     });
             });
 
-            // Actualizar tooltip del botón cuando cambia la selección de categorías
-            document.querySelectorAll('input[name="categorias_fisicas[]"]').forEach(function (cb) {
-                cb.addEventListener('change', function () {
-                    var n = document.querySelectorAll('input[name="categorias_fisicas[]"]:checked').length;
-                    btnSugerir.title = n > 0
-                        ? 'Generar código basado en la categoría seleccionada (Dewey)'
-                        : 'Generar código genérico (PF-' + new Date().getFullYear() + '-XXXX)';
-                });
-            });
+            // Actualizar tooltip del botón cuando cambia el tipo de material o la categoría
+            function actualizarTooltip() {
+                if (selectTipoMaterial.value && selectTipoMaterial.value !== 'BIB-GEN') {
+                    btnSugerir.title = 'Generar código basado en el tipo de material (' + selectTipoMaterial.value + ')';
+                } else if (selectCategoria.value) {
+                    btnSugerir.title = 'Generar código basado en la categoría Dewey seleccionada';
+                } else {
+                    btnSugerir.title = 'Generar código genérico (PF-XXXX)';
+                }
+            }
+            selectCategoria.addEventListener('change', actualizarTooltip);
+            selectTipoMaterial.addEventListener('change', actualizarTooltip);
+            actualizarTooltip();
         }
     })();
 </script>

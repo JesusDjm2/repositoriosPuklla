@@ -69,21 +69,6 @@
     </div>
 </div>
 
-<style>
-    .kawsay-portada { display: flex; flex-direction: column; gap: .9rem; }
-    .kawsay-portada__preview {
-        width: 100%; max-width: 320px; aspect-ratio: 4 / 3; border-radius: 12px;
-        overflow: hidden; background: #f0ebe4; color: #b8a898;
-        display: flex; align-items: center; justify-content: center; font-size: 2.2rem;
-        border: 2px solid #e5ddd2; transition: opacity .15s ease;
-    }
-    .kawsay-portada__preview img { width: 100%; height: 100%; object-fit: cover; }
-    .kawsay-portada__preview.is-quitada { opacity: .3; }
-    .kawsay-portada__campos { min-width: 0; }
-    .kawsay-portada__input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
-    .kawsay-portada__input:focus-visible + label { outline: 2px solid #6e7d1e; outline-offset: 2px; }
-    .kawsay-portada__nombre { display: block; margin-top: .35rem; font-size: .75rem; color: #6c757d; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-</style>
 
 <script>
     (function () {

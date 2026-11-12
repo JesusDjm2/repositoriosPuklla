@@ -7,13 +7,14 @@ use App\Models\LibroFisico;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class LibroFisicoController extends Controller
 {
     public function index(Request $request)
     {
         $query = LibroFisico::query()
-            ->with('categoriasFisicas')
+            ->with('categoriaFisica')
             ->orderBy('nombre');
 
         if ($request->filled('q')) {
@@ -26,10 +27,7 @@ class LibroFisicoController extends Controller
         }
 
         if ($request->filled('categoria_fisica_id')) {
-            $cid = (int) $request->input('categoria_fisica_id');
-            $query->whereHas('categoriasFisicas', function ($q) use ($cid) {
-                $q->where('categorias_fisicas.id', $cid);
-            });
+            $query->where('categoria_fisica_id', (int) $request->input('categoria_fisica_id'));
         }
 
         if ($request->filled('ubicacion')) {
@@ -53,6 +51,8 @@ class LibroFisicoController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge(['categoria_fisica_id' => $request->input('categoria_fisica_id') ?: null]);
+
         $request->validate([
             'nombre' => 'required|string|max:255',
             'autor' => 'required|string|max:255',
@@ -61,35 +61,64 @@ class LibroFisicoController extends Controller
             'numero_paginas' => 'nullable|integer|min:1|max:65535',
             'codigo' => 'required|string|max:100|unique:libros_fisicos,codigo',
             'cantidad_ejemplares' => 'required|integer|min:1|max:9999',
+            'etiquetas_ejemplares' => 'nullable|array',
+            'etiquetas_ejemplares.*' => 'nullable|string|max:50',
+            'categoria_fisica_id' => 'nullable|exists:categorias_fisicas,id',
             'tipo_material' => ['required', Rule::in(array_keys(CategoriaFisica::TIPOS_MATERIAL))],
             'ubicacion' => ['required', Rule::in(array_keys(LibroFisico::UBICACIONES))],
-            'categorias_fisicas' => 'required|array|min:1',
-            'categorias_fisicas.*' => 'exists:categorias_fisicas,id',
         ]);
 
-        $libro = LibroFisico::create($request->only(['nombre', 'autor', 'editorial', 'anio_publicacion', 'numero_paginas', 'codigo', 'cantidad_ejemplares', 'tipo_material', 'ubicacion']));
-        $libro->categoriasFisicas()->sync($request->input('categorias_fisicas'));
+        $etiquetas = LibroFisico::normalizarEtiquetasEjemplares(
+            $request->integer('cantidad_ejemplares'),
+            $request->input('etiquetas_ejemplares', [])
+        );
+        $this->validarEtiquetasUnicas($etiquetas);
+
+        $libro = LibroFisico::create($request->only(['nombre', 'autor', 'editorial', 'anio_publicacion', 'numero_paginas', 'codigo', 'cantidad_ejemplares', 'categoria_fisica_id', 'tipo_material', 'ubicacion']) + ['etiquetas_ejemplares' => $etiquetas]);
+        if ($libro->categoria_fisica_id) {
+            $libro->categoriasFisicas()->sync([$libro->categoria_fisica_id]);
+        }
 
         return redirect()->route('biblioteca-fisica.libros.index')
             ->with('success', 'Libro físico registrado correctamente.');
     }
 
+    /**
+     * Dos ejemplares con la misma etiqueta ("A" y "A") serían indistinguibles
+     * al prestar, así que se rechazan antes de guardar.
+     */
+    private function validarEtiquetasUnicas(array $etiquetas): void
+    {
+        $repetidas = collect($etiquetas)->duplicates()->unique()->values();
+
+        if ($repetidas->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'etiquetas_ejemplares' => 'Hay etiquetas de ejemplar repetidas: '.$repetidas->implode(', ').'. Cada ejemplar debe tener una etiqueta distinta.',
+            ]);
+        }
+    }
+
     public function edit(LibroFisico $libro_fisico)
     {
         $categoriasFisicas = CategoriaFisica::orderBy('nombre')->get();
-        $categoriasSeleccionadas = $libro_fisico->categoriasFisicas->pluck('id')->all();
         $prestadosActivos = $libro_fisico->prestamosActivos()->count();
+
+        // Etiquetas que no se pueden renombrar/quitar ahora mismo porque su
+        // ejemplar está prestado (ver guardia equivalente en update()).
+        $etiquetasEnPrestamo = $libro_fisico->prestamosActivos()->pluck('numero_ejemplar')->filter()->values()->all();
 
         return view('libros-fisicos.edit', [
             'libro' => $libro_fisico,
             'categoriasFisicas' => $categoriasFisicas,
-            'categoriasSeleccionadas' => $categoriasSeleccionadas,
             'prestadosActivos' => $prestadosActivos,
+            'etiquetasEnPrestamo' => $etiquetasEnPrestamo,
         ]);
     }
 
     public function update(Request $request, LibroFisico $libro_fisico)
     {
+        $request->merge(['categoria_fisica_id' => $request->input('categoria_fisica_id') ?: null]);
+
         $request->validate([
             'nombre' => 'required|string|max:255',
             'autor' => 'required|string|max:255',
@@ -98,20 +127,41 @@ class LibroFisicoController extends Controller
             'numero_paginas' => 'nullable|integer|min:1|max:65535',
             'codigo' => ['required', 'string', 'max:100', Rule::unique('libros_fisicos', 'codigo')->ignore($libro_fisico->id)],
             'cantidad_ejemplares' => 'required|integer|min:1|max:9999',
+            'etiquetas_ejemplares' => 'nullable|array',
+            'etiquetas_ejemplares.*' => 'nullable|string|max:50',
+            'categoria_fisica_id' => 'nullable|exists:categorias_fisicas,id',
             'tipo_material' => ['required', Rule::in(array_keys(CategoriaFisica::TIPOS_MATERIAL))],
             'ubicacion' => ['required', Rule::in(array_keys(LibroFisico::UBICACIONES))],
-            'categorias_fisicas' => 'required|array|min:1',
-            'categorias_fisicas.*' => 'exists:categorias_fisicas,id',
         ]);
 
-        $prestados = $libro_fisico->prestamosActivos()->count();
-        if ($request->integer('cantidad_ejemplares') < $prestados) {
+        $prestamosActivos = $libro_fisico->prestamosActivos()->get();
+        if ($request->integer('cantidad_ejemplares') < $prestamosActivos->count()) {
             return back()->withInput()->with('error',
-                "No se puede reducir a {$request->input('cantidad_ejemplares')} ejemplares: actualmente hay {$prestados} prestados.");
+                "No se puede reducir a {$request->input('cantidad_ejemplares')} ejemplares: actualmente hay {$prestamosActivos->count()} prestados.");
         }
 
-        $libro_fisico->update($request->only(['nombre', 'autor', 'editorial', 'anio_publicacion', 'numero_paginas', 'codigo', 'cantidad_ejemplares', 'tipo_material', 'ubicacion']));
-        $libro_fisico->categoriasFisicas()->sync($request->input('categorias_fisicas'));
+        $etiquetas = LibroFisico::normalizarEtiquetasEjemplares(
+            $request->integer('cantidad_ejemplares'),
+            $request->input('etiquetas_ejemplares', [])
+        );
+        $this->validarEtiquetasUnicas($etiquetas);
+
+        // Un ejemplar prestado no puede perder ni cambiar su etiqueta mientras está
+        // fuera: dejaría el préstamo apuntando a una etiqueta que ya no existe.
+        $etiquetasEnPrestamo = $prestamosActivos->pluck('numero_ejemplar')->filter()->all();
+        $etiquetasQueDesaparecen = array_diff($etiquetasEnPrestamo, $etiquetas);
+        if (! empty($etiquetasQueDesaparecen)) {
+            return back()->withInput()->with('error',
+                'No puedes renombrar/quitar la etiqueta "'.implode('", "', $etiquetasQueDesaparecen).
+                '": ese ejemplar está prestado actualmente. Registra la devolución primero.');
+        }
+
+        $libro_fisico->update($request->only(['nombre', 'autor', 'editorial', 'anio_publicacion', 'numero_paginas', 'codigo', 'cantidad_ejemplares', 'categoria_fisica_id', 'tipo_material', 'ubicacion']) + ['etiquetas_ejemplares' => $etiquetas]);
+        if ($libro_fisico->categoria_fisica_id) {
+            $libro_fisico->categoriasFisicas()->sync([$libro_fisico->categoria_fisica_id]);
+        } else {
+            $libro_fisico->categoriasFisicas()->detach();
+        }
 
         return redirect()->route('biblioteca-fisica.libros.index')
             ->with('success', 'Libro físico actualizado correctamente.');
@@ -135,7 +185,8 @@ class LibroFisicoController extends Controller
     public function catalogo(Request $request)
     {
         $query = LibroFisico::query()
-            ->with('categoriasFisicas')
+            ->with('categoriaFisica')
+            ->withCount(['prestamos as ejemplares_prestados_count' => fn ($q) => $q->activos()])
             ->orderBy('nombre');
 
         if ($request->filled('q')) {
@@ -148,8 +199,7 @@ class LibroFisicoController extends Controller
         }
 
         if ($request->filled('cat')) {
-            $cid = (int) $request->input('cat');
-            $query->whereHas('categoriasFisicas', fn($q) => $q->where('categorias_fisicas.id', $cid));
+            $query->where('categoria_fisica_id', (int) $request->input('cat'));
         }
 
         $libros     = $query->paginate(24)->withQueryString();
@@ -171,7 +221,7 @@ class LibroFisicoController extends Controller
         $page = max(1, (int) $request->input('page', 1));
         $perPage = 20;
 
-        $query = LibroFisico::query()->with('categoriasFisicas')->orderBy('nombre');
+        $query = LibroFisico::query()->with('categoriaFisica')->orderBy('nombre');
 
         if ($term !== '') {
             $like = '%'.addcslashes($term, '%_\\').'%';
@@ -212,15 +262,16 @@ class LibroFisicoController extends Controller
             'codigo' => $l->codigo,
             'cantidad_ejemplares' => $l->cantidad_ejemplares,
             'ejemplares_disponibles' => $l->ejemplares_disponibles,
-            'ubicacion' => LibroFisico::nombreParaUbicacion($l->ubicacion),
+            'etiquetas_ejemplares_disponibles' => $l->etiquetas_ejemplares_disponibles,
+            'categoria' => $l->categoriaFisica ? [
+                'nombre' => $l->categoriaFisica->nombre,
+                'color' => CategoriaFisica::colorForCodigo($l->categoriaFisica->codigo),
+            ] : null,
             'tipo_material' => $l->tipo_material ? [
                 'nombre' => CategoriaFisica::nombreParaTipoMaterial($l->tipo_material),
                 'color' => CategoriaFisica::colorForTipoMaterial($l->tipo_material),
             ] : null,
-            'categorias' => $l->categoriasFisicas->map(fn (CategoriaFisica $c) => [
-                'nombre' => $c->nombre,
-                'color' => CategoriaFisica::colorForCodigo($c->codigo),
-            ])->values(),
+            'ubicacion' => LibroFisico::nombreParaUbicacion($l->ubicacion),
         ];
     }
 
@@ -228,8 +279,11 @@ class LibroFisicoController extends Controller
 
     public function sugerirCodigo(Request $request): JsonResponse
     {
-        $prefix = $this->prefijoDesdeCategorias(
-            array_filter(array_map('intval', (array) $request->input('categorias', [])))
+        // Continúa la misma secuencia limpia (PREFIJO-0001, 0002…) que ya tienen
+        // todos los libros existentes desde la renumeración por Dewey/tipo de material.
+        $prefix = $this->prefijoDesdeClasificacion(
+            $request->input('tipo_material'),
+            (int) $request->input('categoria_fisica_id')
         );
 
         $maximo = LibroFisico::where('codigo', 'like', $prefix . '-%')
@@ -246,30 +300,23 @@ class LibroFisicoController extends Controller
         return response()->json(['codigo' => mb_substr($codigo, 0, 50)]);
     }
 
-    private function prefijoDesdeCategorias(array $ids): string
+    /**
+     * Prefijo del código sugerido: los tipos de material con colección propia
+     * (referencia, textos escolares, sala de lectura…) se identifican por su
+     * propio código; el resto ("Bibliografía general") se ubica por su decena
+     * Dewey si tiene una, igual que un libro de estantería clasificado por materia.
+     */
+    private function prefijoDesdeClasificacion(?string $tipoMaterial, int $categoriaId): string
     {
-        if (empty($ids)) {
-            return 'PF-' . date('Y');
+        if ($tipoMaterial && $tipoMaterial !== 'BIB-GEN') {
+            return $tipoMaterial;
         }
 
-        // Tomar la primera categoría que tenga código
-        $cat = CategoriaFisica::whereIn('id', $ids)
-            ->whereNotNull('codigo')
-            ->orderByRaw('FIELD(id, ' . implode(',', $ids) . ')')
-            ->first();
-
-        if (!$cat) {
-            return 'PF-' . date('Y');
-        }
-
-        $codigo = $cat->codigo; // ej: "DEW-300", "TEX-PRI", "REF", "BIB-GEN"
-
-        // Si es Dewey (DEW-NNN), usar solo el número como prefijo: "300"
-        if (preg_match('/^DEW-(\d+)$/', $codigo, $m)) {
+        $cat = $categoriaId ? CategoriaFisica::find($categoriaId) : null;
+        if ($cat && preg_match('/^DEW-(\d+)$/', $cat->codigo, $m)) {
             return $m[1];
         }
 
-        // Cualquier otra categoría (TEX-PRI, REF, DOC, SW…): usar su código tal cual
-        return $codigo;
+        return 'PF';
     }
 }

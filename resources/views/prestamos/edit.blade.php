@@ -36,14 +36,52 @@
 
         <div class="bv-form-card" id="bvCardLibro">
             <div class="bv-form-section-title">
-                <i class="fa fa-book mr-1"></i>Libro
+                <i class="fa {{ $prestamo->es_material ? 'fa-cubes' : 'fa-book' }} mr-1"></i>{{ $prestamo->es_material ? 'Material didáctico' : 'Libro' }}
             </div>
             <p class="mb-0">
-                <span class="font-weight-bold">{{ $prestamo->libroFisico->nombre }}</span>
-                <code class="small text-muted ml-1">{{ $prestamo->libroFisico->codigo }}</code>
+                <span class="font-weight-bold">{{ $prestamo->item_nombre }}</span>
+                <code class="small text-muted ml-1">{{ $prestamo->item_codigo }}</code>
                 <span class="badge {{ $prestamo->estado_badge_class }} ml-2">{{ $prestamo->estado_label }}</span>
             </p>
-            <small class="text-muted">El libro de un préstamo no se puede cambiar; elimina este registro y crea uno nuevo si te equivocaste de libro.</small>
+            <small class="text-muted">
+                {{ $prestamo->es_material ? 'El material' : 'El libro' }} de un préstamo no se puede cambiar; elimina este registro y crea uno nuevo si te equivocaste.
+            </small>
+
+            @if ($prestamo->es_material)
+                <div class="form-group mt-2 mb-0" style="max-width: 220px;">
+                    <label class="bv-form-label" for="cantidad">
+                        Unidades prestadas <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" name="cantidad" id="cantidad" min="1" step="1" required
+                        @if ($prestamo->fecha_devolucion === null) max="{{ $maxUnidadesMaterial }}" @endif
+                        class="form-control form-control-sm @error('cantidad') is-invalid @enderror"
+                        value="{{ old('cantidad', $prestamo->cantidad) }}">
+                    @if ($prestamo->fecha_devolucion === null)
+                        <small class="text-muted">Máximo {{ $maxUnidadesMaterial }} según disponibilidad.</small>
+                    @endif
+                    @error('cantidad')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            @elseif ($prestamo->libroFisico->cantidad_ejemplares > 1)
+                <div class="form-group mt-2 mb-0" style="max-width: 220px;">
+                    <label class="bv-form-label" for="numero_ejemplar">
+                        N.º de ejemplar prestado <span class="text-danger">*</span>
+                    </label>
+                    <select name="numero_ejemplar" id="numero_ejemplar"
+                        class="form-control form-control-sm @error('numero_ejemplar') is-invalid @enderror" required>
+                        <option value="">Selecciona…</option>
+                        @foreach ($numerosEjemplarDisponibles as $numero)
+                            <option value="{{ $numero }}" @selected(old('numero_ejemplar', $prestamo->numero_ejemplar) === $numero)>
+                                Ejemplar {{ $numero }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('numero_ejemplar')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            @endif
         </div>
 
         <div class="bv-form-card" id="bvCardPrestatario">
@@ -153,6 +191,7 @@
 @push('scripts')
 <script>
     (function () {
+        window.bvPageAnimated = true;
         gsap.from(['#bvCardLibro', '#bvCardPrestatario', '#bvCardFechas'], {
             opacity: 0, y: 22, duration: 0.42, stagger: 0.1, ease: 'power2.out'
         });

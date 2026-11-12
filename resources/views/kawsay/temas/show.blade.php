@@ -90,6 +90,33 @@
         @endforeach
     </div>
 
+    {{-- Libros y videos del catálogo asignados a este tema (Panel → Libros/Videos → "Tema del repositorio") --}}
+    @if ($catalogo->isNotEmpty())
+        <section class="kcar ktema-catalogo" id="catalogo-tema" aria-labelledby="kcar-titulo-catalogo" data-kcar>
+            <div class="kcar__head">
+                <span class="kcar__icon" aria-hidden="true"><i class="fa fa-book-open"></i></span>
+                <div class="kcar__heading">
+                    <h2 class="kcar__title" id="kcar-titulo-catalogo">Del catálogo</h2>
+                    <p class="kcar__sub">Libros y videos relacionados con este tema.</p>
+                </div>
+                <div class="kcar__controls">
+                    <button type="button" class="kcar__btn" data-kcar-prev aria-controls="kcar-pista-catalogo" aria-label="Catálogo: anteriores">
+                        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="kcar__btn" data-kcar-next aria-controls="kcar-pista-catalogo" aria-label="Catálogo: siguientes">
+                        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="kcar__pista" id="kcar-pista-catalogo" data-kcar-pista tabindex="0"
+                role="region" aria-roledescription="carrusel" aria-label="Del catálogo">
+                @foreach ($catalogo as $item)
+                    @include('kawsay.partials.carrusel-card', ['item' => $item, 'posicion' => $loop->iteration, 'total' => $loop->count])
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     @include('kawsay.temas.partials.comentarios')
 </div>
 
@@ -98,6 +125,7 @@
 @endif
 
 @include('kawsay.partials.estilos')
+<script src="{{ asset('js/kawsay.js') }}?v={{ @filemtime(public_path('js/kawsay.js')) }}" defer></script>
 
 <script>
     (function () {

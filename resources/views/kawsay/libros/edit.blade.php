@@ -44,6 +44,7 @@
                         @endforeach
                     </div>
                 </div>
+                @include('kawsay.partials.selector-tema', ['temasPorArea' => $temasPorArea, 'seleccionado' => $libro->kawsay_tema_id ?? null])
                 <button type="submit" class="btn btn-sm btn-primary">Guardar</button>
             </form>
         </div>

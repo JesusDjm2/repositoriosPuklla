@@ -1,9 +1,6 @@
 @extends('layouts.app')
 @section('titulo', '- Comentarios Kawsay')
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('css/biblioteca-crud.css') }}?v={{ file_exists(public_path('css/biblioteca-crud.css')) ? filemtime(public_path('css/biblioteca-crud.css')) : 1 }}">
-@endpush
 
 @section('contenido')
 
@@ -133,48 +130,6 @@
         </div>
     @endif
 
-    <style>
-        .kcm-barra {
-            display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-            padding: .6rem 1rem; margin-bottom: .75rem; background: #f8f9f5; border: 1px solid #e9ecef; border-radius: .6rem;
-        }
-        .kcm-todos { display: flex; align-items: center; gap: .5rem; font-size: .85rem; font-weight: 600; color: #495057; margin: 0; cursor: pointer; }
-        .kcm-todos input:disabled { cursor: not-allowed; }
-
-        .kcm-fila {
-            display: flex; align-items: flex-start; gap: .9rem; padding: .9rem 1rem;
-            background: #fff; border: 1px solid rgba(20, 20, 40, .06); border-radius: .8rem; margin-bottom: .6rem;
-            box-shadow: 0 1px 2px rgba(20, 20, 40, .03);
-        }
-        .kcm-check { margin-top: .55rem; width: 1.05rem; height: 1.05rem; flex-shrink: 0; }
-        .kcm-avatar {
-            width: 2.4rem; height: 2.4rem; border-radius: 50%; flex-shrink: 0; margin-top: .1rem;
-            display: inline-flex; align-items: center; justify-content: center;
-            background: #eef3dc; color: #55631a; font-weight: 800; font-size: 1rem;
-        }
-        .kcm-cuerpo { flex: 1; min-width: 0; }
-        .kcm-meta { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; margin-bottom: .2rem; }
-        .kcm-autor { font-size: .92rem; color: #212529; }
-        .kcm-meta time { font-size: .76rem; color: #adb5bd; }
-        .kcm-texto { margin: 0 0 .5rem; color: #3d4437; font-size: .92rem; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; }
-        .kcm-origen { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
-        .kcm-area {
-            --kcm-color: #6e7d1e;
-            font-size: .7rem; font-weight: 700; padding: .1rem .55rem; border-radius: 999px;
-            background: color-mix(in srgb, var(--kcm-color) 14%, white); color: color-mix(in srgb, var(--kcm-color) 70%, black);
-            border: 1px solid color-mix(in srgb, var(--kcm-color) 30%, white);
-        }
-        .kcm-tema { font-size: .78rem; font-weight: 600; color: #6e7d1e; text-decoration: none; }
-        .kcm-tema:hover { text-decoration: underline; }
-        .kcm-vercomo { color: #adb5bd; font-size: .74rem; }
-        .kcm-vercomo:hover { color: #6e7d1e; }
-        .kcm-borrar { flex-shrink: 0; margin-top: -.1rem; }
-
-        @media (max-width: 575.98px) {
-            .kcm-fila { flex-wrap: wrap; }
-            .kcm-borrar { margin-left: auto; }
-        }
-    </style>
 
     <script>
         (function () {

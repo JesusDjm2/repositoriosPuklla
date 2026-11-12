@@ -37,6 +37,17 @@ class Aportacion extends Model
         'is_approved' => 'boolean',
     ];
 
+    /**
+     * El detalle llega del editor (Summernote) de un formulario PÚBLICO y se
+     * muestra con {!! !!}: se limpia al guardar, venga de donde venga
+     * (store, storeStandalone, update o cualquier código futuro).
+     */
+    public function setDetalleAttribute($value): void
+    {
+        $limpio = \App\Services\HtmlSeguro::limpiar($value);
+        $this->attributes['detalle'] = $limpio === '' ? null : $limpio;
+    }
+
     public function category()
     {
         return $this->belongsTo(Category::class);

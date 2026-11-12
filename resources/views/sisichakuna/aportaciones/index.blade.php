@@ -7,23 +7,24 @@
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
 @endpush
 @section('contenido')
+@include('sisichakuna.partials.sisipedia-hero')
 @include('sisichakuna.partials.sisipedia-admin-nav', ['active' => 'aportaciones'])
 
 <div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white py-3">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h4 class="card-title mb-1">
+    <div class="card-body py-3">
+        <div class="adm-page-head">
+            <div class="adm-page-head__title">
+                <h1 class="h4">
                     <i class="fa fa-users mr-2 text-primary"></i>Aportaciones
-                </h4>
+                </h1>
                 <small class="text-muted">Registros enviados por el equipo, docentes, líderes y estudiantes</small>
             </div>
-            <div class="d-flex align-items-center" style="gap:.5rem;">
-                <span class="badge badge-light border text-muted font-weight-normal" style="font-size:.8rem;">
+            <div class="adm-page-head__actions">
+                <span class="adm-chip">
                     {{ $aportaciones->total() }} total
                 </span>
                 @if($pendientesGeneral > 0)
-                    <span class="badge badge-warning text-dark font-weight-normal" style="font-size:.8rem;">
+                    <span class="adm-chip adm-chip--aporte">
                         <i class="fa fa-exclamation-circle mr-1"></i>{{ $pendientesGeneral }} pendiente(s)
                     </span>
                 @endif
@@ -68,8 +69,7 @@
     </div>
     @foreach($roles as $rol)
         <div class="col-6 col-lg-2 mb-3">
-            <div class="card border-0 shadow-sm h-100 border-left border-{{ $rolMeta[$rol]['color'] ?? 'secondary' }}"
-                 style="border-left: 4px solid !important;">
+            <div class="card border-0 shadow-sm h-100 sisi-stat sisi-stat--{{ $rolMeta[$rol]['color'] ?? 'secondary' }}">
                 <div class="card-body text-center py-3">
                     <div class="text-muted small mb-1">
                         <i class="fa {{ $rolMeta[$rol]['icon'] ?? 'fa-user' }} mr-1"></i>{{ $rol }}
@@ -87,12 +87,12 @@
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body py-2">
         <form method="GET" action="{{ route('sisipedia.aportaciones.index') }}" id="filtrosAportForm"
-              class="d-flex align-items-center" style="gap:.5rem;flex-wrap:nowrap;">
+              class="adm-toolbar">
 
             {{-- Keyword --}}
-            <div class="input-group input-group-sm flex-shrink-0" style="min-width:220px;max-width:340px;">
+            <div class="input-group input-group-sm adm-toolbar__grow">
                 <div class="input-group-prepend">
-                    <span class="input-group-text bg-white border-right-0">
+                    <span class="input-group-text border-right-0">
                         <i class="fa fa-search text-muted"></i>
                     </span>
                 </div>
@@ -111,7 +111,7 @@
             </div>
 
             {{-- Rol --}}
-            <select name="rol" id="filtroRol" class="form-control form-control-sm flex-shrink-0" style="min-width:150px;">
+            <select name="rol" id="filtroRol" class="form-control form-control-sm adm-toolbar__item" aria-label="Filtrar por rol">
                 <option value="">Todos los roles</option>
                 @foreach($roles as $rol)
                     <option value="{{ $rol }}" @selected(request('rol') === $rol)>{{ $rol }}</option>
@@ -119,7 +119,7 @@
             </select>
 
             {{-- Estado --}}
-            <select name="estado" id="filtroEstado" class="form-control form-control-sm flex-shrink-0" style="min-width:150px;">
+            <select name="estado" id="filtroEstado" class="form-control form-control-sm adm-toolbar__item" aria-label="Filtrar por estado">
                 <option value="">Todos los estados</option>
                 <option value="pendiente" @selected(request('estado') === 'pendiente')>Pendiente</option>
                 <option value="aprobada"  @selected(request('estado') === 'aprobada')>Aprobada</option>
@@ -128,7 +128,7 @@
             {{-- Limpiar todo --}}
             @if(request()->hasAny(['q','rol','estado']))
                 <a href="{{ route('sisipedia.aportaciones.index') }}"
-                   class="btn btn-sm btn-outline-secondary flex-shrink-0" title="Quitar filtros">
+                   class="btn btn-sm btn-outline-secondary" title="Quitar filtros">
                     <i class="fa fa-times mr-1"></i>Limpiar
                 </a>
             @endif
@@ -147,10 +147,10 @@
             </div>
         @else
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0 sisi-aportes-table">
                 <thead class="thead-light">
                     <tr>
-                        <th style="width:1%">#</th>
+                        <th class="sisi-col-min">#</th>
                         <th>Nombre en lengua original</th>
                         <th>Título</th>
                         <th>Rol</th>
@@ -159,7 +159,7 @@
                         <th>Institución / Trabajo / Ubicación</th>
                         <th class="text-center">Archivos</th>
                         <th>Fecha</th>
-                        <th style="width:1%"></th>
+                        <th class="sisi-col-min"><span class="sr-only">Acciones</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -171,29 +171,28 @@
                         while ($cur) { array_unshift($path, $cur); $cur = $cur->parent ?? null; }
                     @endphp
                     <tr>
-                        <td class="text-muted small align-middle">{{ $ap->id }}</td>
+                        <td class="text-muted small align-middle sisi-td-id" data-label="#">{{ $ap->id }}</td>
 
                         {{-- Nombre + detalle colapsable --}}
-                        <td class="align-middle">
+                        <td class="align-middle sisi-td-nombre" data-label="Nombre">
                             <div class="font-weight-semibold">{{ $ap->nombre_ol }}</div>
                             @if($ap->detalle)
-                                <div class="text-muted small mt-1"
-                                     style="max-width:280px;max-height:60px;overflow:hidden;line-height:1.4;"
-                                     title="{{ strip_tags($ap->detalle) }}">
-                                    {!! $ap->detalle !!}
+                                <div class="text-muted small mt-1 sisi-aporte-preview"
+                                     title="{{ html_entity_decode(strip_tags($ap->detalle)) }}">
+                                    {{ \Illuminate\Support\Str::limit(trim(html_entity_decode(strip_tags($ap->detalle))), 160) }}
                                 </div>
                             @endif
                         </td>
-                        <td class="align-middle small">
+                        <td class="align-middle small" data-label="Título">
                             @if($ap->titulo)
-                                <span class="badge badge-info">{{ $ap->titulo }}</span>
+                                <span class="sisi-aporte-titulo">{{ $ap->titulo }}</span>
                             @else
                                 <span class="text-muted">—</span>
                             @endif
                         </td>
 
                         {{-- Rol --}}
-                        <td class="align-middle">
+                        <td class="align-middle" data-label="Rol">
                             <span class="badge badge-{{ $rolMeta[$ap->rol_nombre]['color'] ?? 'secondary' }}">
                                 <i class="fa {{ $rolMeta[$ap->rol_nombre]['icon'] ?? 'fa-user' }} mr-1"></i>
                                 {{ \App\Models\sisipedia\Aportacion::etiquetaRol($ap->rol_nombre) }}
@@ -201,38 +200,37 @@
                         </td>
 
                         {{-- Ruta de categoría --}}
-                        <td class="align-middle" style="max-width:220px;">
+                        <td class="align-middle sisi-aporte-registro" data-label="Registro">
                             @if($cat)
-                                <div class="d-flex flex-wrap align-items-center" style="gap:.2rem;">
+                                <div class="d-flex flex-wrap align-items-center adm-gap-1">
                                     @foreach($path as $i => $node)
                                         @if($i > 0)
-                                            <i class="fa fa-angle-right text-muted" style="font-size:.7rem;"></i>
+                                            <i class="fa fa-angle-right text-muted small" aria-hidden="true"></i>
                                         @endif
                                         <a href="{{ route('sisipedia.categories.admin-show', $node) }}"
-                                           class="badge badge-light border text-dark font-weight-normal"
-                                           style="font-size:.75rem;">
+                                           class="adm-chip">
                                             {{ $node->display_name }}
                                         </a>
                                     @endforeach
                                 </div>
                             @else
-                                <span class="badge badge-light border text-muted small font-weight-normal">Sin registro</span>
+                                <span class="adm-chip">Sin registro</span>
                                 @if(!$ap->is_approved)
-                                    <span class="badge badge-warning text-dark ml-1" style="font-size:.65rem;">Requiere asignación</span>
+                                    <span class="adm-chip adm-chip--aporte">Requiere asignación</span>
                                 @endif
                             @endif
                         </td>
 
-                        <td class="align-middle text-center">
+                        <td class="align-middle text-center" data-label="Estado">
                             @if($ap->is_approved)
-                                <span class="badge badge-success">Aprobada</span>
+                                <span class="adm-chip adm-chip--ok">Aprobada</span>
                             @else
-                                <span class="badge badge-warning text-dark">Pendiente</span>
+                                <span class="adm-chip adm-chip--aporte">Pendiente</span>
                             @endif
                         </td>
 
                         {{-- Institución / Ubicación --}}
-                        <td class="align-middle small">
+                        <td class="align-middle small" data-label="Institución">
                             @if($ap->institucion)
                                 <div><i class="fa fa-building text-muted mr-1"></i>{{ $ap->institucion }}</div>
                             @endif
@@ -245,11 +243,11 @@
                         </td>
 
                         {{-- Archivos (desde nueva tabla) --}}
-                        <td class="align-middle text-center">
+                        <td class="align-middle text-center" data-label="Archivos">
                             @php
                                 $archivos = $ap->relationLoaded('archivos') ? $ap->archivos : $ap->archivos()->get();
                             @endphp
-                            <div class="d-flex justify-content-center flex-wrap" style="gap:.25rem;">
+                            <div class="d-flex justify-content-center flex-wrap adm-gap-1 sisi-aporte-archivos">
                                 @forelse($archivos as $archivo)
                                     @php
                                         $iconMap = ['imagen' => 'fa-file-image-o', 'pdf' => 'fa-file-pdf-o', 'doc' => 'fa-file-word-o', 'audio' => 'fa-music', 'video' => 'fa-video-camera'];
@@ -267,7 +265,7 @@
                                         <a href="{{ $archivo->getUrl() }}" target="_blank" title="Ver imagen">
                                             <img src="https://drive.google.com/thumbnail?id={{ $archivo->drive_id }}&sz=w60"
                                                  alt="Imagen" width="60" height="60"
-                                                 style="object-fit:cover;border-radius:4px;border:1px solid #dee2e6;"
+                                                 class="sisi-aporte-thumb"
                                                  onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';">
                                             <span class="badge badge-info d-none"><i class="fa fa-image"></i></span>
                                         </a>
@@ -285,20 +283,20 @@
                         </td>
 
                         {{-- Fecha --}}
-                        <td class="align-middle small text-nowrap text-muted">
+                        <td class="align-middle small text-nowrap text-muted" data-label="Fecha">
                             {{ $ap->created_at->format('d/m/Y') }}
                         </td>
 
                         {{-- Acciones --}}
-                        <td class="align-middle text-right text-nowrap">
+                        <td class="align-middle text-right text-nowrap sisi-td-acciones">
                             @if($cat)
                                 <a href="{{ route('sisipedia.categories.admin-show', $cat) }}"
-                                   class="btn btn-xs btn-outline-secondary mr-1" title="Ver en categoría">
+                                   class="btn btn-sm btn-outline-secondary" title="Ver en su registro" aria-label="Ver en su registro">
                                     <i class="fa fa-eye"></i>
                                 </a>
                             @endif
                             <button type="button"
-                                    class="btn btn-xs btn-outline-primary mr-1 sisipedia-btn-editar-ap"
+                                    class="btn btn-sm btn-outline-primary sisipedia-btn-editar-ap"
                                     data-toggle="modal"
                                     data-target="#modalEditarAporte"
                                     data-action="{{ route('sisipedia.aportaciones.update', $ap) }}"
@@ -307,7 +305,7 @@
                                     data-titulo="{{ e($ap->titulo ?? '') }}"
                                     data-institucion="{{ e($ap->institucion ?? '') }}"
                                     data-ubicacion="{{ e($ap->ubicacion ?? '') }}"
-                                    data-detalle="{{ e($ap->detalle ?? '') }}"
+                                    data-detalle="{{ \App\Services\HtmlSeguro::limpiar($ap->detalle) }}"
                                     data-category-id="{{ $ap->category_id ?? '' }}"
                                     data-is-approved="{{ $ap->is_approved ? '1' : '0' }}"
                                     data-archivos-json="{{ $ap->archivos->toJson() }}"
@@ -317,18 +315,20 @@
                             @if($cat)
                                 <form action="{{ route('sisipedia.categories.aportaciones.destroy', [$cat, $ap]) }}"
                                       method="POST" class="d-inline"
-                                      onsubmit="return confirm('¿Eliminar esta aportación?')">
+                                      data-confirm-delete="¿Eliminar la aportación de {{ $ap->nombre_ol }}?"
+                                      data-confirm-delete-text="Se borrarán también sus archivos. No se puede deshacer.">
                                     @csrf @method('DELETE')
-                                    <button class="btn btn-xs btn-outline-danger" title="Eliminar">
+                                    <button class="btn btn-sm btn-outline-danger" title="Eliminar" aria-label="Eliminar aportación">
                                         <i class="fa fa-trash"></i>
                                     </button>
                                 </form>
                             @else
                                 <form action="{{ route('sisipedia.aportaciones.destroy', $ap) }}"
                                       method="POST" class="d-inline"
-                                      onsubmit="return confirm('¿Eliminar esta aportación?')">
+                                      data-confirm-delete="¿Eliminar la aportación de {{ $ap->nombre_ol }}?"
+                                      data-confirm-delete-text="Se borrarán también sus archivos. No se puede deshacer.">
                                     @csrf @method('DELETE')
-                                    <button class="btn btn-xs btn-outline-danger" title="Eliminar">
+                                    <button class="btn btn-sm btn-outline-danger" title="Eliminar" aria-label="Eliminar aportación">
                                         <i class="fa fa-trash"></i>
                                     </button>
                                 </form>
@@ -356,13 +356,12 @@
         <form method="POST" id="formEditarAporte" action="#" class="modal-content border-0 shadow-lg" enctype="multipart/form-data">
             @csrf
             @method('PATCH')
-            <div class="modal-header border-0 pb-0 text-white"
-                 style="background: linear-gradient(135deg, #1a6e3c 0%, #28a745 45%, #20c997 100%); border-radius: .25rem .25rem 0 0; padding: 1.25rem 1.5rem;">
+            <div class="modal-header border-0 pb-0 sisipedia-modal-editar-header">
                 <div>
                     <h5 class="modal-title font-weight-bold mb-1" id="modalEditarAporteTitulo">
                         <i class="fa fa-edit mr-2"></i>Editar aportación
                     </h5>
-                    <p class="mb-0 small" style="opacity:.92;">Modifica los datos o cambia el registro (categoría) asignado.</p>
+                    <p class="mb-0 small sisipedia-modal-aprobar-sub">Modifica los datos o cambia el registro (categoría) asignado.</p>
                 </div>
                 <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
                     <span aria-hidden="true">&times;</span>
@@ -413,7 +412,7 @@
                     </label>
                     <div id="editArchivosPreviewWrap" class="mb-2">
                         <small class="text-muted d-block mb-1">Archivos actuales:</small>
-                        <div id="editArchivosLista" class="d-flex flex-wrap" style="gap:.3rem;"></div>
+                        <div id="editArchivosLista" class="d-flex flex-wrap adm-gap-1"></div>
                     </div>
                     <input type="file" name="archivos[]" multiple
                            accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.mp3,.wav,.ogg,.mp4,.webm,.mov,.m4v"
@@ -434,7 +433,7 @@
                            class="form-control mb-2"
                            placeholder="Buscar registro por nombre o ruta…"
                            autocomplete="off">
-                    <div class="sisipedia-reg-pick-scroll border rounded position-relative bg-white mb-2" style="max-height:240px;min-height:100px;">
+                    <div class="sisipedia-reg-pick-scroll sisipedia-reg-pick-scroll--sm border rounded position-relative mb-2">
                         @forelse($categoryPickerRows ?? [] as $row)
                             <button type="button"
                                     class="sisipedia-reg-pick-row w-100 text-left border-0 {{ $row['is_root'] ? 'sisipedia-reg-pick-root' : 'sisipedia-reg-pick-child' }}"
@@ -449,7 +448,7 @@
                                     </span>
                                     <span class="flex-grow-1 min-w-0">
                                         @if($row['is_root'])
-                                            <span class="badge badge-primary align-middle mr-1" style="font-size:.65rem;">Raíz</span>
+                                            <span class="adm-chip adm-chip--video align-middle mr-1">Raíz</span>
                                         @endif
                                         <span class="sisipedia-reg-pick-name font-weight-bold d-block">{{ $row['name'] }}</span>
                                         <span class="sisipedia-reg-pick-path small text-muted d-block text-truncate" title="{{ $row['path_label'] }}">{{ $row['path_label'] }}</span>
@@ -633,8 +632,8 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="modal-body pt-3">
                 <div class="sisipedia-aporte-resumen card border-0 shadow-sm mb-4">
                     <div class="card-body py-3">
-                        <div class="text-uppercase text-muted small font-weight-bold mb-2" style="letter-spacing:.04em;">Vas a aprobar</div>
-                        <div class="d-flex flex-wrap align-items-center justify-content-between" style="gap:.75rem;">
+                        <div class="sisi-eyebrow mb-2">Vas a aprobar</div>
+                        <div class="d-flex flex-wrap align-items-center justify-content-between adm-gap-3">
                             <div>
                                 <div class="h6 mb-1 font-weight-bold text-dark" id="modalAprobarNombre">—</div>
                                 <span class="badge badge-secondary" id="modalAprobarRol">—</span>
@@ -661,7 +660,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <small class="form-text text-muted mb-0">
                             Los <strong>registros raíz</strong> agrupan a los <strong>hijos</strong> (indentados). Pulsa una fila para elegir.
                         </small>
-                        <span class="badge badge-light border text-muted font-weight-normal" id="fnRegistroContador" style="font-size:.7rem;"></span>
+                        <span class="adm-chip" id="fnRegistroContador"></span>
                     </div>
 
                     <label class="font-weight-bold text-dark mb-1 d-block">
@@ -682,7 +681,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     </span>
                                     <span class="flex-grow-1 min-w-0">
                                         @if($row['is_root'])
-                                            <span class="badge badge-primary align-middle mr-1" style="font-size:.65rem;">Raíz</span>
+                                            <span class="adm-chip adm-chip--video align-middle mr-1">Raíz</span>
                                         @endif
                                         <span class="sisipedia-reg-pick-name font-weight-bold d-block">{{ $row['name'] }}</span>
                                         <span class="sisipedia-reg-pick-path small text-muted d-block text-truncate" title="{{ $row['path_label'] }}">{{ $row['path_label'] }}</span>
@@ -717,57 +716,6 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
 </div>
 
-<style>
-    .sisipedia-aportes-alert-icon { width: 2.5rem; height: 2.5rem; font-size: 1.1rem; }
-    .sisipedia-modal-aprobar-header {
-        background: linear-gradient(135deg, #1a5f9e 0%, #0d6efd 45%, #5b21b6 100%);
-        border-radius: 0.25rem 0.25rem 0 0;
-        padding: 1.25rem 1.5rem;
-    }
-    .sisipedia-modal-aprobar-sub { opacity: 0.92; }
-    .sisipedia-modal-aprobar-content { border-radius: 0.35rem; overflow: hidden; }
-    .sisipedia-aporte-resumen { background: linear-gradient(180deg, #f8fafc 0%, #fff 100%); }
-    .sisipedia-reg-pick-scroll {
-        max-height: min(58vh, 520px);
-        min-height: 300px;
-        overflow-y: auto;
-        overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
-    }
-    .sisipedia-reg-pick-row {
-        display: block;
-        padding: 0.65rem 0.85rem 0.65rem calc(0.85rem + var(--reg-depth, 0) * 1.35rem);
-        background: #fff;
-        border-bottom: 1px solid #e9ecef !important;
-        transition: background .12s ease, box-shadow .12s ease;
-        cursor: pointer;
-        line-height: 1.35;
-    }
-    .sisipedia-reg-pick-row:last-child { border-bottom: 0 !important; }
-    .sisipedia-reg-pick-row:hover {
-        background: #f1f7ff !important;
-    }
-    .sisipedia-reg-pick-row:focus {
-        outline: none;
-        box-shadow: inset 0 0 0 2px rgba(13, 110, 253, 0.35);
-        z-index: 1;
-        position: relative;
-    }
-    .sisipedia-reg-pick-root {
-        background: linear-gradient(90deg, #e7f1ff 0%, #f8fafc 12%, #fff 100%) !important;
-        border-bottom: 1px solid #cfe2ff !important;
-    }
-    .sisipedia-reg-pick-root .sisipedia-reg-pick-name { font-size: 1rem; }
-    .sisipedia-reg-pick-child { border-left: 3px solid #dee2e6; }
-    .sisipedia-reg-pick-child[data-depth="1"] { border-left-color: #adb5bd; }
-    .sisipedia-reg-pick-row.is-selected {
-        background: #e8f5e9 !important;
-        box-shadow: inset 3px 0 0 0 #28a745;
-    }
-    .sisipedia-reg-pick-row.is-selected .sisipedia-reg-ico-off { display: none !important; }
-    .sisipedia-reg-pick-row.is-selected .sisipedia-reg-ico-on { display: inline-block !important; }
-    .sisipedia-reg-pick-path { font-size: 0.78rem; }
-</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

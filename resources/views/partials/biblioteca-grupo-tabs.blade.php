@@ -8,6 +8,10 @@
     $grupoActivo = $grupoActivo ?? null;
 @endphp
 <nav class="bv-crud-nav-grupo mb-2" aria-label="Biblioteca">
+    <a href="{{ route('bibliotecario') }}"
+        class="bv-crud-tab-grupo {{ $grupoActivo === 'panel' ? 'is-active' : '' }}">
+        <i class="fa fa-tachometer"></i> Panel
+    </a>
     <a href="{{ route('secciones.index') }}"
         class="bv-crud-tab-grupo {{ $grupoActivo === 'digital' ? 'is-active' : '' }}">
         <i class="fa fa-laptop"></i> Biblioteca digital
@@ -15,5 +19,9 @@
     <a href="{{ route('biblioteca-fisica.categorias.index') }}"
         class="bv-crud-tab-grupo {{ $grupoActivo === 'fisica' ? 'is-active' : '' }}">
         <i class="fa fa-archive"></i> Biblioteca física
+    </a>
+    <a href="{{ route('admin.taqe.trabajos.index') }}"
+        class="bv-crud-tab-grupo {{ $grupoActivo === 'taqe' ? 'is-active' : '' }}">
+        <i class="fa fa-graduation-cap"></i> Taq'e
     </a>
 </nav>

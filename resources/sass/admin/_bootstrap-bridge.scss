@@ -1,0 +1,347 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// PUENTE BOOTSTRAP 4 → TOKENS
+//
+// El panel sigue sobre Bootstrap 4.5 (CDN). Sus componentes traen colores
+// fijos (blanco, gris, azul #007bff) que ignoran el tema. Aquí se reasignan
+// UNA sola vez a las variables --adm-*; como las variables ya cambian con
+// [data-theme="dark"], no hace falta repetir cada regla para el modo oscuro.
+//
+// Si una vista necesita un color distinto, se crea una variable o un
+// modificador en su módulo (admin/modules/*), nunca un <style> en la vista.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── Texto y enlaces ────────────────────────────────────────────────────────
+body {
+    color: var(--adm-text);
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    color: var(--adm-text);
+}
+
+// :where() deja la especificidad en 0: cualquier componente con clase propia
+// (títulos de Kawsay, tarjetas, pestañas) decide su color sin pelear con esto.
+:where(.admin-content) a:where(:not(.btn, .nav-link, .dropdown-item, .list-group-item-action)) {
+    color: var(--adm-link);
+}
+
+hr {
+    border-top-color: var(--adm-border);
+}
+
+.text-muted { color: var(--adm-text-muted) !important; }
+.text-dark { color: var(--adm-text) !important; }
+.text-primary { color: var(--adm-link) !important; }
+.text-success { color: var(--adm-success) !important; }
+.text-danger { color: var(--adm-danger) !important; }
+.text-warning { color: var(--adm-warning) !important; }
+.text-info { color: var(--adm-info) !important; }
+
+.bg-white { background-color: var(--adm-surface) !important; }
+.bg-light { background-color: var(--adm-surface-2) !important; }
+.border,
+.border-top,
+.border-bottom,
+.border-left,
+.border-right { border-color: var(--adm-border) !important; }
+
+mark,
+.mark {
+    padding: 0 2px;
+    border-radius: 3px;
+    background: var(--adm-highlight);
+    color: inherit;
+}
+
+// ─── Tarjetas, listas, modales, menús ───────────────────────────────────────
+.card,
+.modal-content,
+.dropdown-menu,
+.popover {
+    background-color: var(--adm-surface);
+    color: var(--adm-text);
+    border-color: var(--adm-border);
+}
+
+.card-header,
+.card-footer {
+    background-color: var(--adm-surface);
+    border-color: var(--adm-border);
+}
+
+.modal-header,
+.modal-footer {
+    border-color: var(--adm-border);
+}
+
+.close {
+    color: var(--adm-text);
+    text-shadow: none;
+    opacity: 0.6;
+}
+
+.list-group-item {
+    background-color: var(--adm-surface);
+    color: var(--adm-text);
+    border-color: var(--adm-border);
+}
+
+.list-group-item-action:hover,
+.list-group-item-action:focus {
+    background-color: var(--adm-surface-2);
+    color: var(--adm-text);
+}
+
+.dropdown-item {
+    color: var(--adm-text);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--adm-surface-2);
+    color: var(--adm-text);
+}
+
+.dropdown-divider {
+    border-top-color: var(--adm-border);
+}
+
+.breadcrumb {
+    background-color: var(--adm-surface-2);
+}
+
+.breadcrumb-item + .breadcrumb-item::before,
+.breadcrumb-item.active {
+    color: var(--adm-text-muted);
+}
+
+.nav-tabs {
+    border-bottom-color: var(--adm-border);
+}
+
+.nav-tabs .nav-link {
+    color: var(--adm-text-muted);
+}
+
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.show .nav-link {
+    background-color: var(--adm-surface);
+    color: var(--adm-text);
+    border-color: var(--adm-border) var(--adm-border) var(--adm-surface);
+}
+
+.page-link {
+    background-color: var(--adm-surface);
+    color: var(--adm-link);
+    border-color: var(--adm-border);
+}
+
+.page-item.active .page-link {
+    background-color: var(--adm-primary);
+    border-color: var(--adm-primary);
+    color: var(--adm-on-primary);
+}
+
+.page-item.disabled .page-link {
+    background-color: var(--adm-surface-2);
+    color: var(--adm-text-subtle);
+    border-color: var(--adm-border);
+}
+
+// ─── Formularios ────────────────────────────────────────────────────────────
+.form-control,
+.custom-select,
+.custom-file-label {
+    background-color: var(--adm-surface);
+    color: var(--adm-text);
+    border-color: var(--adm-border-strong);
+}
+
+.form-control:focus,
+.custom-select:focus {
+    background-color: var(--adm-surface);
+    color: var(--adm-text);
+    border-color: var(--adm-accent);
+    box-shadow: var(--adm-focus-ring);
+}
+
+.form-control::placeholder {
+    color: var(--adm-text-subtle);
+    opacity: 1;
+}
+
+.form-control:disabled,
+.form-control[readonly] {
+    background-color: var(--adm-surface-2);
+}
+
+.input-group-text {
+    background-color: var(--adm-surface-2);
+    color: var(--adm-text-muted);
+    border-color: var(--adm-border-strong);
+}
+
+// En celular, inputs de 16px evitan el zoom automático de iOS.
+@media (max-width: 767.98px) {
+    .admin-content .form-control,
+    .admin-content .custom-select {
+        font-size: 16px;
+    }
+}
+
+// ─── Tablas ─────────────────────────────────────────────────────────────────
+.table {
+    color: var(--adm-text);
+}
+
+// Sin position, un hijo absoluto (p. ej. .sr-only en un <th>) se posiciona
+// respecto de la página y "escapa" del scroll: ensancha toda la página.
+.table-responsive {
+    position: relative;
+}
+
+.table th,
+.table td,
+.table thead th {
+    border-color: var(--adm-border);
+}
+
+.thead-light th,
+.table thead.thead-light th {
+    background-color: var(--adm-surface-2);
+    color: var(--adm-text-muted);
+    border-color: var(--adm-border-strong);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--adm-surface-2);
+}
+
+.table-hover tbody tr:hover {
+    color: var(--adm-text);
+    background-color: var(--adm-accent-soft);
+}
+
+// ─── Botones: un solo lenguaje de color en todo el panel ────────────────────
+// Bootstrap pinta primary/info/outline en azul y celeste. En el panel:
+// primario = rojo institucional, info = dorado, secundario = neutro.
+.btn-primary {
+    background-color: var(--adm-primary);
+    border-color: var(--adm-primary);
+    color: var(--adm-on-primary);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:not(:disabled):not(.disabled):active {
+    background-color: var(--adm-primary-hover);
+    border-color: var(--adm-primary-hover);
+    color: var(--adm-on-primary);
+}
+
+.btn-outline-primary {
+    color: var(--adm-link);
+    border-color: var(--adm-link);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:not(:disabled):not(.disabled):active {
+    background-color: var(--adm-primary);
+    border-color: var(--adm-primary);
+    color: var(--adm-on-primary);
+}
+
+.btn-info,
+.btn-info:hover,
+.btn-info:focus {
+    background-color: var(--adm-accent);
+    border-color: var(--adm-accent-hover);
+    color: #fff;
+}
+
+.btn-outline-info {
+    color: var(--adm-accent-strong);
+    border-color: var(--adm-accent-border);
+}
+
+.btn-outline-info:hover,
+.btn-outline-info:focus {
+    background-color: var(--adm-accent);
+    border-color: var(--adm-accent);
+    color: #fff;
+}
+
+.btn-outline-secondary {
+    color: var(--adm-text);
+    border-color: var(--adm-border-strong);
+}
+
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus,
+.btn-outline-secondary:not(:disabled):not(.disabled):active {
+    background-color: var(--adm-surface-2);
+    color: var(--adm-text);
+    border-color: var(--adm-border-strong);
+}
+
+.btn-outline-success {
+    color: var(--adm-success);
+    border-color: var(--adm-success);
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:focus {
+    background-color: var(--adm-success);
+    border-color: var(--adm-success);
+    color: var(--adm-surface);
+}
+
+.btn-outline-danger {
+    color: var(--adm-danger);
+    border-color: var(--adm-danger);
+}
+
+.btn-light {
+    background-color: var(--adm-surface-2);
+    border-color: var(--adm-border);
+    color: var(--adm-text);
+}
+
+.btn:focus-visible {
+    outline: 2px solid var(--adm-accent);
+    outline-offset: 2px;
+}
+
+// ─── Insignias ──────────────────────────────────────────────────────────────
+// Tonos suaves (fondo claro + texto del mismo color) en vez de bloques
+// saturados: legibles en ambos temas y menos ruido visual.
+.badge-primary { background-color: var(--adm-primary-soft); color: var(--adm-link); }
+.badge-success { background-color: var(--adm-success-soft); color: var(--adm-success); }
+.badge-danger { background-color: var(--adm-danger-soft); color: var(--adm-danger); }
+.badge-warning { background-color: var(--adm-warning-soft); color: var(--adm-warning); }
+.badge-info { background-color: var(--adm-info-soft); color: var(--adm-info); }
+.badge-secondary { background-color: var(--adm-surface-3); color: var(--adm-text-muted); }
+.badge-light { background-color: var(--adm-surface-2); color: var(--adm-text-muted); }
+.badge-dark { background-color: var(--adm-text); color: var(--adm-surface); }
+.badge-warning.text-dark { color: var(--adm-warning) !important; }
+
+// ─── Alertas ────────────────────────────────────────────────────────────────
+.alert-success { background-color: var(--adm-success-soft); color: var(--adm-success); border-color: transparent; }
+.alert-danger { background-color: var(--adm-danger-soft); color: var(--adm-danger); border-color: transparent; }
+.alert-warning { background-color: var(--adm-warning-soft); color: var(--adm-warning); border-color: transparent; }
+.alert-info { background-color: var(--adm-info-soft); color: var(--adm-info); border-color: transparent; }
+.alert-secondary,
+.alert-light { background-color: var(--adm-surface-2); color: var(--adm-text); border-color: var(--adm-border); }
+
+// ─── SweetAlert (Select2 ya se adapta en _crud.scss) ────────────────────────
+.swal2-popup {
+    background: var(--adm-surface);
+    color: var(--adm-text);
+}
+
+.swal2-title,
+.swal2-html-container {
+    color: var(--adm-text);
+}

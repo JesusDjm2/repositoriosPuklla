@@ -1,276 +1,379 @@
+@php
+    $inGroup = fn (array $patterns) => collect($patterns)->contains(fn ($p) => request()->routeIs($p));
+    $user = auth()->user();
+    $rolActual = $user?->getRoleNames()->first();
+    $nombreCompleto = $user?->name ?? 'Usuario';
+    $nombreCorto = explode(' ', trim($nombreCompleto))[0];
+    $inicialAvatar = strtoupper(substr($nombreCorto, 0, 1));
+
+    // Página pública del proyecto según el rol del encargado o contexto actual del admin
+    $proyectoUrl = null;
+    $proyectoNombre = null;
+
+    if ($user) {
+        if ($user->hasRole('biblioteca')) {
+            $proyectoUrl = route('eesppukllasunchis');
+            $proyectoNombre = 'Web EESP Pukllasunchis';
+        } elseif ($user->hasRole('sisicha') || $user->hasRole('audios') || $user->hasRole('videos')) {
+            $proyectoUrl = route('index');
+            $proyectoNombre = 'Web Sisipedia / Radio';
+        } elseif ($user->hasRole('kawsay')) {
+            $proyectoUrl = route('kawsay');
+            $proyectoNombre = 'Web Portal Kawsay';
+        } elseif ($user->hasRole('admin')) {
+            if ($inGroup(['bibliotecario', 'libros.*', 'categorias.*', 'secciones.*', 'biblioteca-fisica.*', 'admin.taqe.*'])) {
+                $proyectoUrl = route('eesppukllasunchis');
+                $proyectoNombre = 'Web EESP Pukllasunchis';
+            } elseif ($inGroup(['adminRadio', 'adminSisicha', 'sisipedia.*', 'canciones.*', 'cancionescat.*', 'videos.*', 'videoscat.*'])) {
+                $proyectoUrl = route('index');
+                $proyectoNombre = 'Web Sisipedia / Radio';
+            } elseif ($inGroup(['adminKawsay', 'kawsayareas.*', 'kawsaytemas.*', 'kawsaycomentarios.*', 'kawsayarchivos.*', 'kawsaylibros.*', 'kawsaycategorias.*'])) {
+                $proyectoUrl = route('kawsay');
+                $proyectoNombre = 'Web Portal Kawsay';
+            }
+        }
+    }
+@endphp
 <nav id="sidebar">
-    <div class="p-4">
-        <div class="sidebar-brand">
-            <h1>
-                @role('sisicha')
-                    <a href="{{ route('sisipedia.categories.index') }}" class="logo">
-                        <img src="{{ asset('img/Asociacion-logo-blanco.png') }}" width="100%" alt="">
-                    </a>
-                @else
-                    <a href="{{ route('home') }}" class="logo">
-                        <img src="{{ asset('img/Asociacion-logo-blanco.png') }}" width="100%" alt="">
-                    </a>
-                @endrole
-            </h1>
+    <div class="bv-sidebar-brand">
+        <a href="{{ route('hub') }}" class="logo">
+            <img src="{{ asset('img/Asociacion-logo-blanco.png') }}" width="100%" alt="Asociación Pukllasunchis">
+        </a>
+    </div>
+
+    <div class="bv-sidebar-user">
+        <div class="bv-sidebar-user__avatar">{{ $inicialAvatar }}</div>
+        <div class="bv-sidebar-user__info">
+            <span class="bv-sidebar-user__name">{{ $nombreCorto }}</span>
+            @if ($rolActual)
+                <span class="bv-sidebar-user__role">{{ ucfirst($rolActual) }}</span>
+            @endif
         </div>
-        <ul class="list-unstyled components">
-            @php
-                // Qué pantallas tiene cada rol, tanto para el menú "Proyectos" del admin
-                // (ver MenuAdmin::render()) como para el menú propio de cada rol más abajo.
-                // El nombre/orden de cada proyecto y qué roles le pertenecen sí vienen de la
-                // tabla proyectos (admin/proyectos): crear un proyecto o mover un rol de uno
-                // a otro se refleja solo. Lo que NO puede salir de la base de datos es qué
-                // pantallas tiene cada rol (Libros, Categorías, ...), cómo se agrupan entre
-                // sí, ni el "panel" (mini-dashboard con estadísticas) al que ese rol aterriza
-                // — cada uno es código a mano de un controlador/vista distinta, así que ese
-                // agrupamiento sigue viviendo aquí. Un rol puede tener 'items' (lista plana)
-                // o 'grupos' (subsecciones con nombre propio, cuando sus tablas se relacionan
-                // en más de un bloque temático, como Biblioteca digital/física).
-                $rolesMenu = [
-                    'biblioteca' => [
-                        'label' => 'Biblioteca',
-                        'icono' => 'fa-book',
-                        'panel' => ['ruta' => 'bibliotecario', 'label' => 'Panel de Biblioteca'],
-                        'grupos' => [
-                            'Biblioteca digital' => [
-                                'icono' => 'fa-laptop',
-                                'items' => [
-                                    ['ruta' => 'secciones.index', 'label' => 'Secciones'],
-                                    ['ruta' => 'categorias.index', 'label' => 'Categorías'],
-                                    ['ruta' => 'libros.index', 'label' => 'Libros'],
-                                ],
-                            ],
-                            'Biblioteca física' => [
-                                'icono' => 'fa-archive',
-                                'items' => [
-                                    ['ruta' => 'biblioteca-fisica.categorias.index', 'label' => 'Categorías físicas'],
-                                    ['ruta' => 'biblioteca-fisica.libros.index', 'label' => 'Libros físicos'],
-                                    ['ruta' => 'biblioteca-fisica.prestamos.index', 'label' => 'Préstamos'],
-                                ],
-                            ],
-                        ],
-                    ],
-                    'sisicha' => [
-                        'label' => 'Sisichakunay',
-                        'icono' => 'fa-th-list',
-                        'panel' => ['ruta' => 'adminSisicha', 'label' => 'Panel Sisichakunay'],
-                        'items' => [
-                            ['ruta' => 'sisipedia.categories.index', 'label' => 'Registros'],
-                            ['ruta' => 'sisipedia.aportaciones.index', 'label' => 'Aportaciones'],
-                        ],
-                    ],
-                    'audios' => [
-                        'label' => 'Canciones',
-                        'icono' => 'fa-music',
-                        'panel' => ['ruta' => 'adminCanciones', 'label' => 'Panel de Canciones'],
-                        'items' => [
-                            ['ruta' => 'canciones.index', 'label' => 'Canciones'],
-                            ['ruta' => 'cancionescat.index', 'label' => 'Categorías de canciones'],
-                        ],
-                    ],
-                    'videos' => [
-                        'label' => 'Videos',
-                        'icono' => 'fa-video-camera',
-                        'panel' => ['ruta' => 'adminVideos', 'label' => 'Panel de Videos'],
-                        'items' => [
-                            ['ruta' => 'videos.index', 'label' => 'Videos'],
-                            ['ruta' => 'videoscat.index', 'label' => 'Categorías de video'],
-                        ],
-                    ],
-                    'kawsay' => [
-                        'label' => 'Kawsay',
-                        'icono' => 'fa-leaf',
-                        'panel' => ['ruta' => 'adminKawsay', 'label' => 'Panel Kawsay'],
-                        'items' => [
-                            ['ruta' => 'kawsayareas.index', 'label' => 'Áreas'],
-                            ['ruta' => 'kawsaytemas.index', 'label' => 'Temas'],
-                            ['ruta' => 'kawsayarchivos.index', 'label' => 'Archivos'],
-                            ['ruta' => 'kawsaylibros.index', 'label' => 'Libros'],
-                            ['ruta' => 'kawsaycategorias.index', 'label' => 'Categorías'],
-                            ['ruta' => 'kawsayvideos.index', 'label' => 'Videos'],
-                            ['ruta' => 'kawsayvideoscat.index', 'label' => 'Categorías de video'],
-                        ],
-                    ],
-                ];
+        <button type="button" id="bvThemeToggle" class="bv-theme-toggle" data-theme-toggle title="Cambiar tema"
+            aria-label="Cambiar entre tema claro y oscuro">
+            <i class="fa fa-moon-o" data-theme-icon="dark"></i>
+            <i class="fa fa-sun-o" data-theme-icon="light"></i>
+        </button>
+    </div>
 
-                // Convierte la definición de un rol ('items' plano o 'grupos' con nombre) en
-                // una lista uniforme de secciones [{titulo, icono, items}] que consume
-                // livewire.partials.menu-secciones. titulo=null → se listan sin sub-toggle.
-                $seccionesDesdeRol = function (array $definicionRol): array {
-                    if (isset($definicionRol['grupos'])) {
-                        return collect($definicionRol['grupos'])
-                            ->map(fn ($grupo, $nombreGrupo) => [
-                                'titulo' => $nombreGrupo,
-                                'icono' => $grupo['icono'] ?? null,
-                                'items' => $grupo['items'],
-                            ])
-                            ->values()
-                            ->all();
-                    }
-
-                    return [['titulo' => null, 'icono' => null, 'items' => $definicionRol['items'] ?? []]];
-                };
-            @endphp
-            @role('admin')
-                @php
-                    // Ícono del proyecto en el menú. Un proyecto nuevo que no esté en este
-                    // mapa cae en el ícono genérico de abajo (no requiere código para existir
-                    // en el menú, solo para tener un ícono a medida).
-                    $proyectoIconos = [
-                        'eesp-pukllasunchis' => 'fa-book',
-                        'radio-pukllasunchis' => 'fa-broadcast-tower',
-                        'kawsay' => 'fa-leaf',
-                    ];
-
-                    // Proyectos con más de un rol (p. ej. Radio Pukllasunchis) que ya
-                    // tienen una vista propia con pestañas (ver admin/radio.blade.php)
-                    // en vez de tener que repartirse en un desplegable de N enlaces.
-                    // Un proyecto multi-rol que no esté aquí cae en el enlace directo
-                    // al primer panel (ver más abajo) — nunca en un submenú.
-                    $proyectoPanelCombinado = [
-                        'radio-pukllasunchis' => ['ruta' => 'adminRadio'],
-                    ];
-                @endphp
+    <div class="bv-sidebar-nav">
+        <ul class="list-unstyled components mb-4">
+            {{-- SECCIÓN PARA ROL ADMIN --}}
+            @if (auth()->user()->hasRole('admin'))
+                <li class="sidebar-menu-label">General</li>
                 <li class="{{ request()->routeIs('admin.principal') ? 'active' : '' }}">
                     <a href="{{ route('admin.principal') }}"><i class="fa fa-th-large"></i> Panel principal</a>
                 </li>
                 <li class="{{ request()->routeIs('proyectos.*') ? 'active' : '' }}">
-                    <a href="{{ route('proyectos.index') }}"><i class="fa fa-sitemap"></i> Proyectos</a>
+                    <a href="{{ route('proyectos.index') }}"><i class="fa fa-sitemap"></i> Proyectos Hub</a>
                 </li>
 
-                @if ($proyectos->isNotEmpty())
-                    <li class="sidebar-section-title">Proyectos</li>
-                    @foreach ($proyectos as $proyecto)
-                        @php
-                            // Un proyecto puede agrupar más de un rol — p. ej. Radio
-                            // Pukllasunchis junta videos + audios + sisicha en un solo
-                            // registro de la tabla proyectos — y cada rol con panel propio
-                            // aporta su pantalla. Con 1 solo panel el link va directo (su
-                            // panel ya lista sus pantallas); con más de uno, es un
-                            // desplegable con un link por panel, para no perder acceso a
-                            // ninguno (antes de quedarse con uno solo vía first(), acá
-                            // vivía el bug: Radio Pukllasunchis mostraba solo Sisichakunay
-                            // y escondía Canciones y Videos del sidebar).
-                            $definicionesProyecto = collect($rolesMenu)
-                                ->filter(fn ($definicion, $nombreRol) => $proyecto->roles->contains('name', $nombreRol))
-                                ->filter(fn ($definicion) => isset($definicion['panel']) && \Illuminate\Support\Facades\Route::has($definicion['panel']['ruta']))
-                                ->values();
-                            $combinado = $proyectoPanelCombinado[$proyecto->slug] ?? null;
-                            $combinado = $combinado && \Illuminate\Support\Facades\Route::has($combinado['ruta']) ? $combinado : null;
-                            $rutasProyecto = $definicionesProyecto
-                                ->flatMap(fn ($definicion) => collect($seccionesDesdeRol($definicion))
-                                    ->flatMap(fn ($seccion) => collect($seccion['items'])->pluck('ruta'))
-                                    ->push($definicion['panel']['ruta']))
-                                ->push($combinado['ruta'] ?? null)
-                                ->filter()
-                                ->all();
-                        @endphp
-                        <li class="{{ $rutasProyecto && request()->routeIs(...$rutasProyecto) ? 'active' : '' }}">
-                            @if ($definicionesProyecto->isEmpty())
-                                <a href="{{ route('proyectos.edit', $proyecto) }}">
-                                    <i class="fa {{ $proyectoIconos[$proyecto->slug] ?? 'fa-folder-open' }}"></i>
-                                    {{ $proyecto->nombre }}
-                                    <span class="menu-note">Sin configurar</span>
-                                </a>
-                            @elseif ($definicionesProyecto->count() === 1)
-                                <a href="{{ route($definicionesProyecto->first()['panel']['ruta']) }}">
-                                    <i class="fa {{ $proyectoIconos[$proyecto->slug] ?? ($definicionesProyecto->first()['icono'] ?? 'fa-folder-open') }}"></i>
-                                    {{ $proyecto->nombre }}
-                                </a>
-                            @else
-                                {{-- Más de un rol, sin desplegable: si hay un panel combinado
-                                     con pestañas para este proyecto se enlaza ahí directo; si
-                                     no, al primer panel disponible (nunca a un submenú). --}}
-                                <a href="{{ route($combinado['ruta'] ?? $definicionesProyecto->first()['panel']['ruta']) }}">
-                                    <i class="fa {{ $proyectoIconos[$proyecto->slug] ?? 'fa-folder-open' }}"></i>
-                                    {{ $proyecto->nombre }}
-                                </a>
-                            @endif
+                <li class="sidebar-menu-label">Biblioteca EESP</li>
+                <li class="{{ request()->routeIs('bibliotecario') ? 'active' : '' }}">
+                    <a href="{{ route('bibliotecario') }}"><i class="fa fa-tachometer"></i> Panel Biblioteca</a>
+                </li>
+
+                @php $openBibVirt = $inGroup(['libros.*', 'categorias.*', 'secciones.*']); @endphp
+                <li>
+                    <a href="#admBibVirt" data-toggle="collapse" aria-expanded="{{ $openBibVirt ? 'true' : 'false' }}"
+                        class="dropdown-toggle"><i class="fa fa-laptop"></i> Biblioteca virtual</a>
+                    <ul class="collapse list-unstyled {{ $openBibVirt ? 'show' : '' }}" id="admBibVirt">
+                        <li class="{{ request()->routeIs('libros.*') ? 'active' : '' }}">
+                            <a href="{{ route('libros.index') }}"><span class="flecha-admin">→</span> Libros</a>
                         </li>
-                        {{-- Botón aparte, solo para Kawsay: acceso directo al gestor de
-                             comentarios sin meter un desplegable ni tocar el resto de
-                             proyectos (pedido puntual, ver KawsayComentarioController). --}}
-                        @if ($proyecto->slug === 'kawsay' && \Illuminate\Support\Facades\Route::has('kawsaycomentarios.index'))
-                            <li class="{{ request()->routeIs('kawsaycomentarios.index') ? 'active' : '' }}">
-                                <a href="{{ route('kawsaycomentarios.index') }}">
-                                    <i class="fa fa-comments"></i> Comentarios
+                        <li class="{{ request()->routeIs('categorias.*') ? 'active' : '' }}">
+                            <a href="{{ route('categorias.index') }}"><span class="flecha-admin">→</span> Categorías</a>
+                        </li>
+                        <li class="{{ request()->routeIs('secciones.*') ? 'active' : '' }}">
+                            <a href="{{ route('secciones.index') }}"><span class="flecha-admin">→</span> Secciones</a>
+                        </li>
+                    </ul>
+                </li>
+
+                @php
+                    $openBibFis = $inGroup([
+                        'biblioteca-fisica.categorias.*',
+                        'biblioteca-fisica.libros.*',
+                        'biblioteca-fisica.prestamos.*',
+                        'biblioteca-fisica.material-categorias.*',
+                        'biblioteca-fisica.materiales.*',
+                    ]);
+                @endphp
+                <li>
+                    <a href="#admBibFis" data-toggle="collapse" aria-expanded="{{ $openBibFis ? 'true' : 'false' }}"
+                        class="dropdown-toggle"><i class="fa fa-archive"></i> Biblioteca física</a>
+                    <ul class="collapse list-unstyled {{ $openBibFis ? 'show' : '' }}" id="admBibFis">
+                        <li class="{{ request()->routeIs('biblioteca-fisica.categorias.*') ? 'active' : '' }}">
+                            <a href="{{ route('biblioteca-fisica.categorias.index') }}"><span class="flecha-admin">→</span> Categorías</a>
+                        </li>
+                        <li class="{{ request()->routeIs('biblioteca-fisica.libros.*') ? 'active' : '' }}">
+                            <a href="{{ route('biblioteca-fisica.libros.index') }}"><span class="flecha-admin">→</span> Libros</a>
+                        </li>
+                        <li class="{{ request()->routeIs('biblioteca-fisica.prestamos.*') ? 'active' : '' }}">
+                            <a href="{{ route('biblioteca-fisica.prestamos.index') }}"><span class="flecha-admin">→</span> Préstamos</a>
+                        </li>
+                        <li class="{{ request()->routeIs('biblioteca-fisica.materiales.*', 'biblioteca-fisica.material-categorias.*') ? 'active' : '' }}">
+                            <a href="{{ route('biblioteca-fisica.materiales.index') }}"><span class="flecha-admin">→</span> Material didáctico</a>
+                        </li>
+                    </ul>
+                </li>
+
+                @php $openBibTaqe = $inGroup(['admin.taqe.*']); @endphp
+                <li>
+                    <a href="#admBibTaqe" data-toggle="collapse" aria-expanded="{{ $openBibTaqe ? 'true' : 'false' }}"
+                        class="dropdown-toggle"><i class="fa fa-graduation-cap"></i> Taq'e (Tesis)</a>
+                    <ul class="collapse list-unstyled {{ $openBibTaqe ? 'show' : '' }}" id="admBibTaqe">
+                        <li class="{{ request()->routeIs('admin.taqe.trabajos.*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.taqe.trabajos.index') }}"><span class="flecha-admin">→</span> Trabajos</a>
+                        </li>
+                        <li class="{{ request()->routeIs('admin.taqe.categorias.*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.taqe.categorias.index') }}"><span class="flecha-admin">→</span> Categorías</a>
+                        </li>
+                    </ul>
+                </li>
+
+                @php $openVideos = $inGroup(['videos.*', 'videoscat.*']); @endphp
+                <li class="sidebar-menu-label">Multimedia EESP</li>
+                <li>
+                    <a href="#admVideos" data-toggle="collapse" aria-expanded="{{ $openVideos ? 'true' : 'false' }}"
+                        class="dropdown-toggle"><i class="fa fa-video-camera"></i> Videos EESP</a>
+                    <ul class="collapse list-unstyled {{ $openVideos ? 'show' : '' }}" id="admVideos">
+                        <li class="{{ request()->routeIs('videos.index') ? 'active' : '' }}">
+                            <a href="{{ route('videos.index') }}"><span class="flecha-admin">→</span> Videos</a>
+                        </li>
+                        <li class="{{ request()->routeIs('videoscat.*') ? 'active' : '' }}">
+                            <a href="{{ route('videoscat.index') }}"><span class="flecha-admin">→</span> Categorías</a>
+                        </li>
+                    </ul>
+                </li>
+
+                @php $openCanciones = $inGroup(['canciones.*', 'cancionescat.*']); @endphp
+                <li>
+                    <a href="#admCanciones" data-toggle="collapse" aria-expanded="{{ $openCanciones ? 'true' : 'false' }}"
+                        class="dropdown-toggle"><i class="fa fa-music"></i> Canciones & Audios</a>
+                    <ul class="collapse list-unstyled {{ $openCanciones ? 'show' : '' }}" id="admCanciones">
+                        <li class="{{ request()->routeIs('canciones.index') ? 'active' : '' }}">
+                            <a href="{{ route('canciones.index') }}"><span class="flecha-admin">→</span> Canciones</a>
+                        </li>
+                        <li class="{{ request()->routeIs('cancionescat.*') ? 'active' : '' }}">
+                            <a href="{{ route('cancionescat.index') }}"><span class="flecha-admin">→</span> Categorías</a>
+                        </li>
+                    </ul>
+                </li>
+
+                @if (!empty($proyectos) && $proyectos->isNotEmpty())
+                    <li class="sidebar-menu-label">Otros Proyectos Hub</li>
+                    @foreach ($proyectos as $proyecto)
+                        @if ($proyecto->slug !== 'eesp-pukllasunchis')
+                            @php
+                                $linkUrl = match ($proyecto->slug) {
+                                    'radio-pukllasunchis' => route('adminRadio'),
+                                    'kawsay' => route('adminKawsay'),
+                                    default => route('proyectos.edit', $proyecto),
+                                };
+                                $iconoProy = match ($proyecto->slug) {
+                                    'radio-pukllasunchis' => 'fa-podcast',
+                                    'kawsay' => 'fa-leaf',
+                                    default => 'fa-folder-open',
+                                };
+                            @endphp
+                            <li>
+                                <a href="{{ $linkUrl }}">
+                                    <i class="fa {{ $iconoProy }}"></i> {{ $proyecto->nombre }}
                                 </a>
                             </li>
+                            @if ($proyecto->slug === 'kawsay' && \Illuminate\Support\Facades\Route::has('kawsaycomentarios.index'))
+                                <li class="{{ request()->routeIs('kawsaycomentarios.index') ? 'active' : '' }}">
+                                    <a href="{{ route('kawsaycomentarios.index') }}">
+                                        <i class="fa fa-comments"></i> Comentarios Kawsay
+                                    </a>
+                                </li>
+                            @endif
                         @endif
                     @endforeach
                 @endif
 
-                <li class="sidebar-section-title">Usuarios</li>
-                <li class="{{ request()->routeIs('admin.index', 'alumnos') ? 'active' : '' }}">
-                    <a href="{{ route('admin.index') }}"><i class="fa fa-building"></i> Usuarios</a>
+                <li class="sidebar-menu-label">Administración</li>
+                <li class="{{ request()->routeIs('admin.index') ? 'active' : '' }}">
+                    <a href="{{ route('admin.index') }}"><i class="fa fa-users"></i> Administradores</a>
                 </li>
-
-                <li class="sidebar-section-title">Sistema</li>
+                <li class="{{ request()->routeIs('alumnos') ? 'active' : '' }}">
+                    <a href="{{ route('alumnos') }}"><i class="fa fa-graduation-cap"></i> Alumnos</a>
+                </li>
                 <li class="{{ request()->routeIs('backups.*') ? 'active' : '' }}">
                     <a href="{{ route('backups.index') }}"><i class="fa fa-database"></i> Backups</a>
                 </li>
-            @else
-                {{-- Cualquier rol que no sea admin: mismo patrón que arriba, a partir de
-                     la misma definición de $rolesMenu — sin duplicar nada por rol. El
-                     panel de cada rol (ver admin/bibliotecario.blade.php y hermanos) ya
-                     lista sus pantallas como module-cards (agrupadas en tabs cuando el
-                     rol tiene más de un grupo, p. ej. Biblioteca digital/física), así que
-                     el link va directo ahí en vez de repetir esa jerarquía en el sidebar. --}}
-                @foreach ($rolesMenu as $nombreRol => $definicion)
-                    @role($nombreRol)
-                        @php
-                            $idMenuRol = 'rolMenu' . $nombreRol;
-                            $rutaPanelRol = $definicion['panel']['ruta'] ?? null;
-                            $rutaPanelRol = $rutaPanelRol && \Illuminate\Support\Facades\Route::has($rutaPanelRol)
-                                ? $rutaPanelRol
-                                : null;
-                            $rutasRol = collect($seccionesDesdeRol($definicion))
-                                ->flatMap(fn ($seccion) => collect($seccion['items'])->pluck('ruta'))
-                                ->push($rutaPanelRol)
-                                ->filter()
-                                ->all();
-                        @endphp
-                        <li class="{{ $rutasRol && request()->routeIs(...$rutasRol) ? 'active' : '' }}">
-                            @if ($rutaPanelRol)
-                                <a href="{{ route($rutaPanelRol) }}">
-                                    <i class="fa {{ $definicion['icono'] }}"></i> {{ $definicion['panel']['label'] }}
-                                </a>
-                            @else
-                                {{-- Sin panel configurado: se listan sus secciones directo para
-                                     no dejar al rol sin acceso a sus pantallas. --}}
-                                <a href="#{{ $idMenuRol }}" data-toggle="collapse" aria-expanded="false"
-                                    class="dropdown-toggle">
-                                    <i class="fa {{ $definicion['icono'] }}"></i> {{ $definicion['label'] }}
-                                </a>
-                                <ul class="collapse list-unstyled" id="{{ $idMenuRol }}">
-                                    @include('livewire.partials.menu-secciones', [
-                                        'secciones' => $seccionesDesdeRol($definicion),
-                                        'idPrefix' => $idMenuRol,
-                                    ])
-                                </ul>
-                            @endif
+
+            {{-- SECCIÓN PARA ROL BIBLIOTECA (EXACTA A BIBLIOTECA STANDALONE) --}}
+            @elseif (auth()->user()->hasRole('biblioteca'))
+                <li class="sidebar-menu-label">Biblioteca EESP</li>
+                <li class="{{ request()->routeIs('bibliotecario') ? 'active' : '' }}">
+                    <a href="{{ route('bibliotecario') }}"><i class="fa fa-tachometer"></i> Panel Biblioteca</a>
+                </li>
+
+                @php $openBibVirt = $inGroup(['secciones.*', 'categorias.*', 'libros.*']); @endphp
+                <li>
+                    <a href="#bibVirt" data-toggle="collapse" aria-expanded="{{ $openBibVirt ? 'true' : 'false' }}"
+                        class="dropdown-toggle"><i class="fa fa-laptop"></i> Biblioteca virtual</a>
+                    <ul class="collapse list-unstyled {{ $openBibVirt ? 'show' : '' }}" id="bibVirt">
+                        <li class="{{ request()->routeIs('secciones.*') ? 'active' : '' }}">
+                            <a href="{{ route('secciones.index') }}"><span class="flecha-admin">→</span> Secciones</a>
                         </li>
-                        {{-- Botón aparte, solo para el rol Kawsay: acceso directo al gestor
-                             de comentarios sin meter un desplegable (pedido puntual). --}}
-                        @if ($nombreRol === 'kawsay' && \Illuminate\Support\Facades\Route::has('kawsaycomentarios.index'))
-                            <li class="{{ request()->routeIs('kawsaycomentarios.index') ? 'active' : '' }}">
-                                <a href="{{ route('kawsaycomentarios.index') }}">
-                                    <i class="fa fa-comments"></i> Comentarios
-                                </a>
-                            </li>
-                        @endif
-                    @endrole
-                @endforeach
-            @endrole
+                        <li class="{{ request()->routeIs('categorias.*') ? 'active' : '' }}">
+                            <a href="{{ route('categorias.index') }}"><span class="flecha-admin">→</span> Categorías</a>
+                        </li>
+                        <li class="{{ request()->routeIs('libros.*') ? 'active' : '' }}">
+                            <a href="{{ route('libros.index') }}"><span class="flecha-admin">→</span> Libros</a>
+                        </li>
+                    </ul>
+                </li>
+
+                @php
+                    $openBibFis = $inGroup([
+                        'biblioteca-fisica.categorias.*',
+                        'biblioteca-fisica.libros.*',
+                        'biblioteca-fisica.prestamos.*',
+                        'biblioteca-fisica.material-categorias.*',
+                        'biblioteca-fisica.materiales.*',
+                    ]);
+                @endphp
+                <li>
+                    <a href="#bibFis" data-toggle="collapse" aria-expanded="{{ $openBibFis ? 'true' : 'false' }}"
+                        class="dropdown-toggle"><i class="fa fa-archive"></i> Biblioteca física</a>
+                    <ul class="collapse list-unstyled {{ $openBibFis ? 'show' : '' }}" id="bibFis">
+                        <li class="{{ request()->routeIs('biblioteca-fisica.categorias.*') ? 'active' : '' }}">
+                            <a href="{{ route('biblioteca-fisica.categorias.index') }}"><span class="flecha-admin">→</span> Categorías</a>
+                        </li>
+                        <li class="{{ request()->routeIs('biblioteca-fisica.libros.*') ? 'active' : '' }}">
+                            <a href="{{ route('biblioteca-fisica.libros.index') }}"><span class="flecha-admin">→</span> Libros</a>
+                        </li>
+                        <li class="{{ request()->routeIs('biblioteca-fisica.prestamos.*') ? 'active' : '' }}">
+                            <a href="{{ route('biblioteca-fisica.prestamos.index') }}"><span class="flecha-admin">→</span> Préstamos</a>
+                        </li>
+                        <li class="{{ request()->routeIs('biblioteca-fisica.materiales.*', 'biblioteca-fisica.material-categorias.*') ? 'active' : '' }}">
+                            <a href="{{ route('biblioteca-fisica.materiales.index') }}"><span class="flecha-admin">→</span> Material didáctico</a>
+                        </li>
+                    </ul>
+                </li>
+
+                @php $openBibTaqe = $inGroup(['admin.taqe.*']); @endphp
+                <li>
+                    <a href="#bibTaqe" data-toggle="collapse" aria-expanded="{{ $openBibTaqe ? 'true' : 'false' }}"
+                        class="dropdown-toggle"><i class="fa fa-graduation-cap"></i> Taq'e</a>
+                    <ul class="collapse list-unstyled {{ $openBibTaqe ? 'show' : '' }}" id="bibTaqe">
+                        <li class="{{ request()->routeIs('admin.taqe.trabajos.*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.taqe.trabajos.index') }}"><span class="flecha-admin">→</span> Trabajos</a>
+                        </li>
+                        <li class="{{ request()->routeIs('admin.taqe.categorias.*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.taqe.categorias.index') }}"><span class="flecha-admin">→</span> Categorías</a>
+                        </li>
+                    </ul>
+                </li>
+
+            {{-- SECCIÓN PARA ROL SISICHA (RADIO & SISIPEDIA) --}}
+            @elseif (auth()->user()->hasRole('sisicha'))
+                <li class="sidebar-menu-label">Radio & Sisichakunay</li>
+                <li class="{{ request()->routeIs('adminRadio', 'adminSisicha') ? 'active' : '' }}">
+                    <a href="{{ route('adminRadio') }}"><i class="fa fa-tachometer"></i> Panel Radio / Sisicha</a>
+                </li>
+                <li class="{{ request()->routeIs('sisipedia.categories.*') ? 'active' : '' }}">
+                    <a href="{{ route('sisipedia.categories.index') }}"><i class="fa fa-sitemap"></i> Registros Sisipedia</a>
+                </li>
+                <li class="{{ request()->routeIs('sisipedia.aportaciones.*') ? 'active' : '' }}">
+                    <a href="{{ route('sisipedia.aportaciones.index') }}"><i class="fa fa-comments"></i> Aportaciones</a>
+                </li>
+                <li class="{{ request()->routeIs('sisipedia.busquedas.*') ? 'active' : '' }}">
+                    <a href="{{ route('sisipedia.busquedas.sin-resultados') }}"><i class="fa fa-search"></i> Búsquedas vacías</a>
+                </li>
+
+                @php $openRadioMedia = $inGroup(['canciones.*', 'cancionescat.*', 'videos.*', 'videoscat.*']); @endphp
+                <li>
+                    <a href="#sisiMedia" data-toggle="collapse" aria-expanded="{{ $openRadioMedia ? 'true' : 'false' }}"
+                        class="dropdown-toggle"><i class="fa fa-play-circle"></i> Multimedia Radio</a>
+                    <ul class="collapse list-unstyled {{ $openRadioMedia ? 'show' : '' }}" id="sisiMedia">
+                        <li class="{{ request()->routeIs('canciones.index') ? 'active' : '' }}">
+                            <a href="{{ route('canciones.index') }}"><span class="flecha-admin">→</span> Canciones</a>
+                        </li>
+                        <li class="{{ request()->routeIs('cancionescat.*') ? 'active' : '' }}">
+                            <a href="{{ route('cancionescat.index') }}"><span class="flecha-admin">→</span> Categorías Canciones</a>
+                        </li>
+                        <li class="{{ request()->routeIs('videos.index') ? 'active' : '' }}">
+                            <a href="{{ route('videos.index') }}"><span class="flecha-admin">→</span> Videos</a>
+                        </li>
+                        <li class="{{ request()->routeIs('videoscat.*') ? 'active' : '' }}">
+                            <a href="{{ route('videoscat.index') }}"><span class="flecha-admin">→</span> Categorías Videos</a>
+                        </li>
+                    </ul>
+                </li>
+
+            {{-- SECCIÓN PARA ROL KAWSAY --}}
+            @elseif (auth()->user()->hasRole('kawsay'))
+                <li class="sidebar-menu-label">Kawsay</li>
+                <li class="{{ request()->routeIs('adminKawsay') ? 'active' : '' }}">
+                    <a href="{{ route('adminKawsay') }}"><i class="fa fa-leaf"></i> Panel Kawsay</a>
+                </li>
+                <li class="{{ request()->routeIs('kawsayareas.*') ? 'active' : '' }}">
+                    <a href="{{ route('kawsayareas.index') }}"><i class="fa fa-sitemap"></i> Áreas</a>
+                </li>
+                <li class="{{ request()->routeIs('kawsaytemas.*') ? 'active' : '' }}">
+                    <a href="{{ route('kawsaytemas.index') }}"><i class="fa fa-book"></i> Temas</a>
+                </li>
+                <li class="{{ request()->routeIs('kawsaycomentarios.*') ? 'active' : '' }}">
+                    <a href="{{ route('kawsaycomentarios.index') }}"><i class="fa fa-comments"></i> Comentarios</a>
+                </li>
+                <li class="{{ request()->routeIs('kawsayarchivos.*') ? 'active' : '' }}">
+                    <a href="{{ route('kawsayarchivos.index') }}"><i class="fa fa-file-text"></i> Archivos</a>
+                </li>
+                <li class="{{ request()->routeIs('kawsaylibros.*') ? 'active' : '' }}">
+                    <a href="{{ route('kawsaylibros.index') }}"><i class="fa fa-book"></i> Libros</a>
+                </li>
+                <li class="{{ request()->routeIs('kawsaycategorias.*') ? 'active' : '' }}">
+                    <a href="{{ route('kawsaycategorias.index') }}"><i class="fa fa-tags"></i> Categorías</a>
+                </li>
+
+            {{-- SECCIÓN PARA ROL VIDEOS --}}
+            @elseif (auth()->user()->hasRole('videos'))
+                <li class="sidebar-menu-label">Videos</li>
+                <li class="{{ request()->routeIs('videos.index') ? 'active' : '' }}">
+                    <a href="{{ route('videos.index') }}"><i class="fa fa-video-camera"></i> Videos</a>
+                </li>
+                <li class="{{ request()->routeIs('videoscat.*') ? 'active' : '' }}">
+                    <a href="{{ route('videoscat.index') }}"><i class="fa fa-tags"></i> Categorías</a>
+                </li>
+
+            {{-- SECCIÓN PARA ROL AUDIOS --}}
+            @elseif (auth()->user()->hasRole('audios'))
+                <li class="sidebar-menu-label">Canciones</li>
+                <li class="{{ request()->routeIs('canciones.index') ? 'active' : '' }}">
+                    <a href="{{ route('canciones.index') }}"><i class="fa fa-music"></i> Canciones</a>
+                </li>
+                <li class="{{ request()->routeIs('cancionescat.*') ? 'active' : '' }}">
+                    <a href="{{ route('cancionescat.index') }}"><i class="fa fa-compact-disc"></i> Categorías</a>
+                </li>
+            @endif
         </ul>
-        <div class="footer">
-            <p class="text-center">
-                Copyright
-                &copy;
-                <script>
-                    document.write(new Date().getFullYear());
-                </script> <br> Made by <a href="" target="_blank">DJM2 </a>
-            </p>
-        </div>
+    </div>
+
+    <div class="bv-sidebar-footer">
+        @if ($proyectoUrl)
+            <a href="{{ $proyectoUrl }}" target="_blank" rel="noopener noreferrer" class="bv-sidebar-link" title="{{ $proyectoNombre }}">
+                <i class="fa fa-external-link"></i> {{ $proyectoNombre }}
+            </a>
+        @endif
+        <a href="{{ route('hub') }}" target="_blank" rel="noopener noreferrer" class="bv-sidebar-link">
+            <i class="fa fa-home"></i> Página de inicio
+        </a>
+        <a href="#" class="bv-sidebar-link bv-sidebar-link--danger" id="bvLogoutLink" data-logout-confirm>
+            <i class="fa fa-sign-out"></i> {{ __('Salir') }}
+        </a>
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+            @csrf
+        </form>
+    </div>
+
+    <div class="bv-sidebar-copy">
+        <p class="mb-0">Copyright &copy; <span id="bvSidebarYear">{{ date('Y') }}</span><br>Made by
+            <a href="https://www.facebook.com/DjmWebMaster" target="_blank" rel="noopener">DJM2</a>
+        </p>
     </div>
 </nav>

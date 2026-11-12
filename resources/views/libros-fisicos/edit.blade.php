@@ -19,6 +19,14 @@
         </a>
     </div>
 
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show bv-alert" role="alert">
+            <i class="fa fa-exclamation-circle mr-2"></i>{{ session('error') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Cerrar">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
 
     @if ($errors->any())
         <div class="alert alert-danger bv-alert mb-3">
@@ -30,13 +38,6 @@
             </ul>
         </div>
     @endif
-
-    @php
-        $catsSeleccionadas = old('categorias_fisicas');
-        if (!is_array($catsSeleccionadas)) {
-            $catsSeleccionadas = $categoriasSeleccionadas ?? [];
-        }
-    @endphp
 
     @if ($categoriasFisicas->isEmpty())
         <div class="alert alert-warning bv-alert">
@@ -153,34 +154,47 @@
                         @enderror
                     </div>
                 </div>
+
+                <div class="form-group mb-0 mt-2 d-none" id="etiquetasEjemplaresWrap">
+                    <label class="bv-form-label mb-1">
+                        Etiquetas de cada ejemplar
+                        <small class="text-muted font-weight-normal">(opcional — por defecto 1, 2, 3…; puedes usar A, B, Sala, etc.)</small>
+                    </label>
+                    <div class="bv-etiquetas-ejemplares-list" id="etiquetasEjemplaresList"></div>
+                    @if (count($etiquetasEnPrestamo))
+                        <small class="text-muted d-block mt-1">
+                            <i class="fa fa-lock mr-1"></i>Las etiquetas con candado están prestadas ahora mismo; registra la devolución para poder renombrarlas.
+                        </small>
+                    @endif
+                    @error('etiquetas_ejemplares')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
             </div>
 
-            {{-- Sección 2: clasificación --}}
+            {{-- Sección 2: categoría y tipo de material --}}
             <div class="bv-form-card" id="bvCardCats">
                 <div class="bv-form-section-title">
                     <i class="fa fa-tags mr-1"></i>Clasificación
                 </div>
 
                 <div class="form-row">
-                    <div class="form-group col-md-5 mb-md-0">
-                        <label class="bv-form-label">
-                            Categoría Dewey <span class="text-danger">*</span>
-                            <small class="text-muted font-weight-normal">(puede elegir varias)</small>
+                    <div class="form-group col-md-5">
+                        <label class="bv-form-label" for="categoria_fisica_id">
+                            Categoría Dewey
+                            <small class="text-muted font-weight-normal">(materia — opcional)</small>
                         </label>
-                        <div class="bv-cat-pills">
+                        <select name="categoria_fisica_id" id="categoria_fisica_id"
+                            class="form-control form-control-sm @error('categoria_fisica_id') is-invalid @enderror">
+                            <option value="">Sin clasificación Dewey…</option>
                             @foreach ($categoriasFisicas as $cat)
-                                <div class="bv-cat-pill">
-                                    <input type="checkbox" name="categorias_fisicas[]"
-                                        id="catfis_{{ $cat->id }}" value="{{ $cat->id }}"
-                                        {{ in_array($cat->id, $catsSeleccionadas) ? 'checked' : '' }}>
-                                    <label for="catfis_{{ $cat->id }}">{{ $cat->nombre }}</label>
-                                </div>
+                                <option value="{{ $cat->id }}" {{ (int) old('categoria_fisica_id', $libro->categoria_fisica_id) === $cat->id ? 'selected' : '' }}>
+                                    {{ $cat->nombre }}
+                                </option>
                             @endforeach
-                        </div>
-                        @error('categorias_fisicas')
-                            <div class="text-danger small mt-1">
-                                <i class="fa fa-exclamation-circle mr-1"></i>{{ $message }}
-                            </div>
+                        </select>
+                        @error('categoria_fisica_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="form-group col-md-4">
@@ -188,25 +202,29 @@
                             Tipo de material <span class="text-danger">*</span>
                         </label>
                         <select name="tipo_material" id="tipo_material"
-                            class="form-control form-control-sm @error('tipo_material') is-invalid @enderror" required>
-                            <option value="">Seleccionar…</option>
-                            @foreach (\App\Models\CategoriaFisica::TIPOS_MATERIAL as $valor => $etiqueta)
-                                <option value="{{ $valor }}" @selected(old('tipo_material', $libro->tipo_material) === $valor)>{{ $etiqueta }}</option>
+                            class="form-control form-control-sm @error('tipo_material') is-invalid @enderror">
+                            <option value="">Selecciona…</option>
+                            @foreach (\App\Models\CategoriaFisica::TIPOS_MATERIAL as $codigoTipo => $nombreTipo)
+                                <option value="{{ $codigoTipo }}" {{ old('tipo_material', $libro->tipo_material) === $codigoTipo ? 'selected' : '' }}>
+                                    {{ $nombreTipo }}
+                                </option>
                             @endforeach
                         </select>
                         @error('tipo_material')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="form-group col-md-3 mb-0">
+                    <div class="form-group col-md-3">
                         <label class="bv-form-label" for="ubicacion">
                             Ubicación <span class="text-danger">*</span>
                         </label>
                         <select name="ubicacion" id="ubicacion"
-                            class="form-control form-control-sm @error('ubicacion') is-invalid @enderror" required>
-                            <option value="">Seleccionar…</option>
-                            @foreach (\App\Models\LibroFisico::UBICACIONES as $valor => $etiqueta)
-                                <option value="{{ $valor }}" @selected(old('ubicacion', $libro->ubicacion) === $valor)>{{ $etiqueta }}</option>
+                            class="form-control form-control-sm @error('ubicacion') is-invalid @enderror">
+                            <option value="">Selecciona…</option>
+                            @foreach (\App\Models\LibroFisico::UBICACIONES as $codigoUbicacion => $nombreUbicacion)
+                                <option value="{{ $codigoUbicacion }}" {{ old('ubicacion', $libro->ubicacion) === $codigoUbicacion ? 'selected' : '' }}>
+                                    {{ $nombreUbicacion }}
+                                </option>
                             @endforeach
                         </select>
                         @error('ubicacion')
@@ -228,12 +246,92 @@
     @endif
 @endsection
 
+@push('styles')
+@endpush
+
 @push('scripts')
 <script>
     (function () {
+        window.bvPageAnimated = true;
         gsap.from(['#bvCardInfo', '#bvCardCats'], {
             opacity: 0, y: 22, duration: 0.42, stagger: 0.11, ease: 'power2.out'
         });
+
+        // Muestra un input de texto por ejemplar para poder nombrarlo (1, 2… o A, B, "Sala"…)
+        // en vez de solo un correlativo fijo; se regenera al cambiar la cantidad sin perder lo ya escrito.
+        // Los ejemplares actualmente prestados quedan de solo lectura (ver guardia en el controlador).
+        (function () {
+            var cantidadInput = document.getElementById('cantidad_ejemplares');
+            var wrap = document.getElementById('etiquetasEjemplaresWrap');
+            var list = document.getElementById('etiquetasEjemplaresList');
+            var valoresIniciales = @json(old('etiquetas_ejemplares', $libro->etiquetas_ejemplares_lista));
+            var etiquetasBloqueadas = @json($etiquetasEnPrestamo);
+
+            function valorActualEn(index) {
+                var existente = list.children[index];
+                if (existente) return existente.querySelector('input').value;
+                return valoresIniciales[index] || '';
+            }
+
+            function render() {
+                var cantidad = parseInt(cantidadInput.value, 10) || 0;
+                if (cantidad <= 1) {
+                    wrap.classList.add('d-none');
+                    list.innerHTML = '';
+                    return;
+                }
+                wrap.classList.remove('d-none');
+
+                var valores = [];
+                for (var i = 0; i < cantidad; i++) valores.push(valorActualEn(i));
+
+                list.innerHTML = '';
+                valores.forEach(function (valor, i) {
+                    var valorFinal = valor || String(i + 1);
+                    var bloqueado = etiquetasBloqueadas.indexOf(valorFinal) !== -1;
+
+                    var item = document.createElement('div');
+                    item.className = 'input-group input-group-sm';
+
+                    var prependWrap = document.createElement('div');
+                    prependWrap.className = 'input-group-prepend';
+                    var prepend = document.createElement('span');
+                    prepend.className = 'input-group-text';
+                    prepend.textContent = (i + 1) + '.';
+                    prependWrap.appendChild(prepend);
+                    item.appendChild(prependWrap);
+
+                    var input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'form-control';
+                    input.name = 'etiquetas_ejemplares[]';
+                    input.maxLength = 50;
+                    input.value = valorFinal;
+                    input.placeholder = String(i + 1);
+                    if (bloqueado) {
+                        input.readOnly = true;
+                        input.classList.add('bg-light');
+                        input.title = 'Este ejemplar está prestado; registra la devolución para poder renombrarlo.';
+                    }
+                    item.appendChild(input);
+
+                    if (bloqueado) {
+                        var appendWrap = document.createElement('div');
+                        appendWrap.className = 'input-group-append';
+                        var appendSpan = document.createElement('span');
+                        appendSpan.className = 'input-group-text';
+                        appendSpan.innerHTML = '<i class="fa fa-lock text-muted"></i>';
+                        appendWrap.appendChild(appendSpan);
+                        item.appendChild(appendWrap);
+                    }
+
+                    list.appendChild(item);
+                });
+            }
+
+            cantidadInput.addEventListener('input', render);
+            render();
+        })();
 
         function attachCounter(inputId, counterId, max) {
             var el = document.getElementById(inputId);

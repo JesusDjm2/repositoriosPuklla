@@ -1,9 +1,6 @@
 @extends('layouts.app')
 @section('titulo', '- Áreas Kawsay')
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('css/biblioteca-crud.css') }}?v={{ file_exists(public_path('css/biblioteca-crud.css')) ? filemtime(public_path('css/biblioteca-crud.css')) : 1 }}">
-@endpush
 
 @section('contenido')
 
@@ -69,9 +66,9 @@
             $archivosArea = $temasArea->sum(fn ($t) => $resumenTema[$t->id]['total']);
             $pct = $temasArea->count() ? round($conArea / $temasArea->count() * 100) : 0;
         @endphp
-        <div class="kawsay-area-card">
+        <div class="kawsay-area-card" style="--area-color: {{ $area->color ?: '#6e7d1e' }}">
             <div class="kawsay-area-card__head">
-                <span class="kawsay-area-card__circle" style="border-color: {{ $area->color ?: '#6e7d1e' }};">
+                <span class="kawsay-area-card__circle">
                     @if ($area->imagen)
                         <img src="{{ asset($area->imagen) }}" alt="{{ $area->nombre }}">
                     @else
@@ -89,7 +86,7 @@
 
                     @if ($temasArea->count())
                         <div class="kac-progreso" title="{{ $conArea }} de {{ $temasArea->count() }} temas tienen contenido">
-                            <div class="kac-progreso__barra"><span style="width: {{ $pct }}%; background: {{ $area->color ?: '#6e7d1e' }};"></span></div>
+                            <div class="kac-progreso__barra"><span style="width: {{ $pct }}%;"></span></div>
                             <span class="kac-progreso__texto">
                                 <strong>{{ $conArea }}</strong> de {{ $temasArea->count() }} temas con contenido
                                 · <strong>{{ $archivosArea }}</strong> {{ $archivosArea === 1 ? 'archivo' : 'archivos' }}
@@ -187,115 +184,6 @@
         </div>
     @endforelse
 
-    <style>
-        .kawsay-area-card {
-            background: #fff;
-            border: 1px solid rgba(20, 20, 40, 0.06);
-            border-radius: 1rem;
-            box-shadow: 0 1px 2px rgba(20, 20, 40, 0.04), 0 0.5rem 1.25rem rgba(20, 20, 40, 0.06);
-            padding: 1.25rem 1.4rem;
-            margin-bottom: 1.25rem;
-        }
-        .kawsay-area-card__head { display: flex; align-items: flex-start; gap: 1rem; }
-        .kawsay-area-card__circle {
-            flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
-            width: 56px; height: 56px; border-radius: 50%; border: 3px solid; overflow: hidden;
-            background: #f1f3f5; color: #6c757d; font-size: 1.3rem;
-        }
-        .kawsay-area-card__circle img { width: 100%; height: 100%; object-fit: cover; }
-        .kawsay-area-card__info { flex: 1 1 auto; min-width: 0; }
-        .kawsay-area-card__title { font-weight: 700; font-size: 1.05rem; color: #212529; display: flex; align-items: center; gap: 0.5rem; }
-        .kawsay-area-card__orden { font-size: 0.72rem; font-weight: 600; color: #adb5bd; }
-        .kawsay-area-card__desc { margin: 0.2rem 0 0; color: #6c757d; font-size: 0.85rem; }
-        .kawsay-area-card__actions { flex-shrink: 0; display: flex; gap: 0.35rem; }
-        .kawsay-area-card__vacio { color: #adb5bd; font-size: 0.85rem; font-style: italic; }
-        .kawsay-area-card__tema {
-            display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.8rem; border-radius: 999px;
-            background: #f1f3f5; color: #495057; font-size: 0.82rem; font-weight: 600; text-decoration: none;
-            transition: background-color 0.15s ease, transform 0.15s ease;
-        }
-        .kawsay-area-card__tema--nuevo { background: transparent; border: 1px dashed #ced4da; color: #868e96; }
-        .kawsay-area-card__tema--nuevo:hover { border-color: #6e7d1e; color: #6e7d1e; background: rgba(110, 125, 30, 0.06); text-decoration: none; }
-
-        /* Barra de filtros y leyenda */
-        .kac-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1.5rem; margin-bottom: 1rem; }
-        .kac-filtros { display: inline-flex; gap: .4rem; flex-wrap: wrap; }
-        .kac-filtro {
-            border: 1px solid #dee2e6; background: #fff; border-radius: 999px; padding: .35rem .9rem;
-            font-size: .82rem; font-weight: 600; color: #495057; cursor: pointer; display: inline-flex; align-items: center; gap: .45rem;
-        }
-        .kac-filtro span { background: #f1f3f5; border-radius: 999px; padding: 0 .5rem; font-size: .72rem; }
-        .kac-filtro.is-activo { background: #343a40; border-color: #343a40; color: #fff; }
-        .kac-filtro.is-activo span { background: rgba(255, 255, 255, .2); }
-        .kac-leyenda { margin: 0; font-size: .8rem; color: #868e96; }
-        .kac-leyenda i { margin-right: .25rem; }
-
-        /* Progreso del área */
-        .kac-progreso { margin-top: .7rem; max-width: 520px; }
-        .kac-progreso__barra { height: 6px; border-radius: 999px; background: #edf0e6; overflow: hidden; }
-        .kac-progreso__barra span { display: block; height: 100%; border-radius: 999px; }
-        .kac-progreso__texto { display: block; margin-top: .3rem; font-size: .78rem; color: #6c757d; }
-
-        /* Lista de temas */
-        .kac-temas { margin-top: 1rem; padding-top: .5rem; border-top: 1px dashed #e9ecef; }
-        .kac-tema {
-            display: grid; align-items: center; gap: .5rem 1.25rem;
-            grid-template-columns: minmax(180px, 1.5fr) minmax(250px, 2fr) 150px auto;
-            padding: .7rem .5rem .7rem .75rem; border-bottom: 1px solid #f1f3f5; border-left: 4px solid transparent;
-            border-radius: 8px; transition: background .15s ease;
-        }
-        .kac-tema:last-child { border-bottom: 0; }
-        .kac-tema:hover { background: #fafbf7; }
-        .kac-tema--vacio { border-left-color: #e5484d; }
-        .kac-tema--parcial { border-left-color: #f5a623; }
-        .kac-tema--bueno { border-left-color: #46a758; }
-        .kac-tema.is-oculto { display: none; }
-
-        .kac-tema__nombre { min-width: 0; }
-        .kac-tema__titulo { font-weight: 700; font-size: .92rem; color: #212529; text-decoration: none; display: block; }
-        .kac-tema__titulo:hover { color: #6e7d1e; text-decoration: none; }
-        .kac-tema__flags { display: inline-flex; align-items: center; gap: .55rem; margin-top: .2rem; font-size: .72rem; color: #ced4da; }
-        .kac-tema__flags .is-on { color: #6e7d1e; }
-        .kac-tema__coment { display: inline-flex; align-items: center; gap: .25rem; }
-        .kac-tema__coment i { margin-right: 0; }
-
-        .kac-tipos { display: flex; flex-wrap: wrap; gap: .35rem; }
-        .kac-tipo {
-            position: relative; width: 2.15rem; height: 2.15rem; border-radius: 10px;
-            display: inline-flex; align-items: center; justify-content: center;
-            background: #f4f5f2; color: #c4c9bd; font-size: .85rem; border: 1px solid transparent;
-        }
-        .kac-tipo.is-on { background: #eef3dc; color: #55631a; border-color: #d5e0b0; }
-        .kac-tipo b {
-            position: absolute; top: -.4rem; right: -.4rem; min-width: 1.1rem; height: 1.1rem; padding: 0 .25rem;
-            border-radius: 999px; background: #6e7d1e; color: #fff; font-size: .62rem; line-height: 1.1rem; text-align: center;
-        }
-
-        .kac-tema__estado { display: flex; flex-direction: column; align-items: flex-start; gap: .15rem; }
-        .kac-tema__estado small { color: #868e96; font-size: .72rem; }
-        .kac-badge { display: inline-flex; align-items: center; gap: .35rem; padding: .2rem .65rem; border-radius: 999px; font-size: .76rem; font-weight: 700; }
-        .kac-badge--vacio { background: #fdecec; color: #b42525; }
-        .kac-badge--parcial { background: #fff3dc; color: #96620a; }
-        .kac-badge--bueno { background: #e6f4ea; color: #2a6e3a; }
-
-        .kac-tema__acciones { display: flex; gap: .35rem; justify-content: flex-end; }
-
-        @media (max-width: 991.98px) {
-            .kac-tema { grid-template-columns: 1fr auto; }
-            .kac-tipos { grid-column: 1 / -1; order: 3; }
-            .kac-tema__estado { flex-direction: row; align-items: center; gap: .5rem; grid-column: 1 / -1; order: 2; }
-        }
-        .hero-banner__stats { flex-wrap: wrap; }
-        @media (max-width: 575.98px) {
-            .kac-tipos { gap: .3rem; }
-            .kac-tipo { width: 1.85rem; height: 1.85rem; font-size: .75rem; border-radius: 8px; }
-            .kawsay-area-card { padding: 1rem; }
-            .kawsay-area-card__head { flex-wrap: wrap; }
-            .kawsay-area-card__actions { width: 100%; }
-            .kac-tema__acciones .btn span { display: none; }
-            .kac-leyenda { display: none; }
-        }
-    </style>
 
     <script>
         (function () {

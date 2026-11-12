@@ -1,0 +1,144 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// BIBLIOTECA — préstamos y libros físicos
+// Vistas: prestamos/index, prestamos/create, libros-fisicos/{create,edit}
+// ═══════════════════════════════════════════════════════════════════════════
+
+// prestamos/index: Select2 del filtro de libro con la altura de .form-control-sm
+#pre-libro + .select2-container .select2-selection--single,
+#pre-libro + .select2-container .select2-selection--single .select2-selection__arrow {
+    height: calc(1.5em + 0.5rem + 2px);
+}
+
+#pre-libro + .select2-container .select2-selection--single .select2-selection__rendered {
+    padding-left: 0.5rem;
+    line-height: 1.9;
+}
+
+// libros-fisicos/{create,edit}: etiquetas de ejemplares
+.bv-etiquetas-ejemplares-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.bv-etiquetas-ejemplares-list .input-group {
+    width: 160px;
+}
+
+.bv-etiquetas-ejemplares-list .input-group-text {
+    padding: 0.25rem 0.5rem;
+}
+
+// ─── prestamos/create.blade.php ────────────────────────────
+/* Estilos del Selector Inicial de Tipo de Material */
+.bv-tipo-selector-wrap {
+    background: var(--bv-surface);
+    border: 1px solid var(--bv-border);
+    border-radius: 10px;
+    padding: 0.85rem 1.15rem;
+    box-shadow: var(--bv-shadow);
+}
+.bv-tipo-selector-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--bv-accent);
+}
+.bv-tipo-selector-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 0.65rem;
+}
+@media (max-width: 576px) {
+    .bv-tipo-selector-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.bv-tipo-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.95rem;
+    border: 1.5px solid var(--bv-border-strong);
+    border-radius: 8px;
+    background: var(--bv-surface-2);
+    cursor: pointer;
+    transition: all 0.16s ease-in-out;
+    user-select: none;
+    margin-bottom: 0;
+}
+.bv-tipo-card input[type="radio"] {
+    display: none;
+}
+.bv-tipo-card:hover {
+    border-color: var(--bv-accent);
+    background: var(--bv-accent-soft);
+    transform: translateY(-1px);
+}
+.bv-tipo-card.is-active {
+    border-color: var(--bv-accent);
+    background: var(--bv-accent-soft);
+    box-shadow: 0 0 0 1px var(--bv-accent);
+}
+.bv-tipo-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    background: var(--bv-surface);
+    color: var(--bv-accent);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    flex-shrink: 0;
+    transition: all 0.16s ease;
+}
+.bv-tipo-card.is-active .bv-tipo-icon {
+    background: var(--bv-accent);
+    color: #fff;
+}
+.bv-tipo-text {
+    line-height: 1.25;
+}
+.bv-tipo-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--bv-text);
+    display: block;
+}
+.bv-tipo-sub {
+    font-size: 0.72rem;
+    color: var(--bv-text-muted);
+}
+
+/* Tarjetas de formulario más compactas */
+.bv-form-card--compact {
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1rem;
+}
+.bv-form-card--compact .bv-form-section-title {
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.45rem;
+    font-size: 0.74rem;
+}
+.bv-form-card--compact .form-group {
+    margin-bottom: 0.75rem;
+}
+
+/* Botones rápidos de plazo */
+.bv-btn-plazo {
+    font-size: 0.73rem !important;
+    font-weight: 500;
+    border-color: var(--bv-border-strong);
+    color: var(--bv-text-muted);
+    background: var(--bv-surface-2);
+    transition: all 0.15s ease;
+}
+.bv-btn-plazo:hover,
+.bv-btn-plazo.active {
+    background-color: var(--bv-accent) !important;
+    border-color: var(--bv-accent-hover) !important;
+    color: #fff !important;
+}

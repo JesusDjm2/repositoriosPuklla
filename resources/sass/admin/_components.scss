@@ -1,0 +1,836 @@
+// Componentes compartidos: hero-banner, project-card, module-card, data-table, form-field, modal de confirmación.
+// Parte del bundle resources/sass/admin.scss — usar solo variables --adm-* (ver _tokens.scss).
+
+// ─── Hero banner (encabezado de bienvenida de cada dashboard) ──────────────
+// Padding recortado (antes llegaba a 2.75rem) y sin min-height: el alto lo
+// da el contenido, no un bloque de aire reservado de más.
+.hero-banner {
+    --_accent: #{$puk-maroon};
+    --_accent-dark: #{$puk-maroon-dark};
+
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.1rem;
+    padding: clamp(1.25rem, 1rem + 1vw, 1.85rem) clamp(1.25rem, 1rem + 1.5vw, 2.1rem);
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, var(--_accent) 0%, var(--_accent-dark) 100%);
+    box-shadow: 0 1px 2px rgba(20, 20, 40, 0.06), 0 1rem 2.25rem rgba(20, 5, 8, 0.25);
+}
+
+// El glow ya no es un tono dorado fijo (chocaba con las variantes verde/marrón
+// de Kawsay y Radio) — se deriva del propio acento de cada dashboard con
+// color-mix, así siempre es un tono más claro de la MISMA familia de color.
+.hero-banner__decor {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 88% -25%, color-mix(in srgb, var(--_accent-dark) 45%, white 55%), transparent 60%),
+        radial-gradient(circle at -5% 120%, rgba(255, 255, 255, 0.1), transparent 55%);
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.hero-banner__row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+// min-width: 0 evita que la fila de contadores (nowrap + scroll) estire el
+// bloque y deje el título sin poder partirse en celular.
+.hero-banner__content {
+    flex: 1 1 18rem;
+    min-width: 0;
+}
+
+.hero-banner__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.45rem;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.hero-banner__title {
+    margin-bottom: 0.3rem;
+    color: #fff;
+    font-size: clamp(1.4rem, 1.05rem + 1.3vw, 1.9rem);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.hero-banner__subtitle {
+    max-width: 46ch;
+    margin-bottom: 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.92rem;
+}
+
+// Contadores de registros del dashboard: fila única que hace scroll
+// horizontal en vez de envolver a una segunda línea — un dashboard con
+// muchos contadores (ej. Kawsay) no debe hacer crecer el hero en alto, solo
+// se desliza. El fade en el borde derecho avisa que hay más sin recurrir a
+// una barra de scroll visible.
+.hero-banner__stats {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent 100%);
+}
+
+.hero-banner__stats::-webkit-scrollbar {
+    display: none;
+}
+
+.hero-banner__stat {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.22rem 0.58rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.13);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-size: 0.74rem;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.hero-banner__stat i {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.72rem;
+}
+
+.hero-banner__stat-value {
+    font-weight: 700;
+}
+
+.hero-banner__stat-label {
+    color: rgba(255, 255, 255, 0.78);
+    font-weight: 500;
+}
+
+.hero-banner__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+
+    .btn {
+        padding: 0.28rem 0.65rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border-radius: 999px;
+    }
+}
+
+.hero-banner__action-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    align-items: stretch;
+    width: 100%;
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        text-align: center;
+        padding: 0.32rem 0.8rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border-radius: 999px;
+    }
+}
+
+// Botón invertido (blanco sobre el degradé del hero) — mismo tratamiento para
+// .btn-primary y .btn-light, que hasta ahora se quedaba con el gris plano de
+// Bootstrap sin ningún estilo propio. El texto usa el acento oscuro de CADA
+// dashboard (--_accent-dark, ya definida por .hero-banner--*) en vez de un
+// rojo institucional fijo, así el botón combina con el color del panel en el
+// que aparece (verde en Kawsay, dorado en Biblioteca, etc.). Funciona igual
+// en modo claro y oscuro porque no depende de variables de tema.
+.hero-banner__actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    border: 1px solid transparent;
+    box-shadow: 0 2px 8px rgba(15, 5, 5, 0.18);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.hero-banner__actions .btn-primary,
+.hero-banner__actions .btn-light {
+    background: #fff;
+    border-color: #fff;
+    color: var(--_accent-dark);
+}
+
+.hero-banner__actions .btn-outline-light {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.45);
+    color: #ffffff;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.hero-banner__actions .btn-primary:hover,
+.hero-banner__actions .btn-primary:focus,
+.hero-banner__actions .btn-light:hover,
+.hero-banner__actions .btn-light:focus {
+    background: #fff !important;
+    border-color: #fff !important;
+    color: var(--_accent-dark) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(15, 5, 5, 0.28);
+}
+
+.hero-banner__actions .btn-outline-light:hover,
+.hero-banner__actions .btn-outline-light:focus {
+    background: rgba(255, 255, 255, 0.26) !important;
+    border-color: rgba(255, 255, 255, 0.85) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(15, 5, 5, 0.25);
+}
+
+.hero-banner__actions .btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(15, 5, 5, 0.2);
+}
+
+@media (max-width: 575.98px) {
+    .hero-banner__row {
+        align-items: flex-start;
+    }
+
+    .hero-banner__actions {
+        width: 100%;
+    }
+
+    .hero-banner__actions .btn {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+}
+
+// Variantes de color: cada mini-dashboard de proyecto usa el mismo acento de
+// marca que su versión pública (ver public/css/estilos.css --project-accent),
+// para que el panel admin se sienta parte de la misma identidad en vez de un
+// granate genérico repetido en todas partes.
+.hero-banner--gold {
+    --_accent: #{$puk-gold};
+    --_accent-dark: #a8752f;
+}
+
+.hero-banner--kawsay {
+    --_accent: #6e7d1e;
+    --_accent-dark: #4e5915;
+}
+
+.hero-banner--radio,
+.hero-banner--sisicha {
+    --_accent: #92471b;      // Terracota / Cobre cálido oficial de Radio Pukllasunchis & Sisipedia
+    --_accent-dark: #6c3f17; // Tono profundo oficial del proyecto (#6c3f17)
+}
+
+// Afinación modo oscuro para Hero Banners de todos los proyectos
+:root[data-theme="dark"] {
+    .hero-banner {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 4px 22px rgba(0, 0, 0, 0.5);
+    }
+
+    .hero-banner--gold {
+        --_accent: #87571f;
+        --_accent-dark: #4d2f09;
+    }
+
+    .hero-banner--kawsay {
+        --_accent: #485710;
+        --_accent-dark: #273104;
+    }
+
+    .hero-banner--radio,
+    .hero-banner--sisicha {
+        --_accent: #5a2612;
+        --_accent-dark: #1b100d;
+        border: 1px solid rgba(217, 119, 6, 0.35);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.65), 0 0 35px rgba(146, 71, 27, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .hero-banner__stat {
+        background: rgba(0, 0, 0, 0.35);
+        border-color: rgba(255, 255, 255, 0.12);
+        color: #f1f5f9;
+
+        i {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .hero-banner__stat-label {
+            color: rgba(255, 255, 255, 0.75);
+        }
+    }
+}
+
+// ─── Componentes del Admin Principal ────────────────────────────────────────
+.admin-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 1.75rem;
+}
+
+.admin-page-header__title {
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.2rem;
+}
+
+.admin-page-header__subtitle {
+    color: var(--adm-text-muted);
+    font-size: 0.95rem;
+}
+
+// Bootstrap 4 (usado en el admin) no trae utilidades .gap-*
+.admin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.proyectos-grid {
+    display: grid;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.project-card {
+    background: var(--adm-surface);
+    border-radius: var(--bs-card-border-radius, 1rem);
+    box-shadow: var(--adm-shadow);
+    border: 1px solid var(--adm-border);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.project-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--adm-shadow-lg);
+    border-color: rgba(174, 12, 33, 0.15);
+}
+
+.project-card__header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1.25rem 1.25rem 0.75rem;
+}
+
+.project-card__logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    object-fit: contain;
+    background: var(--adm-surface-2);
+    padding: 0.35rem;
+    flex-shrink: 0;
+}
+
+.project-card__name {
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+}
+
+.project-card__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0 1.25rem 1rem;
+}
+
+.project-card__stats .badge {
+    background: rgba(174, 12, 33, 0.08);
+    color: var(--adm-link);
+    font-weight: 600;
+}
+
+.project-card__actions {
+    margin-top: auto;
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--adm-border);
+}
+
+// ─── Módulo: tiles de acceso a paneles secundarios (Biblioteca, Kawsay, ────
+// Videos, Canciones, Sisichakunay). Mismo lenguaje visual que .project-card,
+// con acento de color propio por módulo vía --_accent/--_accent-soft.
+.modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.module-card {
+    --_accent: var(--puk-accent);
+    --_accent-dark: var(--puk-accent-dark);
+    --_accent-soft: var(--puk-accent-soft);
+
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    background: var(--adm-surface);
+    border: 1px solid var(--adm-border);
+    border-radius: var(--bs-card-border-radius, 1rem);
+    box-shadow: var(--adm-shadow);
+    padding: 1.4rem 1.6rem;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.module-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--_accent);
+}
+
+.module-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--adm-shadow-lg);
+    border-color: var(--_accent-soft);
+    color: inherit;
+    text-decoration: none;
+}
+
+.module-card__icon {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(145deg, var(--_accent-soft), transparent);
+    color: var(--_accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.module-card__body {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.module-card__title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--adm-text);
+    margin-bottom: 0.15rem;
+}
+
+.module-card__desc {
+    color: var(--adm-text-muted);
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.module-card__badge {
+    flex-shrink: 0;
+    background: var(--_accent-soft);
+    color: var(--_accent-dark);
+    font-weight: 700;
+    font-size: 0.8rem;
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+}
+
+.module-card__arrow {
+    flex-shrink: 0;
+    color: var(--adm-text-muted);
+    font-size: 1.1rem;
+    transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.module-card:hover .module-card__arrow {
+    transform: translateX(4px);
+    color: var(--_accent);
+}
+
+// Mismas variantes que .hero-banner--* (ver arriba): un módulo del panel de
+// Biblioteca/Kawsay/Radio se tiñe con el acento de esa marca, no del granate
+// institucional genérico.
+.module-card--gold {
+    --_accent: #{$puk-gold};
+    --_accent-dark: #a8752f;
+    --_accent-soft: rgba(200, 142, 65, 0.14);
+}
+
+.module-card--kawsay {
+    --_accent: #6e7d1e;
+    --_accent-dark: #4e5915;
+    --_accent-soft: rgba(110, 125, 30, 0.14);
+}
+
+.module-card--radio {
+    --_accent: #8a5222;
+    --_accent-dark: #5c3614;
+    --_accent-soft: rgba(138, 82, 34, 0.14);
+}
+
+
+// ─── Tabla de datos del admin (x-data-table) ────────────────────────────────
+// Reemplaza el <table class="table-hover thead-dark"> heredado de Bootstrap
+// 4 que cada vista CRUD venía reimplementando por su cuenta: mismo lenguaje
+// visual que .stat-card/.project-card (tarjeta blanca, sombra suave, radios
+// redondeados) en vez del gris/negro por defecto de Bootstrap.
+.admin-table-card {
+    background: var(--adm-surface);
+    border-radius: var(--bs-card-border-radius, 1rem);
+    box-shadow: var(--adm-shadow);
+    border: 1px solid var(--adm-border);
+    overflow: hidden;
+}
+
+.admin-table-card__search {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--adm-border);
+    color: var(--adm-text-muted);
+}
+
+.admin-table-card__search input {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.92rem;
+    color: var(--adm-text);
+}
+
+.admin-table {
+    margin-bottom: 0;
+}
+
+.admin-table thead th {
+    background: var(--puk-accent-soft);
+    color: var(--puk-maroon-dark);
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: none;
+    padding: 0.85rem 1.25rem;
+    white-space: nowrap;
+}
+
+.admin-table td {
+    padding: 0.85rem 1.25rem;
+    vertical-align: middle;
+    border-top: 1px solid var(--adm-border);
+    color: var(--adm-text);
+}
+
+.admin-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.admin-table tbody tr:hover {
+    background: var(--puk-accent-soft);
+}
+
+.admin-table__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.4rem;
+}
+
+.admin-table__delete-form {
+    display: contents;
+}
+
+.admin-table__icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--puk-accent-soft);
+    color: var(--adm-link);
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.admin-table__icon-btn:hover,
+.admin-table__icon-btn:focus {
+    background: var(--puk-maroon);
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.admin-table__icon-btn--danger {
+    background: var(--adm-danger-soft);
+    color: var(--adm-danger);
+}
+
+.admin-table__icon-btn--danger:hover,
+.admin-table__icon-btn--danger:focus {
+    background: var(--adm-danger);
+    color: #fff;
+}
+
+// ─── Estado vacío (x-data-table sin filas) ──────────────────────────────────
+.admin-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 3.5rem 1.5rem;
+    text-align: center;
+    color: var(--adm-text-muted);
+}
+
+.admin-empty-state i {
+    font-size: 2.25rem;
+    color: var(--adm-link);
+    opacity: 0.35;
+}
+
+// Nota: .bv-crud-nav/.bv-crud-tab (Secciones/Categorías/Libros, Categorías
+// físicas/Libros físicos/Préstamos, y el switch Biblioteca digital/física)
+// NO se estilan acá — viven en public/css/biblioteca-crud.css, cargado por
+// partials/biblioteca-virtual-crud-header y biblioteca-fisica-crud-header.
+// Antes había una segunda definición de estas mismas clases en este archivo:
+// como este .scss se compila en el <head> ANTES que ese @push('styles'), la
+// cascada dejaba ganar a biblioteca-crud.css solo en las páginas que lo
+// cargaban — y como biblioteca-virtual-crud-header no lo cargaba, las
+// pestañas de Biblioteca digital se veían con un diseño distinto (esta
+// regla) al de Biblioteca física (biblioteca-crud.css). Una sola fuente de
+// verdad evita que vuelva a divergir.
+
+// ─── Campo de formulario del admin (x-form-field) ───────────────────────────
+.admin-form-field {
+    margin-bottom: 1.1rem;
+}
+
+.admin-form-field label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--adm-text);
+}
+
+.admin-form-field .form-control {
+    border-radius: 0.6rem;
+    border-color: var(--adm-border-strong);
+}
+
+.admin-form-field .form-control:focus {
+    border-color: var(--adm-link);
+    box-shadow: 0 0 0 0.2rem var(--puk-accent-soft);
+}
+
+// ─── Ajustes para pantallas muy pequeñas ────────────────────────────────────
+@media (max-width: 420px) {
+    .proyectos-grid,
+    .modules-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .project-card,
+    .module-card {
+        padding: 1.1rem 1.25rem;
+    }
+}
+
+// ─── Modal de confirmación propio (reemplaza confirm() nativo / SweetAlert
+// para procesos importantes: cerrar sesión, eliminar registros) ───────────
+// Se construye una sola vez por invocación (ver pukllaConfirm() en admin.js)
+// e inyecta este marcado; el CSS vive acá para que sea parte del mismo
+// sistema visual del panel (mismo radio/sombra que .module-card/.bv-form-card)
+// en vez de heredar el look de una librería externa que no se puede retocar.
+.puklla-confirm-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(20, 10, 12, 0.55);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    transition: opacity 0.18s ease;
+}
+
+.puklla-confirm-backdrop.is-open {
+    opacity: 1;
+}
+
+.puklla-confirm {
+    width: min(400px, 100%);
+    background: var(--adm-surface);
+    border-radius: 16px;
+    box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.3);
+    padding: 1.85rem 1.6rem 1.6rem;
+    text-align: center;
+    transform: translateY(14px) scale(0.97);
+    transition: transform 0.2s ease;
+}
+
+.puklla-confirm-backdrop.is-open .puklla-confirm {
+    transform: translateY(0) scale(1);
+}
+
+.puklla-confirm__icon {
+    width: 58px;
+    height: 58px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    background: rgba(174, 12, 33, 0.1);
+    color: var(--adm-link);
+}
+
+.puklla-confirm--danger .puklla-confirm__icon {
+    background: rgba(220, 53, 69, 0.12);
+    color: var(--adm-danger);
+}
+
+.puklla-confirm__title {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--adm-text);
+    margin-bottom: 0.4rem;
+}
+
+.puklla-confirm__text {
+    color: var(--adm-text-muted);
+    font-size: 0.88rem;
+    line-height: 1.45;
+    margin-bottom: 1.5rem;
+}
+
+.puklla-confirm__actions {
+    display: flex;
+    gap: 0.6rem;
+}
+
+.puklla-confirm__actions .btn {
+    flex: 1 1 0;
+}
+
+
+
+
+
+// ─── Contadores (x-stat-card dentro de .stats-grid) ─────────────────────────
+// Recuperado: el componente seguía en uso (producción) pero sus estilos se
+// habían perdido y los contadores salían como lista vertical sin formato.
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid var(--adm-border);
+    border-left: 3px solid var(--adm-accent);
+    border-radius: var(--adm-radius-lg);
+    background: var(--adm-surface);
+    box-shadow: var(--adm-shadow);
+}
+
+.stat-card__icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--adm-radius);
+    background: var(--adm-accent-soft);
+    color: var(--adm-accent-strong);
+    font-size: 1.25rem;
+}
+
+.stat-card__value {
+    color: var(--adm-text);
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+.stat-card__label {
+    color: var(--adm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 575.98px) {
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
+    }
+
+    .stat-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.85rem;
+    }
+
+    .stat-card__value {
+        font-size: 1.4rem;
+    }
+}

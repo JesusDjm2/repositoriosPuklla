@@ -1,270 +1,229 @@
 @extends('layouts.padre')
 @section('titulo', '- Kawsay')
+@section('estilos')
+    <link rel="stylesheet" href="{{ asset('css/kawsay.css') }}?v={{ @filemtime(public_path('css/kawsay.css')) }}">
+@endsection
 @section('contenido')
-    <div class="fixed-image-container kawsay-hero">
-        <img src="{{ asset('img/kawsay/fondo-inicial-kawsay.webp') }}" alt="Fondo Kawsay" fetchpriority="high"
-            decoding="async">
-        <div class="overlay"></div>
-        <div class="centered-content">
-            <h2>Repositorio Educativo Kawsay</h2>
-            <p>
-                Aprender haciendo para regenerar el territorio.
-            </p>
-            <form action="{{ route('kawsay.buscar') }}" method="GET" class="search-container">
-                <input type="text" name="query" placeholder="Buscar en Kawsay: temas, contenido, libros, videos..."
-                    class="search-input" required minlength="3">
-                <button type="submit" class="search-button">🔍 Buscar</button>
-            </form>
-        </div>
-    </div>
+    {{-- ═══ HERO EN MOSAICO ═══════════════════════════════════════════════════
+         Izquierda: qué es Kawsay + las 3 formas de empezar (buscar, elegir un
+         formato o un tema sugerido). Derecha: las 4 áreas como mosaico 2×2 con
+         sus pinturas a color (sin el velo oscuro de antes) y el nombre sobre una
+         franja sólida del color del área, para que siempre se lea.
+         En celular: hero corto y las áreas en 2×2 compacto; el contenido empieza
+         dentro de la primera pantalla y media. Estilos: public/css/kawsay.css (.khero) ═══ --}}
+    <section class="khero" aria-labelledby="khero-titulo">
+        <img class="khero__fondo" src="{{ asset('img/kawsay/fondo-inicial-kawsay.webp') }}" alt=""
+            fetchpriority="high" decoding="async">
+        <div class="container khero__grid">
+            <div class="khero__texto">
+                <p class="khero__eyebrow">Repositorio educativo</p>
+                <h1 class="khero__titulo" id="khero-titulo">Kawsay</h1>
+                <p class="khero__lema">Aprender haciendo para regenerar el territorio.</p>
 
-    {{-- FAB: acceso rápido al menú de categorías en mobile --}}
-    <button id="lib-sidebar-fab" class="lib-sidebar-fab" aria-label="Ver categorías">
-        <i class="fa fa-layer-group"></i> Categorías
-    </button>
+                <form action="{{ route('kawsay.buscar') }}" method="GET" class="khero__buscar" role="search">
+                    <label for="khero-buscar" class="visually-hidden">Buscar en Kawsay</label>
+                    <i class="fa fa-search khero__buscar-icono" aria-hidden="true"></i>
+                    <input type="search" id="khero-buscar" name="query" required minlength="3"
+                        placeholder="Busca un tema, video o ficha…" autocomplete="off" enterkeyhint="search">
+                    <button type="submit">Buscar</button>
+                </form>
 
-    {{-- ═══ ÁREAS DEL REPOSITORIO EDUCATIVO: sección propia justo debajo del
-         hero (ya no óvalos flotando encima de la foto estirada — ese patrón
-         obligaba a estirar el fondo con hacks de alto/márgenes negativos por
-         breakpoint y a poner parches de contraste detrás del texto). Ahora
-         son tarjetas normales sobre superficie blanca: la foto de cada área
-         queda como avatar circular (mismo detalle visual que antes), el
-         color de KawsayArea se usa como acento del avatar en vez de teñir
-         toda la tarjeta, y el texto no necesita ningún truco de contraste
-         porque siempre está sobre blanco. Administrable desde Kawsay-Áreas. ═══ --}}
-    <section class="kawsay-areas">
-        <div class="container">
-            <p class="kawsay-areas__heading text-center">Áreas de trabajo</p>
-            <div class="row g-3 g-lg-4 justify-content-center">
-                @foreach ($areas as $area)
-                    <div class="col-6 col-md-3">
-                        <a href="{{ route('kawsay.area', $area->slug) }}" class="kawsay-area-item"
-                            style="--area-color: {{ $area->color ?: '#6e7d1e' }};">
-                            <span class="kawsay-area-item__avatar">
-                                @if ($area->imagen)
-                                    <img src="{{ asset($area->imagen) }}" alt=""
-                                        style="object-position: {{ $area->slug === 'territorio-vivo' ? 'center 78%' : 'center' }};"
-                                        loading="lazy">
-                                @else
-                                    <i class="fa {{ $area->icono ?: 'fa-leaf' }}"></i>
-                                @endif
-                                <span class="kawsay-area-item__scrim"></span>
-                                <span class="kawsay-area-item__title">{{ $area->nombre }}</span>
-                            </span>
-                            @if ($area->descripcion)
-                                <span class="kawsay-area-item__desc">{{ $area->descripcion }}</span>
+                @php $atajos = array_diff_key($carruseles, ['populares' => true]); @endphp
+                @if (count($atajos))
+                    <nav class="khero__atajos" aria-label="Ver por formato">
+                        @foreach ($atajos as $clave => $grupo)
+                            <a href="#formato-{{ $clave }}" class="khero__atajo">
+                                <i class="fa {{ $grupo['icono'] }}" aria-hidden="true"></i> {{ $grupo['titulo'] }}
+                            </a>
+                        @endforeach
+                    </nav>
+                @endif
+
+                @if ($temasSugeridos->isNotEmpty())
+                    <p class="khero__sugerencias">
+                        <span>Empieza por:</span>
+                        @foreach ($temasSugeridos as $sugerido)
+                            @if ($sugerido->area)
+                                <a href="{{ route('kawsay.tema', [$sugerido->area->slug, $sugerido->slug]) }}">{{ $sugerido->titulo }}</a>
                             @endif
-                        </a>
-                    </div>
-                @endforeach
+                        @endforeach
+                    </p>
+                @endif
             </div>
+
+            @if ($areas->isNotEmpty())
+                <nav class="khero__areas" aria-labelledby="khero-areas-titulo">
+                    <h2 class="khero__areas-titulo" id="khero-areas-titulo">Explora por área</h2>
+                    <ul class="khero__mosaico">
+                        @foreach ($areas as $area)
+                            <li>
+                                <a href="{{ route('kawsay.area', $area->slug) }}" class="khero-area"
+                                    style="--area-color: {{ $area->color ?: '#6e7d1e' }}">
+                                    <span class="khero-area__media">
+                                        @if ($area->imagen)
+                                            <img src="{{ asset($area->imagen) }}" alt="" loading="lazy" decoding="async"
+                                                @if ($area->slug === 'territorio-vivo') data-foco="abajo" @endif>
+                                        @else
+                                            <i class="fa {{ $area->icono ?: 'fa-leaf' }}" aria-hidden="true"></i>
+                                        @endif
+                                    </span>
+                                    <span class="khero-area__pie">
+                                        <span class="khero-area__nombre">{{ $area->nombre }}</span>
+                                        <span class="khero-area__meta">
+                                            {{ $area->temas->count() }} {{ $area->temas->count() === 1 ? 'tema' : 'temas' }}
+                                            <i class="fa fa-arrow-right" aria-hidden="true"></i>
+                                        </span>
+                                    </span>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </nav>
+            @endif
         </div>
     </section>
-    @include('kawsay.partials.estilos')
+
+    {{-- Botón flotante (celular): lleva al menú "Explorar", que ahí queda debajo del contenido --}}
+    <button type="button" id="lib-sidebar-fab" class="lib-sidebar-fab" aria-label="Explorar áreas, temas y formatos">
+        <i class="fa fa-compass" aria-hidden="true"></i> Explorar
+    </button>
+
 
     <div class="container py-4 py-lg-5">
         <div class="row g-4 g-lg-5">
             <div class="col-lg-8 order-1">
 
-                {{-- ═══ ÚLTIMOS LIBROS ═══ --}}
-                <div class="lib-content-head">
-                    <h2 class="lib-content-head__title">Últimos libros</h2>
-                    <p class="lib-content-head__sub">Páginas que siembran conciencia y respeto por la naturaleza.</p>
-                </div>
-                <div class="row g-3" id="grid-libros">
-                    @foreach ($libros as $libro)
-                        @php
-                            $urlVistaPrevia = "https://drive.google.com/thumbnail?id={$libro->identificador}&sz=w600";
-                        @endphp
-                        <div class="col-6 col-md-4 col-lg-3 lib-book-col">
-                            <div class="lib-book-card">
-                                <div class="lib-book-card__cover">
-                                    <img src="{{ $urlVistaPrevia }}" alt="{{ $libro->nombre }}" loading="lazy">
-                                    <div class="lib-book-card__overlay">
-                                        <button type="button" class="lib-book-card__btn"
-                                            onclick="abrirVistaPreviaLibro({{ \Illuminate\Support\Js::from($libro->identificador) }}, {{ \Illuminate\Support\Js::from($libro->nombre) }})">
-                                            <i class="fa fa-eye"></i> Vista previa
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="lib-book-card__info">
-                                    <h3 class="lib-book-card__title" title="{{ $libro->nombre }}">{{ $libro->nombre }}</h3>
-                                    <p class="lib-book-card__author">
-                                        <i class="fa fa-user"></i> {{ $libro->autor }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-                <div class="mt-3 mb-4">
-                    <a href="{{ route('kawsaylibros.lista') }}" class="lib-sidebar-anchor">
-                        <i class="fa fa-arrow-right"></i> Ver todos los libros
-                    </a>
-                </div>
+                {{-- ═══ ÚLTIMAS PUBLICACIONES: un carrusel por formato ═══
+                     Datos: App\Services\KawsayPortada. Cada tarjeta abre su contenido en
+                     el visor (PDF/libro), el reproductor (video) o la galería (foto)
+                     sin salir de la portada. Estilos: public/css/kawsay.css --}}
+                <header class="kport-head">
+                    <p class="kport-head__eyebrow">Repositorio vivo</p>
+                    <h2 class="kport-head__title">Últimas publicaciones</h2>
+                    <p class="kport-head__sub">Lo más reciente de cada área, ordenado por formato. Toca una tarjeta para verla aquí mismo.</p>
+                </header>
 
-                {{-- ═══ ÚLTIMOS VIDEOS ═══ --}}
-                <div class="lib-content-head mt-5">
-                    <h2 class="lib-content-head__title">Últimos videos</h2>
-                    <p class="lib-content-head__sub">Historias que inspiran a cuidar la vida que nos rodea.</p>
-                </div>
-                <div class="row g-3" id="grid-videos">
-                    @foreach ($videos as $video)
-                        <div class="col-6 col-md-4 col-lg-3">
-                            <div class="video-card-h">
-                                <div class="video-card-h__thumb">
-                                    @if ($video->youtube)
-                                        <a href="https://www.youtube.com/watch?v={{ $video->youtube }}" target="_blank"
-                                            rel="noopener" class="video-card-h__link">
-                                            <img src="https://img.youtube.com/vi/{{ $video->youtube }}/hqdefault.jpg"
-                                                alt="{{ $video->nombre }}" loading="lazy">
-                                            <span class="video-card-h__play"><i class="fab fa-youtube"></i></span>
-                                        </a>
-                                    @elseif ($video->drive)
-                                        {{-- Miniatura + play que abre el popup con <video controls> real
-                                             (streaming propio), igual que la portada de Radio; no el iframe de Drive. --}}
-                                        <button type="button" class="video-card-h__link border-0 p-0 bg-transparent"
-                                            aria-label="Reproducir {{ $video->nombre }}"
-                                            onclick="abrirVistaPreviaVideo({{ \Illuminate\Support\Js::from(route('kawsayvideos.stream', $video)) }}, {{ \Illuminate\Support\Js::from($video->nombre) }}, {{ \Illuminate\Support\Js::from(\App\Services\GoogleDriveService::getUrl($video->drive)) }})">
-                                            <img src="{{ \App\Services\GoogleDriveService::getThumbnailUrl($video->drive, 600) }}"
-                                                alt="{{ $video->nombre }}" loading="lazy" style="object-fit:contain;"
-                                                onerror="this.style.display='none'">
-                                            <span class="video-card-h__play">
-                                                <span class="btn btn-light rounded-circle shadow-sm d-flex align-items-center justify-content-center"
-                                                    style="width:46px;height:46px;padding:0;">
-                                                    <i class="fa fa-play text-dark" style="font-size:1rem;margin-left:2px;"></i>
-                                                </span>
-                                            </span>
-                                        </button>
-                                    @endif
+                {{-- ═══ TEMA DEL MES: lo elige el equipo en el panel (Kawsay-Temas → estrella) ═══ --}}
+                @if ($temaDelMes)
+                    <a href="{{ $temaDelMes->url }}" class="kdest" style="--area-color: {{ $temaDelMes->area->color ?: '#6e7d1e' }}">
+                        <span class="kdest__media">
+                            @if ($temaDelMes->imagen)
+                                <img src="{{ $temaDelMes->imagen }}" alt="" loading="lazy" decoding="async">
+                            @else
+                                <i class="fa fa-seedling" aria-hidden="true"></i>
+                            @endif
+                        </span>
+                        <span class="kdest__body">
+                            <span class="kdest__eyebrow"><i class="fa fa-star" aria-hidden="true"></i> Tema del mes · {{ $temaDelMes->area->nombre }}</span>
+                            <span class="kdest__title">{{ $temaDelMes->tema->titulo }}</span>
+                            @if ($temaDelMes->tema->descripcion)
+                                <span class="kdest__desc">{{ \Illuminate\Support\Str::limit($temaDelMes->tema->descripcion, 170) }}</span>
+                            @endif
+                            @if ($temaDelMes->formatos->isNotEmpty())
+                                <span class="kdest__formatos">
+                                    @foreach ($temaDelMes->formatos as $formato)
+                                        <span class="kdest__chip"><i class="fa {{ $formato->icono }}" aria-hidden="true"></i> {{ $formato->total }} {{ $formato->label }}</span>
+                                    @endforeach
+                                </span>
+                            @endif
+                            <span class="kdest__cta">Explorar el tema <i class="fa fa-arrow-right" aria-hidden="true"></i></span>
+                        </span>
+                    </a>
+                @endif
+
+                @if (count($carruseles))
+                    {{-- Los atajos por formato están en el hero (.khero__atajos): no se repiten aquí. --}}
+                    @foreach ($carruseles as $clave => $grupo)
+                        <section class="kcar kcar--{{ $clave }}" id="formato-{{ $clave }}" aria-labelledby="kcar-titulo-{{ $clave }}"
+                            data-kcar>
+                            <div class="kcar__head">
+                                <span class="kcar__icon" aria-hidden="true"><i class="fa {{ $grupo['icono'] }}"></i></span>
+                                <div class="kcar__heading">
+                                    <h3 class="kcar__title" id="kcar-titulo-{{ $clave }}">{{ $grupo['titulo'] }}</h3>
+                                    <p class="kcar__sub">{{ $grupo['subtitulo'] }}</p>
                                 </div>
-                                <div class="video-card-h__body">
-                                    <h3 class="video-card-h__title" title="{{ $video->nombre }}">{{ $video->nombre }}</h3>
-                                    @if ($video->descripcion)
-                                        <p class="video-card-h__desc">{{ Str::limit($video->descripcion, 60) }}</p>
-                                    @endif
-                                    @if ($video->categoria)
-                                        <a href="{{ route('kawsayvideoscat.show', $video->categoria->url) }}"
-                                            class="video-card-h__cat">
-                                            <i class="fa fa-folder-open"></i> {{ $video->categoria->nombre }}
-                                        </a>
-                                    @endif
+                                <div class="kcar__controls">
+                                    <button type="button" class="kcar__btn" data-kcar-prev aria-controls="kcar-pista-{{ $clave }}"
+                                        aria-label="{{ $grupo['titulo'] }}: anteriores">
+                                        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="kcar__btn" data-kcar-next aria-controls="kcar-pista-{{ $clave }}"
+                                        aria-label="{{ $grupo['titulo'] }}: siguientes">
+                                        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                                    </button>
                                 </div>
                             </div>
-                        </div>
+
+                            <div class="kcar__pista" id="kcar-pista-{{ $clave }}" data-kcar-pista tabindex="0"
+                                role="region" aria-roledescription="carrusel" aria-label="{{ $grupo['titulo'] }} recientes">
+                                @foreach ($grupo['items'] as $item)
+                                    @include('kawsay.partials.carrusel-card', [
+                                        'item' => $item,
+                                        'posicion' => $loop->iteration,
+                                        'total' => $loop->count,
+                                    ])
+                                @endforeach
+                            </div>
+
+                            @if ($grupo['verTodo'])
+                                <a href="{{ $grupo['verTodo']['url'] }}" class="kcar__more">
+                                    {{ $grupo['verTodo']['label'] }} <i class="fa fa-arrow-right" aria-hidden="true"></i>
+                                </a>
+                            @endif
+                        </section>
                     @endforeach
-                </div>
-                <div class="mt-3 mb-4">
-                    <a href="{{ route('kawsayvideos.lista') }}" class="lib-sidebar-anchor">
-                        <i class="fa fa-arrow-right"></i> Ver todos los videos
-                    </a>
-                </div>
+                @else
+                    <div class="kport-vacio">
+                        <i class="fa fa-seedling" aria-hidden="true"></i>
+                        <p>Aún no hay publicaciones. Pronto encontrarás aquí videos, fotos y fichas de cada área.</p>
+                    </div>
+                @endif
 
             </div>{{-- /.col-lg-8 --}}
 
             <div class="col-lg-4 order-2">
-                <aside class="lib-sidebar" id="lib-sidebar">
-                    <h4 class="lib-sidebar__title">
-                        <i class="fa fa-compass"></i> Explorar el repositorio
-                    </h4>
+                {{-- ═══ MENÚ LATERAL "Áreas y temas" (sticky en escritorio; en celular queda
+                     debajo y el botón flotante "Explorar" lleva hasta aquí). Solo áreas y
+                     temas: los formatos ya están en el hero y en los carruseles.
+                     <details> nativo: funciona sin JS y con teclado. ═══ --}}
+                <aside class="kexp" id="lib-sidebar" aria-labelledby="kexp-titulo">
+                    <h2 class="kexp__title" id="kexp-titulo"><i class="fa fa-compass" aria-hidden="true"></i> Áreas y temas</h2>
 
-                    <div class="lib-sidebar__section">
-                        <button type="button" class="lib-sidebar__section-btn">
-                            <span class="lib-sidebar__section-icon"><i class="fa fa-book"></i></span>
-                            <span class="lib-sidebar__section-name">Libros</span>
-                            <span class="lib-sidebar__meta">
-                                <span class="sidebar-badge sidebar-badge-cat"
-                                    title="{{ $categoriasVirtuales->count() }} categorías">{{ $categoriasVirtuales->count() }}</span>
-                                <span class="sidebar-badge sidebar-badge-book"
-                                    title="{{ $categoriasVirtuales->sum('libros_count') }} textos">{{ $categoriasVirtuales->sum('libros_count') }}</span>
-                            </span>
-                            <span class="lib-sidebar__chevron">▼</span>
-                        </button>
-                        <div class="lib-sidebar__submenu">
-                            @foreach ($categoriasVirtuales as $cat)
-                                <a href="{{ route('kawsaycategorias.show', $cat->url) }}" class="lib-sidebar__cat-link">
-                                    <span class="lib-sidebar__cat-name">{{ $cat->nombre }}</span>
-                                    <span class="lib-sidebar__cat-count">{{ $cat->libros_count }}</span>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <div class="lib-sidebar__section">
-                        <button type="button" class="lib-sidebar__section-btn">
-                            <span class="lib-sidebar__section-icon"><i class="fa fa-video"></i></span>
-                            <span class="lib-sidebar__section-name">Videos</span>
-                            <span class="lib-sidebar__meta">
-                                <span class="sidebar-badge sidebar-badge-cat"
-                                    title="{{ $categoriasVideos->count() }} categorías">{{ $categoriasVideos->count() }}</span>
-                                <span class="sidebar-badge sidebar-badge-book"
-                                    title="{{ $categoriasVideos->sum('videos_count') }} videos">{{ $categoriasVideos->sum('videos_count') }}</span>
-                            </span>
-                            <span class="lib-sidebar__chevron">▼</span>
-                        </button>
-                        <div class="lib-sidebar__submenu">
-                            @foreach ($categoriasVideos as $cat)
-                                <a href="{{ route('kawsayvideoscat.show', $cat->url) }}" class="lib-sidebar__cat-link">
-                                    <span class="lib-sidebar__cat-name">{{ $cat->nombre }}</span>
-                                    <span class="lib-sidebar__cat-count">{{ $cat->videos_count }}</span>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
+                    @foreach ($areas as $area)
+                        <details class="kexp__grupo" style="--area-color: {{ $area->color ?: '#6e7d1e' }}">
+                            <summary class="kexp__summary">
+                                <span class="kexp__avatar" aria-hidden="true">
+                                    @if ($area->imagen)
+                                        <img src="{{ asset($area->imagen) }}" alt="" loading="lazy">
+                                    @else
+                                        <i class="fa {{ $area->icono ?: 'fa-leaf' }}"></i>
+                                    @endif
+                                </span>
+                                <span class="kexp__summary-name">{{ $area->nombre }}</span>
+                                <span class="kexp__count" title="{{ $area->temas->count() }} temas">{{ $area->temas->count() }}</span>
+                                <i class="fa fa-chevron-down kexp__chevron" aria-hidden="true"></i>
+                            </summary>
+                            <ul class="kexp__lista">
+                                @foreach ($area->temas as $tema)
+                                    <li><a href="{{ route('kawsay.tema', [$area->slug, $tema->slug]) }}">{{ $tema->titulo }}</a></li>
+                                @endforeach
+                                <li class="kexp__lista-todo">
+                                    <a href="{{ route('kawsay.area', $area->slug) }}">Ver toda el área <i class="fa fa-arrow-right" aria-hidden="true"></i></a>
+                                </li>
+                            </ul>
+                        </details>
+                    @endforeach
                 </aside>
             </div>
 
         </div>{{-- /.row --}}
     </div>
 
-    {{-- partials.libro-preview-modal ya lo incluye layouts.padre una sola vez --}}
+    {{-- Visor de fotos (mismo de la página de cada tema); lo abren las tarjetas del carrusel de fotos.
+         partials.libro-preview-modal (PDF y video) ya lo incluye layouts.padre. --}}
+    @if ($fotosVisor->isNotEmpty())
+        @include('kawsay.temas.partials.visor-galeria', ['fotos' => $fotosVisor])
+    @endif
 
-    <script>
-        (function() {
-            function loadGsapThen(fn) {
-                if (typeof gsap !== 'undefined') { fn(); return; }
-                var script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js';
-                script.onload = fn;
-                document.head.appendChild(script);
-            }
-
-            loadGsapThen(function() {
-                document.querySelectorAll('#grid-libros, #grid-videos').forEach(function(grid) {
-                    if (grid) {
-                        gsap.from(grid.querySelectorAll('.lib-book-col, .col-6'), {
-                            y: 26, duration: .4, stagger: .045, ease: 'power2.out'
-                        });
-                    }
-                });
-
-                document.querySelectorAll('.lib-sidebar__section-btn').forEach(function(btn) {
-                    var sub = btn.nextElementSibling;
-                    gsap.set(sub, { height: 0, overflow: 'hidden' });
-
-                    btn.addEventListener('click', function() {
-                        var isOpen = btn.classList.toggle('is-open');
-                        gsap.to(sub, {
-                            height: isOpen ? 'auto' : 0,
-                            duration: isOpen ? .38 : .26,
-                            ease: isOpen ? 'power2.out' : 'power2.in'
-                        });
-                    });
-                });
-            });
-
-            var fab = document.getElementById('lib-sidebar-fab');
-            var sidebar = document.getElementById('lib-sidebar');
-            if (fab && sidebar) {
-                fab.addEventListener('click', function() {
-                    sidebar.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                });
-                new IntersectionObserver(function(entries) {
-                    var e = entries[0];
-                    fab.style.opacity = e.isIntersecting ? '0' : '1';
-                    fab.style.pointerEvents = e.isIntersecting ? 'none' : 'auto';
-                }).observe(sidebar);
-            }
-        })();
-    </script>
+    <script src="{{ asset('js/kawsay.js') }}?v={{ @filemtime(public_path('js/kawsay.js')) }}" defer></script>
 @endsection

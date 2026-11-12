@@ -1,20 +1,22 @@
 @extends('layouts.app')
 @section('titulo', 'Inicio')
+
+
 @section('contenido')
     <div class="row">
         <div class="col-lg-12">
             @php
-                $tituloDashboard = 'Administrador General Puklla Virtual'; // Título por defecto
+                $tituloDashboard = 'Administrador General Puklla Virtual';
 
                 if (auth()->check()) {
-                    $rol = auth()->user()->getRoleNames()->first(); // Obtener el primer rol del usuario
+                    $rol = auth()->user()->getRoleNames()->first();
 
                     switch ($rol) {
                         case 'admin':
                             $tituloDashboard = 'Administrador General Puklla Virtual';
                             break;
                         case 'biblioteca':
-                            $tituloDashboard = 'Administrador General Bibliotecario';
+                            $tituloDashboard = 'Panel Biblioteca EESP Pukllasunchis';
                             break;
                         case 'videos':
                             $tituloDashboard = 'Administrador General de Audios y Videos';
@@ -25,9 +27,6 @@
                         case 'sisicha':
                             $tituloDashboard = 'Administrador General Sisipedia';
                             break;
-                        case 'fredy':
-                            $tituloDashboard = 'Administrador General Feria de Investigación';
-                            break;
                         case 'alumno':
                             $tituloDashboard = 'Panel del Alumno - Puklla Virtual';
                             break;
@@ -36,8 +35,119 @@
                     }
                 }
             @endphp
-            <h4 class="text-center mb-4 mt-3">{{ $tituloDashboard }}</h4>
+            <div class="d-flex align-items-center justify-content-between mb-4 mt-2">
+                <div>
+                    <h4 class="font-weight-bold mb-1">{{ $tituloDashboard }}</h4>
+                    <p class="text-muted small mb-0">Bienvenido, {{ Auth::user()->name }}. Accede a la gestión de repositorios.</p>
+                </div>
+                @role('admin')
+                    <a href="{{ route('admin.principal') }}" class="btn btn-primary btn-sm">
+                        <i class="fa fa-sitemap mr-1"></i> Ver proyectos Hub
+                    </a>
+                @endrole
+            </div>
         </div>
+
+        @hasanyrole('admin|biblioteca')
+            <div class="col-12 mb-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="font-weight-bold text-dark mb-0">Módulos de Biblioteca EESP</h5>
+                    <a href="{{ route('bibliotecario') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fa fa-th-large mr-1"></i> Abrir panel completo
+                    </a>
+                </div>
+            </div>
+
+            {{-- BIBLIOTECA FÍSICA --}}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <x-dash-card
+                    href="{{ route('biblioteca-fisica.libros.index') }}"
+                    icono="fa-archive"
+                    variante="fisica"
+                    titulo="Biblioteca Física"
+                    descripcion="Catálogo en estantería, ejemplares, autores y clasificación Dewey.">
+                    <x-slot:badges>
+                        <span class="stat-badge badge-categorias"><i class="fa fa-folder"></i> Categorías</span>
+                        <span class="stat-badge badge-registros"><i class="fa fa-book"></i> Ejemplares</span>
+                    </x-slot:badges>
+                </x-dash-card>
+            </div>
+
+            {{-- PRÉSTAMOS --}}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <x-dash-card
+                    href="{{ route('biblioteca-fisica.prestamos.index') }}"
+                    icono="fa-handshake-o"
+                    variante="prestamos"
+                    titulo="Préstamos"
+                    descripcion="Control de préstamos de libros físicos y material didáctico.">
+                    <x-slot:badges>
+                        <span class="stat-badge badge-registros"><i class="fa fa-list"></i> Préstamos</span>
+                        <span class="stat-badge badge-secciones"><i class="fa fa-clock-o"></i> Activos</span>
+                    </x-slot:badges>
+                </x-dash-card>
+            </div>
+
+            {{-- MATERIAL DIDÁCTICO --}}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <x-dash-card
+                    href="{{ route('biblioteca-fisica.materiales.index') }}"
+                    icono="fa-cubes"
+                    variante="material"
+                    titulo="Material Didáctico"
+                    descripcion="Inventario pedagógico de kits y materiales didácticos de aula.">
+                    <x-slot:badges>
+                        <span class="stat-badge badge-categorias"><i class="fa fa-tags"></i> Categorías</span>
+                        <span class="stat-badge badge-registros"><i class="fa fa-cubes"></i> Materiales</span>
+                    </x-slot:badges>
+                </x-dash-card>
+            </div>
+
+            {{-- BIBLIOTECA DIGITAL --}}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <x-dash-card
+                    href="{{ route('libros.index') }}"
+                    icono="fa-laptop"
+                    variante="virtual"
+                    titulo="Biblioteca Digital"
+                    descripcion="Publicaciones digitales, enlaces a Drive y secciones temáticas.">
+                    <x-slot:badges>
+                        <span class="stat-badge badge-secciones"><i class="fa fa-layer-group"></i> Secciones</span>
+                        <span class="stat-badge badge-registros"><i class="fa fa-file-text-o"></i> Libros</span>
+                    </x-slot:badges>
+                </x-dash-card>
+            </div>
+
+            {{-- TAQ'E --}}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <x-dash-card
+                    href="{{ route('admin.taqe.trabajos.index') }}"
+                    icono="fa-graduation-cap"
+                    variante="taqe"
+                    titulo="Taq'e — Investigaciones"
+                    descripcion="Tesis y trabajos de investigación pedagógica de estudiantes EIB.">
+                    <x-slot:badges>
+                        <span class="stat-badge badge-taqe"><i class="fa fa-folder-open"></i> Líneas</span>
+                        <span class="stat-badge badge-registros"><i class="fa fa-graduation-cap"></i> Trabajos</span>
+                    </x-slot:badges>
+                </x-dash-card>
+            </div>
+
+            {{-- VIDEOS EESP --}}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <x-dash-card
+                    href="{{ route('videos.index') }}"
+                    icono="fa-video-camera"
+                    variante="videos"
+                    titulo="Videos Institucionales"
+                    descripcion="Registro de conferencias y videos pedagógicos EESP.">
+                    <x-slot:badges>
+                        <span class="stat-badge badge-categorias"><i class="fa fa-tags"></i> Categorías</span>
+                        <span class="stat-badge badge-registros"><i class="fa fa-play"></i> Videos</span>
+                    </x-slot:badges>
+                </x-dash-card>
+            </div>
+        @endhasanyrole
 
         @role('sisicha')
             <div class="col-lg-12 px-3 pt-0">

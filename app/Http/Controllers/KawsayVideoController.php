@@ -19,7 +19,9 @@ class KawsayVideoController extends Controller
     {
         $categorias = KawsayVideoCategoria::all();
 
-        return view('kawsay.videos.create', compact('categorias'));
+        $temasPorArea = $this->temasPorArea();
+
+        return view('kawsay.videos.create', compact('categorias', 'temasPorArea'));
     }
 
     public function store(Request $request)
@@ -30,9 +32,10 @@ class KawsayVideoController extends Controller
             'categoria_id' => 'required|exists:kawsay_video_categorias,id',
             'youtube' => 'nullable|string|max:255',
             'drive' => 'nullable|string|max:255',
+            'kawsay_tema_id' => 'nullable|exists:kawsay_temas,id',
         ]);
 
-        KawsayVideo::create($request->all());
+        KawsayVideo::create($request->only('nombre', 'descripcion', 'categoria_id', 'youtube', 'drive') + $this->datosTema($request));
 
         return redirect()->route('kawsayvideos.index')->with('success', 'Video creado exitosamente.');
     }
@@ -49,7 +52,9 @@ class KawsayVideoController extends Controller
         $video = KawsayVideo::findOrFail($id);
         $categorias = KawsayVideoCategoria::all();
 
-        return view('kawsay.videos.edit', compact('video', 'categorias'));
+        $temasPorArea = $this->temasPorArea();
+
+        return view('kawsay.videos.edit', compact('video', 'categorias', 'temasPorArea'));
     }
 
     public function update(Request $request, $id)
@@ -60,10 +65,11 @@ class KawsayVideoController extends Controller
             'categoria_id' => 'required|exists:kawsay_video_categorias,id',
             'youtube' => 'nullable|string|max:255',
             'drive' => 'nullable|string|max:255',
+            'kawsay_tema_id' => 'nullable|exists:kawsay_temas,id',
         ]);
 
         $video = KawsayVideo::findOrFail($id);
-        $video->update($request->only('nombre', 'descripcion', 'categoria_id', 'youtube', 'drive'));
+        $video->update($request->only('nombre', 'descripcion', 'categoria_id', 'youtube', 'drive') + $this->datosTema($request));
 
         return redirect()->route('kawsayvideos.index')->with('success', 'Video actualizado exitosamente.');
     }
@@ -74,5 +80,23 @@ class KawsayVideoController extends Controller
         $video->delete();
 
         return redirect()->route('kawsayvideos.index')->with('success', 'Video eliminado exitosamente.');
+    }
+
+    /** Áreas con sus temas, para el selector "Tema del repositorio" (opcional). */
+    private function temasPorArea()
+    {
+        return \App\Models\KawsayArea::orderBy('orden')
+            ->with(['temas' => fn ($q) => $q->orderBy('orden')->select('id', 'kawsay_area_id', 'titulo')])
+            ->get(['id', 'nombre']);
+    }
+
+    /** kawsay_tema_id solo si la columna ya existe (en producción falta hasta ejecutar el .sql). */
+    private function datosTema(Request $request): array
+    {
+        if (! \App\Services\Contador::columnaExiste('kawsay_videos', 'kawsay_tema_id')) {
+            return [];
+        }
+
+        return ['kawsay_tema_id' => $request->input('kawsay_tema_id') ?: null];
     }
 }

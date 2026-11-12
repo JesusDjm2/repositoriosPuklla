@@ -22,6 +22,9 @@ class KawsayTaxonomia
             'presentacion' => ['label' => 'Presentaciones (PPT)', 'icono' => 'fa-desktop', 'mimes' => ['ppt', 'pptx'], 'maxKb' => 102400],
             'bibliografia' => ['label' => 'Bibliografía', 'icono' => 'fa-book', 'mimes' => ['pdf', 'doc', 'docx'], 'maxKb' => 102400],
             'galeria' => ['label' => 'Galería fotográfica', 'icono' => 'fa-camera', 'mimes' => ['jpg', 'jpeg', 'png', 'webp'], 'maxKb' => 10240],
+            // Cuentos, testimonios, cantos: pesa ~10 veces menos que un video y se escucha
+            // mientras se hace otra cosa. Se reproduce con el mismo reproductor de Radio.
+            'audio' => ['label' => 'Audios y testimonios', 'icono' => 'fa-headphones', 'mimes' => ['mp3', 'm4a', 'ogg', 'wav'], 'maxKb' => 51200],
             'experiencia' => ['label' => 'Experiencias', 'icono' => 'fa-comments', 'mimes' => ['pdf', 'jpg', 'jpeg', 'png', 'webp'], 'maxKb' => 51200],
             'mapa' => ['label' => 'Mapas', 'icono' => 'fa-map-marker-alt', 'mimes' => ['jpg', 'jpeg', 'png', 'webp', 'pdf'], 'maxKb' => 20480],
         ];
@@ -46,6 +49,20 @@ class KawsayTaxonomia
         ][$icono] ?? $icono;
     }
 
+    /** Texto para el panel: "Acepta: PDF, DOC · hasta 100 MB" (lo que permite cada tipo). */
+    public static function aceptaTexto(string $tipoSlug): string
+    {
+        $tipo = self::tipoContenido($tipoSlug);
+        if (! $tipo) {
+            return '';
+        }
+        $extensiones = collect($tipo['mimes'])
+            ->map(fn ($e) => $e === 'jpeg' ? null : strtoupper($e))
+            ->filter()->implode(', ');
+
+        return 'Acepta: ' . $extensiones . ' · hasta ' . round($tipo['maxKb'] / 1024) . ' MB por archivo';
+    }
+
     /** Formato de archivo (pdf/imagen/audio/video/doc, el que usa GoogleDriveService) según la extensión. */
     public static function formatoPorExtension(string $extension): ?string
     {
@@ -55,7 +72,7 @@ class KawsayTaxonomia
             'pdf' => 'pdf',
             'doc' => 'doc', 'docx' => 'doc', 'ppt' => 'doc', 'pptx' => 'doc',
             'jpg' => 'imagen', 'jpeg' => 'imagen', 'png' => 'imagen', 'webp' => 'imagen', 'gif' => 'imagen',
-            'mp3' => 'audio', 'wav' => 'audio', 'ogg' => 'audio',
+            'mp3' => 'audio', 'wav' => 'audio', 'ogg' => 'audio', 'm4a' => 'audio',
             'mp4' => 'video', 'webm' => 'video', 'mov' => 'video', 'm4v' => 'video',
         ];
 

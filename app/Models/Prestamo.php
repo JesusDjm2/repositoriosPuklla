@@ -13,6 +13,9 @@ class Prestamo extends Model
 
     protected $fillable = [
         'libro_fisico_id',
+        'material_didactico_id',
+        'numero_ejemplar',
+        'cantidad',
         'nombre_prestatario',
         'dni_prestatario',
         'contacto_prestatario',
@@ -26,11 +29,37 @@ class Prestamo extends Model
         'fecha_prestamo' => 'date',
         'fecha_limite' => 'date',
         'fecha_devolucion' => 'date',
+        'cantidad' => 'integer',
     ];
 
     public function libroFisico()
     {
         return $this->belongsTo(LibroFisico::class, 'libro_fisico_id');
+    }
+
+    public function materialDidactico()
+    {
+        return $this->belongsTo(MaterialDidactico::class, 'material_didactico_id');
+    }
+
+    public function getEsMaterialAttribute(): bool
+    {
+        return $this->material_didactico_id !== null;
+    }
+
+    /**
+     * Libro o material prestado, para mostrarlo sin importar el tipo de préstamo.
+     */
+    public function getItemNombreAttribute(): string
+    {
+        return $this->es_material
+            ? ($this->materialDidactico?->nombre ?? '—')
+            : ($this->libroFisico?->nombre ?? '—');
+    }
+
+    public function getItemCodigoAttribute(): ?string
+    {
+        return $this->es_material ? $this->materialDidactico?->codigo : $this->libroFisico?->codigo;
     }
 
     /**

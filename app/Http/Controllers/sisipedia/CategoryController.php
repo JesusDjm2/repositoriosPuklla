@@ -20,17 +20,23 @@ class CategoryController extends Controller
 
     public function index()
     {
-        $categories = Category::with('parent')
-            ->orderBy('parent_id')
-            ->orderBy('order');
-        $tree = Category::with([
-            'children.children.children.children',
-            'children.files',
-            'children.children.files',
-            'children.children.children.files',
-            'children.children.children.children.files',
-            'files',
-        ])->whereNull('parent_id')->orderBy('order')->get();
+        // Árbol completo en memoria con pocas consultas. Antes cada fila pedía su
+        // numeración (hermanos de cada nivel), su padre y el tamaño de su
+        // sub-árbol por separado: ~12.000 consultas y ~10 s con 1.500 registros.
+        [$tree, $numeracion, $tamSubarbol] = $this->arbolAdmin();
+
+        // Archivos por registro y tipo, y descargas por registro (2 consultas).
+        $resumenArchivos = [];
+        foreach (DB::table('category_files')->selectRaw('category_id, tipo, count(*) as total')
+            ->groupBy('category_id', 'tipo')->get() as $fila) {
+            $resumenArchivos[$fila->category_id][$fila->tipo] = (int) $fila->total;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('category_files', 'descargas')) {
+            foreach (DB::table('category_files')->selectRaw('category_id, sum(descargas) as total')
+                ->groupBy('category_id')->get() as $fila) {
+                $resumenArchivos[$fila->category_id]['descargas'] = (int) $fila->total;
+            }
+        }
 
         // Conteo de aportaciones por categoría (una sola consulta)
         $aportCounts = DB::table('aportaciones')
@@ -53,7 +59,55 @@ class CategoryController extends Controller
                 ->orderByDesc('descargas')->take(10)->get(['id', 'category_id', 'tipo', 'nombre_original', 'descargas']);
         }
 
-        return view('sisichakuna.categorias.index', compact('categories', 'tree', 'aportCounts', 'fileTypeCounts', 'masVistos', 'masDescargados'));
+        // Contadores del banner "Panel Sisichakunay" (esta vista ES el panel del rol).
+        $conteosPanel = app(\App\Services\ProyectoEstadisticasService::class)->paraRol('sisicha');
+
+        return view('sisichakuna.categorias.index', compact(
+            'tree', 'numeracion', 'tamSubarbol', 'resumenArchivos', 'conteosPanel',
+            'aportCounts', 'fileTypeCounts', 'masVistos', 'masDescargados'
+        ));
+    }
+
+    /**
+     * Carga TODOS los registros en una consulta y arma el árbol en memoria
+     * (relaciones children/parent ya resueltas, sin consultas perezosas).
+     *
+     * @return array{0: \Illuminate\Support\Collection, 1: array<int,string>, 2: array<int,int>}
+     *         [raíces, numeración "1.2.3" por id, tamaño del sub-árbol por id]
+     */
+    private function arbolAdmin(): array
+    {
+        $columnas = ['id', 'parent_id', 'name', 'slug', 'image', 'order', 'is_active'];
+        if (\Illuminate\Support\Facades\Schema::hasColumn('categories', 'visitas')) {
+            $columnas[] = 'visitas';
+        }
+
+        // Mismo orden que el accessor numbering (order; id como desempate estable).
+        $todas = Category::query()->orderBy('order')->orderBy('id')->get($columnas)->keyBy('id');
+        $porPadre = $todas->groupBy(fn ($c) => $c->parent_id ?? 0);
+
+        foreach ($todas as $cat) {
+            $cat->setRelation('children', ($porPadre[$cat->id] ?? collect())->values());
+            $cat->setRelation('parent', $cat->parent_id ? $todas->get($cat->parent_id) : null);
+        }
+
+        $numeracion = [];
+        $tamSubarbol = [];
+        $recorrer = function ($hijos, string $prefijo) use (&$recorrer, &$numeracion, &$tamSubarbol): int {
+            $total = 0;
+            foreach ($hijos->values() as $i => $cat) {
+                $numeracion[$cat->id] = $prefijo === '' ? (string) ($i + 1) : $prefijo . '.' . ($i + 1);
+                $tamSubarbol[$cat->id] = 1 + $recorrer($cat->children, $numeracion[$cat->id]);
+                $total += $tamSubarbol[$cat->id];
+            }
+
+            return $total;
+        };
+
+        $raices = ($porPadre[0] ?? collect())->values();
+        $recorrer($raices, '');
+
+        return [$raices, $numeracion, $tamSubarbol];
     }
 
     public function export()
@@ -66,10 +120,21 @@ class CategoryController extends Controller
             'Expires' => '0'
         ];
 
-        $categories = $this->buildFlatList();
+        // Árbol en memoria (3 consultas en total): numeración y ruta sin consultar
+        // por fila. Antes: ~10.600 consultas y ~23 s, riesgo de corte en el hosting.
+        [$raices, $numeracion] = $this->arbolAdmin();
+        $categories = collect();
+        $aplanar = function ($hijos, int $depth) use (&$aplanar, $categories): void {
+            foreach ($hijos as $cat) {
+                $cat->depth = $depth;
+                $categories->push($cat);
+                $aplanar($cat->children, $depth + 1);
+            }
+        };
+        $aplanar($raices, 0);
         $categoriesList = $categories->keyBy('id');
 
-        $callback = function () use ($categories, $categoriesList) {
+        $callback = function () use ($categories, $categoriesList, $numeracion) {
             $file = fopen('php://output', 'w');
 
             // BOM para compatibilidad con Excel (UTF-8)
@@ -93,7 +158,7 @@ class CategoryController extends Controller
             foreach ($categories as $category) {
                 fputcsv($file, [
                     $category->id,
-                    $category->numbering,
+                    $numeracion[$category->id] ?? '',
                     $category->name,
                     $category->display_name,
                     $category->slug,
@@ -639,31 +704,6 @@ class CategoryController extends Controller
                 'orden' => ++$ultimoOrden,
             ]);
         }
-    }
-
-    // -------------------------------------------------------
-    // Helper privado: lista plana de categorías en orden árbol
-    // -------------------------------------------------------
-    private function buildFlatList(?int $exclude = null): \Illuminate\Support\Collection
-    {
-        $all = Category::orderBy('parent_id')->orderBy('order')->get()->keyBy('id');
-
-        $flat = collect();
-
-        $walk = function ($parentId, $depth) use (&$walk, &$flat, $all, $exclude) {
-            foreach ($all->where('parent_id', $parentId)->sortBy('order') as $cat) {
-                if ($cat->id === $exclude) {
-                    continue;
-                }
-                $cat->depth = $depth;
-                $flat->push($cat);
-                $walk($cat->id, $depth + 1);
-            }
-        };
-
-        $walk(null, 0);
-
-        return $flat;
     }
 
     /**

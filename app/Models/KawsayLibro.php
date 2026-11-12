@@ -9,7 +9,13 @@ class KawsayLibro extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nombre', 'autor', 'identificador'];
+    protected $fillable = ['nombre', 'autor', 'identificador', 'kawsay_tema_id'];
+
+    /** Tema del repositorio al que pertenece (opcional). */
+    public function tema()
+    {
+        return $this->belongsTo(KawsayTema::class, 'kawsay_tema_id');
+    }
 
     public function categorias()
     {

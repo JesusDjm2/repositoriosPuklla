@@ -1,9 +1,6 @@
 @extends('layouts.app')
 @section('titulo', '- Temas Kawsay')
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('css/biblioteca-crud.css') }}?v={{ file_exists(public_path('css/biblioteca-crud.css')) ? filemtime(public_path('css/biblioteca-crud.css')) : 1 }}">
-@endpush
 
 @section('contenido')
 
@@ -63,10 +60,24 @@
                             @endif
                         </td>
                         <td>{{ $tema->area->nombre ?? '—' }}</td>
-                        <td>{{ $tema->titulo }}</td>
+                        <td>
+                            {{ $tema->titulo }}
+                            @if ($tema->destacado)
+                                <span class="adm-chip adm-chip--accent ml-1"><i class="fa fa-star"></i> Tema del mes</span>
+                            @endif
+                        </td>
                         <td>{{ $tema->archivos_count }}</td>
                         <td>{{ $tema->comentarios_count }}</td>
                         <td class="text-right bv-crud-actions">
+                            {{-- Tema del mes: tarjeta grande en la portada de Kawsay (solo uno a la vez) --}}
+                            <form action="{{ route('kawsaytemas.destacar', $tema) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-sm {{ $tema->destacado ? 'btn-warning' : 'btn-outline-secondary' }}"
+                                    title="{{ $tema->destacado ? 'Quitar de tema del mes' : 'Destacar como tema del mes en la portada' }}"
+                                    aria-pressed="{{ $tema->destacado ? 'true' : 'false' }}">
+                                    <i class="fa {{ $tema->destacado ? 'fa-star' : 'fa-star-o' }}"></i>
+                                </button>
+                            </form>
                             <a href="{{ route('kawsay.tema', [$tema->area->slug, $tema->slug]) }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Ver en el sitio">
                                 <i class="fa fa-eye"></i>
                             </a>

@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\KawsayArchivo;
 use App\Models\KawsayArea;
 use App\Models\KawsayTemaComentario;
 use App\Services\AntiSpamComentarios;
+use App\Services\Contador;
+use App\Services\KawsayPortada;
 use App\Services\KawsayTaxonomia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -15,21 +18,35 @@ class KawsayAreaController extends Controller
     {
         $areaModel = KawsayArea::where('slug', $area)->firstOrFail();
 
-        $temas = $areaModel->temas()->withCount('archivos')->get();
+        $temas = $areaModel->temas()->withCount('archivos')->orderBy('orden')->get();
+
+        // Por tema: cuántos videos / fotos / documentos tiene (una sola consulta),
+        // para mostrarlo en cada tarjeta de la página del área.
+        $formatosPorTema = KawsayArchivo::query()
+            ->whereIn('kawsay_tema_id', $temas->pluck('id'))
+            ->selectRaw("kawsay_tema_id, CASE WHEN tipo = 'video' THEN 'video' WHEN tipo = 'audio' THEN 'audio' WHEN tipo = 'imagen' THEN 'foto' ELSE 'documento' END AS grupo, COUNT(*) AS total")
+            ->groupBy('kawsay_tema_id', 'grupo')
+            ->get()
+            ->groupBy('kawsay_tema_id')
+            ->map(fn ($filas) => $filas->pluck('total', 'grupo'));
 
         return view('kawsay.areas.show', [
             'areaSlug' => $area,
             'area' => $areaModel,
             'temas' => $temas,
+            'formatosPorTema' => $formatosPorTema,
         ]);
     }
 
-    public function tema(string $area, string $temaSlug)
+    public function tema(Request $request, KawsayPortada $portada, string $area, string $temaSlug)
     {
         $areaModel = KawsayArea::where('slug', $area)->firstOrFail();
 
         $tema = $areaModel->temas()->where('slug', $temaSlug)->firstOrFail();
         $tema->load(['comentarios']);
+
+        // Visitas del tema (una vez por sesión; no cuenta robots).
+        Contador::sumar($tema, 'visitas', 'kawsay_temas_vistos', $request);
 
         $conteos = $tema->archivos()
             ->selectRaw('tipo_contenido, count(*) as total')
@@ -43,6 +60,8 @@ class KawsayAreaController extends Controller
 
         return view('kawsay.temas.show', [
             'fotos' => $fotos,
+            // Libros y videos del catálogo asignados a este tema (desde el panel).
+            'catalogo' => $portada->catalogoDeTema($tema),
             'areaSlug' => $area,
             'area' => $areaModel,
             'temaSlug' => $temaSlug,

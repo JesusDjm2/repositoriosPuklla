@@ -39,7 +39,7 @@
                             <span class="small">{{ $file->nombre_display }}</span>
                             <a href="{{ \App\Services\GoogleDriveService::getUrl($file->drive_id) }}"
                                target="_blank" class="btn btn-sm p-0 ms-1 text-{{ $color }}" title="Ver">
-                                <i class="fa fa-external-link-alt" style="font-size:.75rem;"></i>
+                                <i class="fa fa-external-link" style="font-size:.75rem;"></i>
                             </a>
                             <button type="button"
                                 class="btn btn-sm p-0 text-danger ml-1 sisipedia-delete-file-btn"

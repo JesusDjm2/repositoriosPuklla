@@ -1,9 +1,6 @@
 @extends('layouts.app')
 @section('titulo', '- Editar área Kawsay')
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('css/biblioteca-crud.css') }}?v={{ file_exists(public_path('css/biblioteca-crud.css')) ? filemtime(public_path('css/biblioteca-crud.css')) : 1 }}">
-@endpush
 
 @section('contenido')
 
@@ -47,7 +44,7 @@
                 <label class="bv-form-label">Imagen del círculo</label>
                 @if ($area->imagen)
                     <div class="mb-2 d-flex align-items-center gap-2">
-                        <img src="{{ asset($area->imagen) }}" alt="{{ $area->nombre }}" style="width:64px;height:64px;object-fit:cover;border-radius:50%;border:3px solid {{ $area->color ?: '#6e7d1e' }};">
+                        <img src="{{ asset($area->imagen) }}" alt="{{ $area->nombre }}" class="adm-avatar-ring" style="--ring-color: {{ $area->color ?: '#6e7d1e' }}">
                         <label class="mb-0 small">
                             <input type="checkbox" name="remove_imagen" value="1"> Quitar imagen actual
                         </label>

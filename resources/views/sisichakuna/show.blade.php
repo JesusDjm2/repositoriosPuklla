@@ -209,7 +209,7 @@
                                                 @endif
                                             </div>
                                             @if($aportacion->detalle)
-                                                <p class="text-muted small mb-2">{!! Str::limit(strip_tags($aportacion->detalle), 100) !!}</p>
+                                                <p class="text-muted small mb-2">{{ Str::limit(html_entity_decode(strip_tags($aportacion->detalle)), 100) }}</p>
                                             @endif
                                             @php
                                                 $archSueltos = $aportacion->relationLoaded('archivos') ? $aportacion->archivos : $aportacion->archivos()->get();

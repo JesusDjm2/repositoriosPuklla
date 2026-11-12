@@ -1,27 +1,35 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\CancionesCategoriaController;
 use App\Http\Controllers\CancionesController;
 use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\CategoriaFisicaController;
+use App\Http\Controllers\LibroFisicoController;
+use App\Http\Controllers\PrestamoController;
+use App\Http\Controllers\CategoriaMaterialDidacticoController;
 use App\Http\Controllers\EnlacesController;
-use App\Http\Controllers\BackupController;
-use App\Http\Controllers\KawsayAreaAdminController;
-use App\Http\Controllers\KawsayBusquedaController;
-use App\Http\Controllers\KawsayAreaController;
 use App\Http\Controllers\KawsayArchivoController;
+use App\Http\Controllers\KawsayAreaAdminController;
+use App\Http\Controllers\KawsayAreaController;
+use App\Http\Controllers\KawsayBusquedaController;
 use App\Http\Controllers\KawsayCategoriaController;
 use App\Http\Controllers\KawsayComentarioController;
-use App\Http\Controllers\KawsayTemaController;
 use App\Http\Controllers\KawsayLibroController;
+use App\Http\Controllers\KawsayTemaController;
 use App\Http\Controllers\KawsayVideoCategoriaController;
 use App\Http\Controllers\KawsayVideoController;
 use App\Http\Controllers\LibroController;
+use App\Http\Controllers\MaterialDidacticoController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\SeccionController;
 use App\Http\Controllers\sisipedia\AportacionController;
 use App\Http\Controllers\sisipedia\AudioStreamController;
 use App\Http\Controllers\sisipedia\CategoryController;
+use App\Http\Controllers\TaqeCategoriaAdminController;
+use App\Http\Controllers\TaqeController;
+use App\Http\Controllers\TaqeTrabajoAdminController;
 use App\Http\Controllers\VideoCategoriaController;
 use App\Http\Controllers\VideoController;
 use App\Http\Controllers\VideoStreamController;
@@ -38,6 +46,8 @@ Route::get('/kawsay/nosotros', fn () => view('kawsay.nosotros'))->name('kawsay.n
 // Streaming de video de Kawsay (proxy a Drive con soporte de Range). Ruta fuera de
 // /kawsay/... para no chocar con los wildcards /kawsay/{area}/{tema}/{tipo} de abajo.
 Route::get('kawsay-video/{archivo}/stream', [VideoStreamController::class, 'kawsayArchivo'])->name('kawsay.archivo.video.stream');
+// Contador de vistas de un archivo de Kawsay (lo llama la portada/tema al abrir un video, PDF o foto).
+Route::post('kawsay-archivo/{archivo}/vista', [KawsayArchivoController::class, 'vista'])->name('kawsay.archivo.vista')->middleware('throttle:60,1');
 Route::get('kawsay-videos-catalogo/{kawsayVideo}/stream', [VideoStreamController::class, 'kawsayVideo'])->name('kawsayvideos.stream');
 Route::get('/kawsay/buscar', [KawsayBusquedaController::class, 'buscar'])->name('kawsay.buscar')->middleware('throttle:60,1');
 Route::get('/kawsay/{area}', [KawsayAreaController::class, 'area'])->name('kawsay.area');
@@ -57,10 +67,10 @@ Route::resource('admin/proyectos', ProyectoController::class)
 Route::get('Lista-de-alumnos', [AdminController::class, 'alumnos'])->name('alumnos')->middleware('auth');
 Route::get('Bibliotecario', [AdminController::class, 'bibliotecario'])->middleware('auth')->name('bibliotecario');
 Route::get('Administrador-Kawsay', [AdminController::class, 'kawsay'])->middleware('auth')->name('adminKawsay');
-Route::get('Administrador-Videos', [AdminController::class, 'videos'])->middleware('auth')->name('adminVideos');
-Route::get('Administrador-Canciones', [AdminController::class, 'canciones'])->middleware('auth')->name('adminCanciones');
-Route::get('Admini-Sisichakunay', [AdminController::class, 'sisicha'])->middleware('auth')->name('adminSisicha');
-Route::get('Administrador-Radio', [AdminController::class, 'radio'])->middleware('auth')->name('adminRadio');
+Route::get('Administrador-Videos', [AdminController::class, 'videos'])->middleware(['auth', 'role:admin|videos'])->name('adminVideos');
+Route::get('Administrador-Canciones', [AdminController::class, 'canciones'])->middleware(['auth', 'role:admin|audios'])->name('adminCanciones');
+Route::get('Admini-Sisichakunay', [AdminController::class, 'sisicha'])->middleware(['auth', 'role:admin|sisicha'])->name('adminSisicha');
+Route::get('Administrador-Radio', [AdminController::class, 'radio'])->middleware(['auth', 'role:admin|sisicha'])->name('adminRadio');
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
@@ -75,8 +85,8 @@ Route::get('libros/create/{categoria?}', [LibroController::class, 'create'])->na
 Route::get('Lista-de-Libros', [LibroController::class, 'libros'])->name('libros');
 
 //Videos
-Route::resource('Videos', VideoController::class)->names('videos')->middleware(['auth', 'role:admin|videos']);
-Route::resource('video-categorias', VideoCategoriaController::class)->names('videoscat')->except('show')->middleware(['auth', 'role:admin|videos']);
+Route::resource('Videos', VideoController::class)->names('videos')->middleware(['auth', 'role:admin|videos|sisicha']);
+Route::resource('video-categorias', VideoCategoriaController::class)->names('videoscat')->except('show')->middleware(['auth', 'role:admin|videos|sisicha']);
 Route::get('video-categorias/{video_categoria}', [VideoCategoriaController::class, 'show'])->name('videoscat.show');
 Route::get('videos-Puklla', [VideoCategoriaController::class, 'lista'])->name('videos');
 Route::get('videos/{video}/stream', [VideoStreamController::class, 'video'])->name('videos.stream');
@@ -96,10 +106,15 @@ Route::get('videos-Kawsay', [KawsayVideoCategoriaController::class, 'lista'])->n
 Route::get('Kawsay-Archivos', [KawsayArchivoController::class, 'index'])->name('kawsayarchivos.index')->middleware(['auth', 'role:admin|kawsay']);
 Route::post('Kawsay-Archivos', [KawsayArchivoController::class, 'store'])->name('kawsayarchivos.store')->middleware(['auth', 'role:admin|kawsay']);
 Route::delete('Kawsay-Archivos/{archivo}', [KawsayArchivoController::class, 'destroy'])->name('kawsayarchivos.destroy')->middleware(['auth', 'role:admin|kawsay']);
+Route::post('Kawsay-Archivos/{archivo}/portada', [KawsayArchivoController::class, 'portada'])->name('kawsayarchivos.portada')->middleware(['auth', 'role:admin|kawsay']);
+Route::delete('Kawsay-Archivos/{archivo}/portada', [KawsayArchivoController::class, 'quitarPortada'])->name('kawsayarchivos.portada.destroy')->middleware(['auth', 'role:admin|kawsay']);
+Route::post('Kawsay-Archivos/youtube', [KawsayArchivoController::class, 'youtube'])->name('kawsayarchivos.youtube')->middleware(['auth', 'role:admin|kawsay']);
+Route::patch('Kawsay-Archivos/{archivo}', [KawsayArchivoController::class, 'update'])->name('kawsayarchivos.update')->middleware(['auth', 'role:admin|kawsay']);
 
 Route::resource('Kawsay-Areas', KawsayAreaAdminController::class)->names('kawsayareas')->parameters(['Kawsay-Areas' => 'area'])->except('show')->middleware(['auth', 'role:admin|kawsay']);
 
 Route::resource('Kawsay-Temas', KawsayTemaController::class)->names('kawsaytemas')->parameters(['Kawsay-Temas' => 'tema'])->except('show')->middleware(['auth', 'role:admin|kawsay']);
+Route::post('Kawsay-Temas/{tema}/destacar', [KawsayTemaController::class, 'destacar'])->name('kawsaytemas.destacar')->middleware(['auth', 'role:admin|kawsay']);
 Route::delete('Kawsay-Temas/{tema}/comentarios/{comentario}', [KawsayTemaController::class, 'destroyComentario'])->name('kawsaytemas.comentarios.destroy')->middleware(['auth', 'role:admin|kawsay']);
 
 Route::get('Kawsay-Comentarios', [KawsayComentarioController::class, 'index'])->name('kawsaycomentarios.index')->middleware(['auth', 'role:admin|kawsay']);
@@ -112,8 +127,8 @@ Route::get('Administrador-Backups/{nombre}/descargar', [BackupController::class,
 Route::delete('Administrador-Backups/{nombre}', [BackupController::class, 'destroy'])->name('backups.destroy')->middleware(['auth', 'role:admin']);
 
 //Canciones
-Route::resource('Categorias-canciones', CancionesCategoriaController::class)->names('cancionescat')->middleware(['auth', 'role:admin|audios']);
-Route::resource('canciones', CancionesController::class)->names('canciones')->middleware(['auth', 'role:admin|audios']);
+Route::resource('Categorias-canciones', CancionesCategoriaController::class)->names('cancionescat')->middleware(['auth', 'role:admin|audios|sisicha']);
+Route::resource('canciones', CancionesController::class)->names('canciones')->middleware(['auth', 'role:admin|audios|sisicha']);
 Route::get('canciones-Puklla', [CancionesController::class, 'canciones'])->name('cancionesPuklla')->middleware('auth');
 Route::get('canciones/{cancion}/stream', [AudioStreamController::class, 'cancion'])->name('canciones.stream');
 
@@ -223,12 +238,29 @@ Route::get('/limpiar-cache', function () {
 // ===== BIBLIOTECA FISICA =====  
   
 Route::middleware(['auth', 'role:admin|biblioteca'])->prefix('biblioteca-fisica')->name('biblioteca-fisica.')->group(function () {  
-    Route::resource('categorias', App\Http\Controllers\CategoriaFisicaController::class)->except(['show'])->parameters(['categorias' => 'categoria_fisica']);  
-    Route::resource('libros', App\Http\Controllers\LibroFisicoController::class)->except(['show'])->parameters(['libros' => 'libro_fisico']);  
-    Route::get('libros-buscar-ajax', [App\Http\Controllers\LibroFisicoController::class, 'buscarAjax'])->name('libros.buscar-ajax');  
-    Route::resource('prestamos', App\Http\Controllers\PrestamoController::class)->except(['show']);  
-    Route::patch('prestamos/{prestamo}/devolver', [App\Http\Controllers\PrestamoController::class, 'devolver'])->name('prestamos.devolver');  
+    Route::resource('categorias', CategoriaFisicaController::class)->except(['show'])->parameters(['categorias' => 'categoria_fisica']);  
+    Route::resource('libros', LibroFisicoController::class)->except(['show'])->parameters(['libros' => 'libro_fisico']);  
+    Route::get('libros-buscar-ajax', [LibroFisicoController::class, 'buscarAjax'])->name('libros.buscar-ajax');  
+    Route::resource('prestamos', PrestamoController::class)->except(['show']);  
+    Route::patch('prestamos/{prestamo}/devolver', [PrestamoController::class, 'devolver'])->name('prestamos.devolver');  
+    Route::resource('material-categorias', CategoriaMaterialDidacticoController::class)->except(['show'])
+        ->parameters(['material-categorias' => 'material_categoria']);
+    Route::resource('materiales', MaterialDidacticoController::class)->except(['show'])
+        ->parameters(['materiales' => 'material']);
+    Route::get('materiales-buscar-ajax', [MaterialDidacticoController::class, 'buscarAjax'])
+        ->name('materiales.buscar-ajax');
 });  
+
+// ===== TAQ'E — INVESTIGACIONES Y TESIS EESP =====
+Route::middleware(['auth', 'role:admin|biblioteca'])->prefix('admin/taqe')->name('admin.taqe.')->group(function () {
+    Route::resource('trabajos', TaqeTrabajoAdminController::class)->except(['show']);
+    Route::resource('categorias', TaqeCategoriaAdminController::class)->except(['show'])
+        ->parameters(['categorias' => 'taqe_categoria']);
+});
+
+Route::get('taqe', [TaqeController::class, 'index'])->name('taqe.index');
+Route::get('taqe/{slug}', [TaqeController::class, 'show'])->name('taqe.show');
+Route::get('taqe/{slug}/descargar', [TaqeController::class, 'descargar'])->name('taqe.descargar');  
   
 Route::middleware(['auth', 'role:admin|biblioteca'])->group(function () {
     Route::get('libros-importar', [App\Http\Controllers\LibroController::class, 'importForm'])->name('libros.import.form');

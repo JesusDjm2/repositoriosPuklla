@@ -1,0 +1,722 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// SISIPEDIA (Radio Pukllasunchis · rol sisicha)
+// Vistas: sisichakuna/categorias/*, sisichakuna/aportaciones/index,
+//         sisichakuna/partials/sisipedia-admin-nav
+// Antes: <style> dentro de cada vista + parches [data-theme="dark"] en admin.scss.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── Sub-navegación del módulo ──────────────────────────────────────────────
+.sisi-admin-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.sisi-admin-nav__links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.sisi-admin-nav__label {
+    margin-right: 0.35rem;
+    color: var(--adm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 575.98px) {
+    .sisi-admin-nav__links,
+    .sisi-admin-nav__links .btn,
+    .sisi-admin-nav > .btn {
+        width: 100%;
+    }
+
+    .sisi-admin-nav__links .btn,
+    .sisi-admin-nav > .btn {
+        justify-content: center;
+        min-height: var(--adm-tap);
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .sisi-admin-nav__label {
+        display: none;
+    }
+}
+
+// ─── Rankings (más visitados / más descargados) ────────────────────────────
+.sisi-ranking .list-group-item {
+    gap: 0.5rem;
+}
+
+.sisi-ranking__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// ─── Árbol de registros ─────────────────────────────────────────────────────
+.category-tree {
+    margin: 0;
+    padding: 0;
+}
+
+.category-tree ul {
+    margin-top: 0.5rem;
+    padding-left: 1rem;
+    border-left: 2px solid var(--adm-border);
+    list-style: none;
+}
+
+@media (min-width: 768px) {
+    .category-tree ul {
+        margin-left: 0.85rem;
+        padding-left: 1.5rem;
+    }
+}
+
+.category-tree li {
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+// Móvil: tres filas (identidad / datos / acciones). Escritorio: una fila.
+.category-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 0.75rem;
+    padding: 0.75rem;
+    background: var(--adm-surface);
+    border: 1px solid var(--adm-border);
+    border-radius: var(--adm-radius-sm);
+    transition: background-color 0.18s var(--adm-ease), border-color 0.18s var(--adm-ease);
+}
+
+@media (hover: hover) {
+    .category-item:hover {
+        background: var(--adm-surface-2);
+        border-color: var(--adm-border-strong);
+    }
+}
+
+.category-item.has-search-match {
+    background: var(--adm-highlight);
+    border-color: var(--adm-accent);
+}
+
+.category-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 0.75rem;
+    flex: 1 1 100%;
+    min-width: 0;
+}
+
+.category-identity {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex: 1 1 14rem;
+    min-width: 0;
+}
+
+.category-image,
+.category-image-placeholder {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.category-image {
+    object-fit: cover;
+    background: var(--adm-surface-3);
+}
+
+.category-image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--adm-surface-3);
+    color: var(--adm-text-subtle);
+}
+
+.category-details {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.category-name {
+    margin-bottom: 0.15rem;
+    color: var(--adm-text);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.category-number {
+    margin-right: 0.35rem;
+    color: var(--adm-link);
+    font-weight: 700;
+}
+
+.category-slug {
+    color: var(--adm-text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    overflow-wrap: anywhere;
+}
+
+.category-files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.35rem;
+}
+
+.category-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.category-parent {
+    color: var(--adm-text-muted);
+    font-size: 0.75rem;
+}
+
+.category-parent i {
+    margin-right: 0.25rem;
+}
+
+// Pastillas de datos (visitas, descargas, orden, estado): mismo estilo que .adm-chip
+.category-order,
+.category-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.category-order {
+    background: var(--adm-surface-2);
+    border: 1px solid var(--adm-border);
+    color: var(--adm-text-muted);
+}
+
+.status-active {
+    background: var(--adm-success-soft);
+    color: var(--adm-success);
+}
+
+.status-inactive {
+    background: var(--adm-danger-soft);
+    color: var(--adm-danger);
+}
+
+.category-actions {
+    display: flex;
+    flex: 1 1 100%;
+    gap: 0.4rem;
+}
+
+// Botones de acción: táctiles (44px) en celular, compactos en escritorio.
+.category-actions .btn-icon {
+    flex: 1 1 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    min-height: var(--adm-tap);
+    padding: 0.375rem 0.6rem;
+    font-size: 0.875rem;
+}
+
+.expand-btn,
+.expand-spacer {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+}
+
+.expand-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 0.375rem;
+    background: none;
+    color: var(--adm-text-muted);
+    cursor: pointer;
+    transition: background-color 0.18s var(--adm-ease), color 0.18s var(--adm-ease);
+}
+
+.expand-btn:hover {
+    background: var(--adm-surface-3);
+    color: var(--adm-text);
+}
+
+.expand-btn:focus-visible {
+    outline: 2px solid var(--adm-accent);
+    outline-offset: 2px;
+}
+
+.expand-btn i {
+    font-size: 0.875rem;
+}
+
+@media (min-width: 1200px) {
+    .category-item {
+        flex-wrap: nowrap;
+    }
+
+    .category-info {
+        flex: 1 1 auto;
+        flex-wrap: nowrap;
+    }
+
+    .category-meta {
+        flex-shrink: 0;
+        justify-content: flex-end;
+        max-width: 22rem;
+    }
+
+    .category-actions {
+        flex: 0 0 auto;
+    }
+
+    .category-actions .btn-icon {
+        flex: 0 0 auto;
+        min-height: 34px;
+        min-width: 36px;
+    }
+}
+
+.no-results {
+    padding: 3rem 1rem;
+    color: var(--adm-text-muted);
+    text-align: center;
+}
+
+// Resumen "Contiene: PDF · Audio · …" bajo el buscador
+.sisi-tree-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+}
+
+// ─── Selector de registro padre (create/edit) ──────────────────────────────
+.bv-parent-picker {
+    position: relative;
+}
+
+.bv-parent-picker__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: var(--adm-tap);
+    padding: 0.375rem 0.75rem;
+    background: var(--adm-surface);
+    border: 1px solid var(--adm-border-strong);
+    border-radius: var(--adm-radius-sm);
+    color: var(--adm-text);
+    font-size: 1rem;
+    text-align: left;
+}
+
+.bv-parent-picker__toggle:focus {
+    outline: none;
+    border-color: var(--adm-accent);
+    box-shadow: var(--adm-focus-ring);
+}
+
+.bv-parent-picker__panel {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 0.25rem);
+    left: 0;
+    right: 0;
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 0.4rem;
+    background: var(--adm-surface);
+    border: 1px solid var(--adm-border-strong);
+    border-radius: var(--adm-radius-sm);
+    box-shadow: var(--adm-shadow-lg);
+}
+
+.bv-parent-picker__empty {
+    margin: 0.5rem;
+    color: var(--adm-text-muted);
+    font-size: 0.85rem;
+}
+
+.bv-parent-picker__tree,
+.bv-parent-picker__tree ul {
+    margin: 0;
+    padding-left: 1.15rem;
+    list-style: none;
+}
+
+.bv-parent-picker__tree {
+    padding-left: 0;
+}
+
+.bv-parent-picker__row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: 0.3rem;
+    cursor: pointer;
+}
+
+.bv-parent-picker__row:hover {
+    background: var(--adm-surface-2);
+}
+
+.bv-parent-picker__row.is-selected {
+    background: var(--adm-accent-soft);
+    font-weight: 600;
+}
+
+.bv-parent-picker__row--root {
+    margin-bottom: 0.3rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--adm-border);
+}
+
+.bv-parent-picker__expand,
+.bv-parent-picker__expand-spacer {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 0.25rem;
+    background: transparent;
+    color: var(--adm-text-muted);
+}
+
+.bv-parent-picker__expand:hover {
+    background: var(--adm-surface-3);
+}
+
+.bv-parent-picker__expand i {
+    font-size: 0.75rem;
+    transition: transform 0.15s ease;
+}
+
+.bv-parent-picker__expand.is-open i {
+    transform: rotate(90deg);
+}
+
+.bv-parent-picker__option-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bv-parent-picker__check {
+    display: none;
+    color: var(--adm-link);
+}
+
+.bv-parent-picker__row.is-selected .bv-parent-picker__check {
+    display: inline-block;
+}
+
+// ─── Aportaciones ───────────────────────────────────────────────────────────
+.sisipedia-aportes-alert-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.1rem;
+}
+
+// Tarjetas de resumen por rol: borde izquierdo del color del rol
+.sisi-stat {
+    border-left: 4px solid var(--sisi-stat-color, var(--adm-border-strong)) !important;
+}
+
+.sisi-stat--info { --sisi-stat-color: var(--adm-info); }
+.sisi-stat--primary { --sisi-stat-color: var(--adm-primary); }
+.sisi-stat--success { --sisi-stat-color: var(--adm-success); }
+.sisi-stat--warning { --sisi-stat-color: var(--adm-warning); }
+
+// Cabeceras de los modales (aprobar / editar): marca, no azul-violeta
+.sisipedia-modal-aprobar-header,
+.sisipedia-modal-editar-header {
+    padding: 1.25rem 1.5rem;
+    border-radius: 0.25rem 0.25rem 0 0;
+    background: linear-gradient(135deg, #ae0c21 0%, #8c0418 100%);
+    color: #fff;
+}
+
+.sisipedia-modal-editar-header {
+    background: linear-gradient(135deg, #a8752f 0%, #8a5222 100%);
+}
+
+.sisipedia-modal-aprobar-header *,
+.sisipedia-modal-editar-header * {
+    color: #fff;
+}
+
+.sisipedia-modal-aprobar-sub {
+    opacity: 0.92;
+}
+
+.sisipedia-modal-aprobar-content {
+    overflow: hidden;
+    border-radius: 0.35rem;
+}
+
+.sisipedia-aporte-resumen {
+    background: var(--adm-surface-2);
+}
+
+// Celdas de la tabla de aportaciones
+.sisi-aporte-preview {
+    max-width: 280px;
+    max-height: 60px;
+    overflow: hidden;
+    line-height: 1.4;
+}
+
+.sisi-aporte-registro {
+    max-width: 220px;
+}
+
+.sisi-aporte-thumb {
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--adm-border);
+}
+
+// Lista de registros para vincular un aporte
+.sisipedia-reg-pick-scroll {
+    max-height: min(58vh, 520px);
+    min-height: 300px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--adm-surface);
+}
+
+.sisipedia-reg-pick-scroll--sm {
+    max-height: 240px;
+    min-height: 100px;
+}
+
+.sisipedia-reg-pick-row {
+    display: block;
+    padding: 0.65rem 0.85rem 0.65rem calc(0.85rem + var(--reg-depth, 0) * 1.35rem);
+    background: var(--adm-surface);
+    border-bottom: 1px solid var(--adm-border) !important;
+    color: var(--adm-text);
+    line-height: 1.35;
+    cursor: pointer;
+    transition: background 0.12s ease, box-shadow 0.12s ease;
+}
+
+.sisipedia-reg-pick-row:last-child {
+    border-bottom: 0 !important;
+}
+
+.sisipedia-reg-pick-row:hover {
+    background: var(--adm-surface-2) !important;
+}
+
+.sisipedia-reg-pick-row:focus {
+    position: relative;
+    z-index: 1;
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--adm-accent);
+}
+
+.sisipedia-reg-pick-root {
+    background: var(--adm-surface-2) !important;
+    border-bottom: 1px solid var(--adm-border-strong) !important;
+}
+
+.sisipedia-reg-pick-root .sisipedia-reg-pick-name {
+    font-size: 1rem;
+}
+
+.sisipedia-reg-pick-child {
+    border-left: 3px solid var(--adm-border);
+}
+
+.sisipedia-reg-pick-child[data-depth="1"] {
+    border-left-color: var(--adm-border-strong);
+}
+
+.sisipedia-reg-pick-row.is-selected {
+    background: var(--adm-success-soft) !important;
+    box-shadow: inset 3px 0 0 0 var(--adm-success);
+}
+
+.sisipedia-reg-pick-row.is-selected .sisipedia-reg-ico-off {
+    display: none !important;
+}
+
+.sisipedia-reg-pick-row.is-selected .sisipedia-reg-ico-on {
+    display: inline-block !important;
+}
+
+.sisipedia-reg-pick-path {
+    font-size: 0.78rem;
+}
+
+// ─── Tabla de aportaciones ──────────────────────────────────────────────────
+// Escritorio: tabla (con scroll interno si no entra). Celular: cada fila es
+// una tarjeta con etiquetas a la izquierda (data-label de cada <td>).
+.sisi-col-min {
+    width: 1%;
+}
+
+.sisi-aportes-table th {
+    white-space: nowrap;
+}
+
+.sisi-aporte-titulo {
+    display: inline-block;
+    max-width: 22rem;
+    color: var(--adm-text);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.sisi-td-acciones {
+    white-space: nowrap;
+}
+
+.sisi-td-acciones .btn + .btn,
+.sisi-td-acciones .btn + form,
+.sisi-td-acciones a + .btn {
+    margin-left: 0.25rem;
+}
+
+.sisi-eyebrow {
+    color: var(--adm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 767.98px) {
+    .sisi-aportes-table thead {
+        display: none;
+    }
+
+    .sisi-aportes-table,
+    .sisi-aportes-table tbody,
+    .sisi-aportes-table tr,
+    .sisi-aportes-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .sisi-aportes-table tr {
+        margin: 0 0 0.75rem;
+        padding: 0.85rem 1rem;
+        background: var(--adm-surface);
+        border: 1px solid var(--adm-border);
+        border-radius: var(--adm-radius);
+    }
+
+    .sisi-aportes-table tbody {
+        padding: 0.75rem;
+    }
+
+    .sisi-aportes-table td {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.35rem 0;
+        border: 0;
+        text-align: left !important;
+        white-space: normal;
+    }
+
+    .sisi-aportes-table td::before {
+        content: attr(data-label);
+        flex: 0 0 5.75rem;
+        padding-top: 0.15rem;
+        color: var(--adm-text-muted);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+
+    .sisi-aportes-table td > * {
+        min-width: 0;
+    }
+
+    // El nombre encabeza la tarjeta, sin etiqueta; el número va como detalle.
+    .sisi-aportes-table .sisi-td-id {
+        display: none;
+    }
+
+    .sisi-aportes-table .sisi-td-nombre {
+        display: block;
+        padding-bottom: 0.6rem;
+        margin-bottom: 0.35rem;
+        border-bottom: 1px solid var(--adm-border);
+        font-size: 1rem;
+    }
+
+    .sisi-aportes-table .sisi-td-nombre::before,
+    .sisi-aportes-table .sisi-td-acciones::before {
+        display: none;
+    }
+
+    .sisi-aportes-table .sisi-td-acciones {
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--adm-border);
+    }
+
+    .sisi-aportes-table .sisi-td-acciones > .btn,
+    .sisi-aportes-table .sisi-td-acciones > form {
+        flex: 1 1 0;
+        margin: 0 !important;
+    }
+
+    .sisi-aportes-table .sisi-td-acciones .btn {
+        width: 100%;
+        min-height: var(--adm-tap);
+    }
+
+    .sisi-aporte-preview,
+    .sisi-aporte-registro {
+        max-width: none;
+    }
+
+    .sisi-aporte-archivos {
+        justify-content: flex-start !important;
+    }
+}

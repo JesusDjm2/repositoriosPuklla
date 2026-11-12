@@ -1,23 +1,31 @@
-{{-- Visor (lightbox) de la Galería fotográfica del tema. Requiere: $fotos (id, titulo, drive_id). --}}
+{{-- Visor (lightbox) de imágenes del tema: Galería, Mapas y Experiencias.
+     Requiere: $fotos (id, titulo, drive_id). Opcional: $etiqueta (nombre del visor),
+     $zoom (true en mapas: botones +/−, doble toque, pellizco y arrastre para leer detalles). --}}
 @php
+    $etiqueta = $etiqueta ?? 'Galería fotográfica';
+    $zoom = $zoom ?? false;
     $fotosJs = $fotos->map(fn ($f) => [
         'titulo' => $f->titulo,
-        'url' => \App\Services\GoogleDriveService::getThumbnailUrl($f->drive_id, 1800),
+        'url' => \App\Services\GoogleDriveService::getThumbnailUrl($f->drive_id, $zoom ? 2600 : 1800),
         'mini' => \App\Services\GoogleDriveService::getThumbnailUrl($f->drive_id, 160),
         'ver' => \App\Services\GoogleDriveService::getUrl($f->drive_id),
     ])->values();
 @endphp
-<div id="kvis" class="kvis" role="dialog" aria-modal="true" aria-label="Galería fotográfica" hidden>
+<div id="kvis" class="kvis {{ $zoom ? 'kvis--zoom' : '' }}" role="dialog" aria-modal="true" aria-label="{{ $etiqueta }}" hidden>
     <div class="kvis__bar">
         <div class="kvis__info">
             <span class="kvis__contador" id="kvisContador" aria-live="polite"></span>
             <span class="kvis__titulo" id="kvisTitulo"></span>
         </div>
         <div class="kvis__acciones">
+            @if ($zoom)
+                <button type="button" class="kvis__btn" id="kvisMenos" aria-label="Alejar"><i class="fa fa-minus" aria-hidden="true"></i></button>
+                <button type="button" class="kvis__btn" id="kvisMas" aria-label="Acercar"><i class="fa fa-plus" aria-hidden="true"></i></button>
+            @endif
             <a id="kvisAbrir" class="kvis__btn kvis__btn--texto" href="#" target="_blank" rel="noopener" title="Abrir en una nueva ventana">
                 <i class="fa fa-external-link-alt" aria-hidden="true"></i> <span>Nueva ventana</span>
             </a>
-            <button type="button" class="kvis__btn" id="kvisCerrar" aria-label="Cerrar galería"><i class="fa fa-xmark" aria-hidden="true"></i></button>
+            <button type="button" class="kvis__btn" id="kvisCerrar" aria-label="Cerrar"><i class="fa fa-xmark" aria-hidden="true"></i></button>
         </div>
     </div>
 
@@ -36,6 +44,9 @@
         <button type="button" class="kvis__nav kvis__nav--next" id="kvisNext" aria-label="Foto siguiente"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
     </div>
 
+    @if ($zoom)
+        <p class="kvis__ayuda">Toca dos veces o usa <strong>+</strong> para acercar; arrastra para recorrer el mapa.</p>
+    @endif
     <div class="kvis__tira" id="kvisTira" role="tablist" aria-label="Miniaturas"></div>
 </div>
 
@@ -60,6 +71,11 @@
     .kvis__figura { margin: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
     .kvis__figura img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; box-shadow: 0 10px 40px rgba(0, 0, 0, .5); user-select: none; transition: opacity .18s ease; }
     .kvis__figura img.is-cargando { opacity: 0; }
+    .kvis--zoom .kvis__figura { overflow: hidden; touch-action: none; }
+    .kvis--zoom .kvis__figura img { cursor: zoom-in; transform-origin: 0 0; will-change: transform; }
+    .kvis--zoom.is-ampliada .kvis__figura img { cursor: grab; box-shadow: none; }
+    .kvis--zoom.is-ampliada .kvis__figura img:active { cursor: grabbing; }
+    .kvis__ayuda { text-align: center; font-size: .8rem; opacity: .75; margin: 0; padding: 0 1rem .2rem; }
     .kvis__cargando { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; pointer-events: none; }
     .kvis__cargando.is-visible { display: flex; }
     .kvis__cargando span { width: 2.6rem; height: 2.6rem; border-radius: 50%; border: 3px solid rgba(255, 255, 255, .25); border-top-color: #fff; animation: kvisGiro .8s linear infinite; }
@@ -100,8 +116,12 @@
         var fotos = @json($fotosJs);
 
         var visor = document.getElementById('kvis');
+        // Se abre desde el botón de la página de tema (#kawsayGaleriaBtn, en la
+        // primera foto) o desde cualquier [data-kvis-indice="n"] (p. ej. las
+        // tarjetas del carrusel de la portada), directamente en esa foto.
         var abrirBtn = document.getElementById('kawsayGaleriaBtn');
-        if (!visor || !abrirBtn || !fotos.length) return;
+        var disparadores = document.querySelectorAll('[data-kvis-indice]');
+        if (!visor || (!abrirBtn && !disparadores.length) || !fotos.length) return;
 
         var img = document.getElementById('kvisImg');
         var cargando = document.getElementById('kvisCargando');
@@ -115,6 +135,74 @@
         var tira = document.getElementById('kvisTira');
         var actual = 0;
         var origen = null;
+
+        // ── Zoom (solo mapas): escala + desplazamiento con transform, sin librerías ──
+        var conZoom = visor.classList.contains('kvis--zoom');
+        var figura = img.parentNode;
+        var z = { s: 1, x: 0, y: 0 };
+        function aplicarZoom() {
+            img.style.transform = z.s === 1 ? '' : 'translate(' + z.x + 'px,' + z.y + 'px) scale(' + z.s + ')';
+            visor.classList.toggle('is-ampliada', z.s > 1);
+        }
+        function reiniciarZoom() { z = { s: 1, x: 0, y: 0 }; aplicarZoom(); }
+        // Acerca o aleja manteniendo fijo el punto (px, py) de la pantalla.
+        function zoomEn(nueva, px, py) {
+            nueva = Math.max(1, Math.min(5, nueva));
+            if (nueva === 1) { reiniciarZoom(); return; }
+            var r = img.getBoundingClientRect();
+            if (px === undefined) { px = r.left + r.width / 2; py = r.top + r.height / 2; }
+            var ox = (px - r.left) / z.s, oy = (py - r.top) / z.s; // punto en la imagen sin escalar
+            z.x += ox * (z.s - nueva);
+            z.y += oy * (z.s - nueva);
+            z.s = nueva;
+            aplicarZoom();
+        }
+        if (conZoom) {
+            document.getElementById('kvisMas').addEventListener('click', function () { zoomEn(z.s * 1.6); });
+            document.getElementById('kvisMenos').addEventListener('click', function () { zoomEn(z.s / 1.6); });
+            img.addEventListener('dblclick', function (e) { zoomEn(z.s > 1 ? 1 : 2.5, e.clientX, e.clientY); });
+            figura.addEventListener('wheel', function (e) {
+                e.preventDefault();
+                zoomEn(z.s * (e.deltaY < 0 ? 1.2 : 1 / 1.2), e.clientX, e.clientY);
+            }, { passive: false });
+            // Arrastre con puntero (ratón o un dedo), pellizco con dos dedos y doble toque.
+            var punteros = {}, arrastre = null, pellizco = null, ultimoToque = 0;
+            img.addEventListener('pointerdown', function (e) {
+                e.preventDefault();
+                punteros[e.pointerId] = { x: e.clientX, y: e.clientY };
+                try { img.setPointerCapture(e.pointerId); } catch (err) {}
+                var ids = Object.keys(punteros);
+                if (ids.length === 2) {
+                    var a = punteros[ids[0]], b = punteros[ids[1]];
+                    pellizco = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, s: z.s };
+                    arrastre = null;
+                } else if (e.pointerType === 'touch' && Date.now() - ultimoToque < 300) {
+                    zoomEn(z.s > 1 ? 1 : 2.5, e.clientX, e.clientY);
+                } else if (z.s > 1) {
+                    arrastre = { x: e.clientX - z.x, y: e.clientY - z.y };
+                }
+                if (e.pointerType === 'touch') ultimoToque = Date.now();
+            });
+            img.addEventListener('pointermove', function (e) {
+                if (!punteros[e.pointerId]) return;
+                punteros[e.pointerId] = { x: e.clientX, y: e.clientY };
+                var ids = Object.keys(punteros);
+                if (pellizco && ids.length === 2) {
+                    var a = punteros[ids[0]], b = punteros[ids[1]];
+                    zoomEn(pellizco.s * Math.hypot(a.x - b.x, a.y - b.y) / pellizco.d, (a.x + b.x) / 2, (a.y + b.y) / 2);
+                } else if (arrastre) {
+                    z.x = e.clientX - arrastre.x; z.y = e.clientY - arrastre.y;
+                    aplicarZoom();
+                }
+            });
+            function soltar(e) {
+                delete punteros[e.pointerId];
+                if (Object.keys(punteros).length < 2) pellizco = null;
+                if (!Object.keys(punteros).length) arrastre = null;
+            }
+            img.addEventListener('pointerup', soltar);
+            img.addEventListener('pointercancel', soltar);
+        }
 
         // Miniaturas
         fotos.forEach(function (f, i) {
@@ -140,6 +228,7 @@
             if (i < 0 || i >= fotos.length) return;
             actual = i;
             var f = fotos[i];
+            if (conZoom) reiniciarZoom();
 
             cargando.classList.add('is-visible');
             error.hidden = true;
@@ -178,11 +267,11 @@
             precargar(i + 1); precargar(i - 1);
         }
 
-        function abrir() {
+        function abrir(inicio) {
             origen = document.activeElement;
             visor.hidden = false;
             document.body.style.overflow = 'hidden';
-            ir(0);
+            ir(typeof inicio === 'number' ? inicio : 0);
             cerrar.focus();
         }
 
@@ -193,7 +282,10 @@
             if (origen && origen.focus) origen.focus();
         }
 
-        abrirBtn.addEventListener('click', abrir);
+        if (abrirBtn) abrirBtn.addEventListener('click', function () { abrir(0); });
+        disparadores.forEach(function (d) {
+            d.addEventListener('click', function () { abrir(parseInt(d.dataset.kvisIndice, 10) || 0); });
+        });
         cerrar.addEventListener('click', cerrarVisor);
         prev.addEventListener('click', function () { ir(actual - 1); });
         next.addEventListener('click', function () { ir(actual + 1); });
@@ -208,6 +300,8 @@
             if (e.key === 'Escape') { cerrarVisor(); }
             else if (e.key === 'ArrowLeft') { ir(actual - 1); }
             else if (e.key === 'ArrowRight') { ir(actual + 1); }
+            else if (conZoom && (e.key === '+' || e.key === '=')) { zoomEn(z.s * 1.6); }
+            else if (conZoom && e.key === '-') { zoomEn(z.s / 1.6); }
             else if (e.key === 'Home') { ir(0); }
             else if (e.key === 'End') { ir(fotos.length - 1); }
             else if (e.key === 'Tab') {
@@ -225,7 +319,7 @@
         var escena = document.getElementById('kvisEscena');
         escena.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
         escena.addEventListener('touchend', function (e) {
-            if (x0 === null) return;
+            if (x0 === null || (conZoom && z.s > 1)) { x0 = null; return; }
             var dx = e.changedTouches[0].clientX - x0;
             x0 = null;
             if (Math.abs(dx) > 50) ir(actual + (dx < 0 ? 1 : -1));

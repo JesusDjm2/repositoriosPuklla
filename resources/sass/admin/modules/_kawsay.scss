@@ -1,0 +1,325 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// KAWSAY — panel admin (rol kawsay)
+// Vistas: admin/kawsay, kawsay/areas_admin/index, kawsay/comentarios/index,
+//         kawsay/temas/edit, kawsay/temas/partials/{campos,ficha}
+// Movido desde <style> de cada vista; colores pasados a tokens.
+//
+// Kawsay conserva su identidad (verde oliva, igual que su sitio público),
+// pero como token propio que también cambia con el tema.
+// ═══════════════════════════════════════════════════════════════════════════
+
+:root {
+    --kw-accent: #6e7d1e;
+    --kw-accent-strong: #55631a;
+    --kw-accent-soft: #eef3dc;
+    --kw-accent-border: #d5e0b0;
+}
+
+:root[data-theme="dark"] {
+    --kw-accent: #a9bb4a;
+    --kw-accent-strong: #c3d36a;
+    --kw-accent-soft: rgba(169, 187, 74, 0.16);
+    --kw-accent-border: rgba(169, 187, 74, 0.38);
+}
+
+// ─── admin/kawsay.blade.php ────────────────────────────────
+.kawsay-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.kawsay-flow__step {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+}
+.kawsay-flow__step .module-card,
+.kawsay-flow__step .dash-card-link {
+    height: 100%;
+}
+.kawsay-flow__num {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    z-index: 1;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--kw-accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: .85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .18);
+}
+.kawsay-flow__arrow {
+    align-self: center;
+    color: var(--adm-text-subtle);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+@media (max-width: 767.98px) {
+    .kawsay-flow { flex-direction: column; }
+    .kawsay-flow__arrow { transform: rotate(90deg); align-self: center; }
+}
+
+// ─── kawsay/areas_admin/index.blade.php ────────────────────
+.kawsay-area-card {
+    background: var(--adm-surface);
+    border: 1px solid var(--adm-border);
+    border-radius: 1rem;
+    box-shadow: var(--adm-shadow);
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.25rem;
+}
+.kawsay-area-card__head { display: flex; align-items: flex-start; gap: 1rem; }
+.kawsay-area-card__circle {
+    flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px; border-radius: 50%; border: 3px solid var(--area-color, var(--kw-accent)); overflow: hidden;
+    background: var(--adm-surface-2); color: var(--adm-text-muted); font-size: 1.3rem;
+}
+.kawsay-area-card__circle img { width: 100%; height: 100%; object-fit: cover; }
+.kawsay-area-card__info { flex: 1 1 auto; min-width: 0; }
+.kawsay-area-card__title { font-weight: 700; font-size: 1.05rem; color: var(--adm-text); display: flex; align-items: center; gap: 0.5rem; }
+.kawsay-area-card__orden { font-size: 0.72rem; font-weight: 600; color: var(--adm-text-subtle); }
+.kawsay-area-card__desc { margin: 0.2rem 0 0; color: var(--adm-text-muted); font-size: 0.85rem; }
+.kawsay-area-card__actions { flex-shrink: 0; display: flex; gap: 0.35rem; }
+.kawsay-area-card__vacio { color: var(--adm-text-subtle); font-size: 0.85rem; font-style: italic; }
+.kawsay-area-card__tema {
+    display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.8rem; border-radius: 999px;
+    background: var(--adm-surface-2); color: var(--adm-text); font-size: 0.82rem; font-weight: 600; text-decoration: none;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.kawsay-area-card__tema--nuevo { background: transparent; border: 1px dashed var(--adm-border-strong); color: var(--adm-text-muted); }
+.kawsay-area-card__tema--nuevo:hover { border-color: var(--kw-accent); color: var(--kw-accent); background: var(--kw-accent-soft); text-decoration: none; }
+
+/* Barra de filtros y leyenda */
+.kac-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1.5rem; margin-bottom: 1rem; }
+.kac-filtros { display: inline-flex; gap: .4rem; flex-wrap: wrap; }
+.kac-filtro {
+    border: 1px solid var(--adm-border-strong); background: var(--adm-surface); border-radius: 999px; padding: .35rem .9rem;
+    font-size: .82rem; font-weight: 600; color: var(--adm-text); cursor: pointer; display: inline-flex; align-items: center; gap: .45rem;
+}
+.kac-filtro span { background: var(--adm-surface-2); border-radius: 999px; padding: 0 .5rem; font-size: .72rem; }
+.kac-filtro.is-activo { background: var(--adm-text); border-color: var(--adm-text); color: var(--adm-surface); }
+.kac-filtro.is-activo span { background: rgba(255, 255, 255, .2); }
+.kac-leyenda { margin: 0; font-size: .8rem; color: var(--adm-text-muted); }
+.kac-leyenda i { margin-right: .25rem; }
+
+/* Progreso del área */
+.kac-progreso { margin-top: .7rem; max-width: 520px; }
+.kac-progreso__barra { height: 6px; border-radius: 999px; background: var(--kw-accent-soft); overflow: hidden; }
+.kac-progreso__barra span { display: block; height: 100%; border-radius: 999px; background: var(--area-color, var(--kw-accent)); }
+.kac-progreso__texto { display: block; margin-top: .3rem; font-size: .78rem; color: var(--adm-text-muted); }
+
+/* Lista de temas */
+.kac-temas { margin-top: 1rem; padding-top: .5rem; border-top: 1px dashed var(--adm-border); }
+.kac-tema {
+    display: grid; align-items: center; gap: .5rem 1.25rem;
+    grid-template-columns: minmax(180px, 1.5fr) minmax(250px, 2fr) 150px auto;
+    padding: .7rem .5rem .7rem .75rem; border-bottom: 1px solid var(--adm-border); border-left: 4px solid transparent;
+    border-radius: 8px; transition: background .15s ease;
+}
+.kac-tema:last-child { border-bottom: 0; }
+.kac-tema:hover { background: var(--adm-surface-2); }
+.kac-tema--vacio { border-left-color: var(--adm-danger); }
+.kac-tema--parcial { border-left-color: var(--adm-warning); }
+.kac-tema--bueno { border-left-color: var(--adm-success); }
+.kac-tema.is-oculto { display: none; }
+
+.kac-tema__nombre { min-width: 0; }
+.kac-tema__titulo { font-weight: 700; font-size: .92rem; color: var(--adm-text); text-decoration: none; display: block; }
+.kac-tema__titulo:hover { color: var(--kw-accent); text-decoration: none; }
+.kac-tema__flags { display: inline-flex; align-items: center; gap: .55rem; margin-top: .2rem; font-size: .72rem; color: var(--adm-text-subtle); }
+.kac-tema__flags .is-on { color: var(--kw-accent); }
+.kac-tema__coment { display: inline-flex; align-items: center; gap: .25rem; }
+.kac-tema__coment i { margin-right: 0; }
+
+.kac-tipos { display: flex; flex-wrap: wrap; gap: .35rem; }
+.kac-tipo {
+    position: relative; width: 2.15rem; height: 2.15rem; border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--adm-surface-2); color: var(--adm-text-subtle); font-size: .85rem; border: 1px solid transparent;
+}
+.kac-tipo.is-on { background: var(--kw-accent-soft); color: var(--kw-accent-strong); border-color: var(--kw-accent-border); }
+.kac-tipo b {
+    position: absolute; top: -.4rem; right: -.4rem; min-width: 1.1rem; height: 1.1rem; padding: 0 .25rem;
+    border-radius: 999px; background: var(--kw-accent); color: #fff; font-size: .62rem; line-height: 1.1rem; text-align: center;
+}
+
+.kac-tema__estado { display: flex; flex-direction: column; align-items: flex-start; gap: .15rem; }
+.kac-tema__estado small { color: var(--adm-text-muted); font-size: .72rem; }
+.kac-badge { display: inline-flex; align-items: center; gap: .35rem; padding: .2rem .65rem; border-radius: 999px; font-size: .76rem; font-weight: 700; }
+.kac-badge--vacio { background: var(--adm-danger-soft); color: var(--adm-danger); }
+.kac-badge--parcial { background: var(--adm-warning-soft); color: var(--adm-warning); }
+.kac-badge--bueno { background: var(--adm-success-soft); color: var(--adm-success); }
+
+.kac-tema__acciones { display: flex; gap: .35rem; justify-content: flex-end; }
+
+@media (max-width: 991.98px) {
+    .kac-tema { grid-template-columns: 1fr auto; }
+    .kac-tipos { grid-column: 1 / -1; order: 3; }
+    .kac-tema__estado { flex-direction: row; align-items: center; gap: .5rem; grid-column: 1 / -1; order: 2; }
+}
+@media (max-width: 575.98px) {
+    .kac-tipos { gap: .3rem; }
+    .kac-tipo { width: 1.85rem; height: 1.85rem; font-size: .75rem; border-radius: 8px; }
+    .kawsay-area-card { padding: 1rem; }
+    .kawsay-area-card__head { flex-wrap: wrap; }
+    .kawsay-area-card__actions { width: 100%; }
+    .kac-tema__acciones .btn span { display: none; }
+    .kac-leyenda { display: none; }
+}
+
+// ─── kawsay/comentarios/index.blade.php ────────────────────
+.kcm-barra {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: .6rem 1rem; margin-bottom: .75rem; background: var(--adm-surface-2); border: 1px solid var(--adm-border); border-radius: .6rem;
+}
+.kcm-todos { display: flex; align-items: center; gap: .5rem; font-size: .85rem; font-weight: 600; color: var(--adm-text); margin: 0; cursor: pointer; }
+.kcm-todos input:disabled { cursor: not-allowed; }
+
+.kcm-fila {
+    display: flex; align-items: flex-start; gap: .9rem; padding: .9rem 1rem;
+    background: var(--adm-surface); border: 1px solid var(--adm-border); border-radius: .8rem; margin-bottom: .6rem;
+    box-shadow: var(--adm-shadow);
+}
+.kcm-check { margin-top: .55rem; width: 1.05rem; height: 1.05rem; flex-shrink: 0; }
+.kcm-avatar {
+    width: 2.4rem; height: 2.4rem; border-radius: 50%; flex-shrink: 0; margin-top: .1rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--kw-accent-soft); color: var(--kw-accent-strong); font-weight: 800; font-size: 1rem;
+}
+.kcm-cuerpo { flex: 1; min-width: 0; }
+.kcm-meta { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; margin-bottom: .2rem; }
+.kcm-autor { font-size: .92rem; color: var(--adm-text); }
+.kcm-meta time { font-size: .76rem; color: var(--adm-text-subtle); }
+.kcm-texto { margin: 0 0 .5rem; color: var(--adm-text); font-size: .92rem; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; }
+.kcm-origen { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.kcm-area {
+    --kcm-color: #6e7d1e;
+    font-size: .7rem; font-weight: 700; padding: .1rem .55rem; border-radius: 999px;
+    background: color-mix(in srgb, var(--kcm-color) 14%, var(--adm-surface)); color: color-mix(in srgb, var(--kcm-color) 70%, var(--adm-text));
+    border: 1px solid color-mix(in srgb, var(--kcm-color) 30%, var(--adm-surface));
+}
+.kcm-tema { font-size: .78rem; font-weight: 600; color: var(--kw-accent); text-decoration: none; }
+.kcm-tema:hover { text-decoration: underline; }
+.kcm-vercomo { color: var(--adm-text-subtle); font-size: .74rem; }
+.kcm-vercomo:hover { color: var(--kw-accent); }
+.kcm-borrar { flex-shrink: 0; margin-top: -.1rem; }
+
+@media (max-width: 575.98px) {
+    .kcm-fila { flex-wrap: wrap; }
+    .kcm-borrar { margin-left: auto; }
+}
+
+// ─── kawsay/temas/edit.blade.php ───────────────────────────
+.kawsay-tipo-tabs { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1rem; }
+.kawsay-tipo-tab {
+    border: 1px solid var(--adm-border-strong); background: var(--adm-surface); border-radius: 999px;
+    padding: .35rem .9rem; font-size: .82rem; color: var(--adm-text);
+    display: inline-flex; align-items: center; gap: .4rem;
+}
+.kawsay-tipo-tab .badge { background: var(--adm-surface-2); color: var(--adm-text); }
+.kawsay-tipo-tab.is-active { background: var(--adm-text); color: var(--adm-surface); border-color: var(--adm-text); }
+.kawsay-tipo-tab.is-active .badge { background: rgba(255,255,255,.2); color: #fff; }
+.kawsay-tipo-panel { display: none; }
+.kawsay-tipo-panel.is-active { display: block; }
+
+// ─── kawsay/temas/partials/campos.blade.php ────────────────
+.kawsay-portada { display: flex; flex-direction: column; gap: .9rem; }
+.kawsay-portada__preview {
+width: 100%; max-width: 320px; aspect-ratio: 4 / 3; border-radius: 12px;
+overflow: hidden; background: var(--adm-surface-3); color: var(--adm-text-subtle);
+display: flex; align-items: center; justify-content: center; font-size: 2.2rem;
+border: 2px solid var(--adm-border); transition: opacity .15s ease;
+}
+.kawsay-portada__preview img { width: 100%; height: 100%; object-fit: cover; }
+.kawsay-portada__preview.is-quitada { opacity: .3; }
+.kawsay-portada__campos { min-width: 0; }
+.kawsay-portada__input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.kawsay-portada__input:focus-visible + label { outline: 2px solid var(--kw-accent); outline-offset: 2px; }
+.kawsay-portada__nombre { display: block; margin-top: .35rem; font-size: .75rem; color: var(--adm-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+// ─── kawsay/temas/partials/ficha.blade.php ─────────────────
+.kt-ficha { background: var(--adm-surface); border: 1px solid var(--adm-border); border-radius: 1rem; box-shadow: var(--adm-shadow); margin-bottom: 1.25rem; overflow: hidden; }
+.kt-edicion { display: none; padding: 1.25rem 1.4rem 1.4rem; }
+.kt-ficha.is-editando .kt-edicion { display: block; animation: ktEntra .25s ease; }
+.kt-ficha.is-editando .kt-vista { display: none; }
+@keyframes ktEntra { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.kt-vista__cabecera { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: .9rem 1.4rem; border-bottom: 1px solid var(--adm-border); background: var(--adm-surface-2); }
+.kt-edicion .kt-vista__cabecera { margin: -1.25rem -1.4rem 1.25rem; }
+.kt-vista__seccion { font-size: .78rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--adm-text-muted); }
+.kt-vista__seccion i { color: var(--kw-accent); margin-right: .35rem; }
+.kt-vista__seccion--edit { color: var(--kw-accent-strong); }
+.kt-vista__acciones { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+.kt-vista__cuerpo { display: grid; grid-template-columns: minmax(220px, 320px) 1fr; gap: 1.75rem; padding: 1.4rem; align-items: start; }
+.kt-portada { aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background: var(--adm-surface-3); box-shadow: 0 8px 22px rgba(20, 30, 10, .14); border: 1px solid var(--adm-border); }
+.kt-portada img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.kt-portada--vacia { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .4rem; color: var(--adm-text-subtle); box-shadow: none; border: 2px dashed var(--adm-border-strong); background: var(--adm-surface-2); }
+.kt-portada--vacia i { font-size: 2.2rem; }
+.kt-portada--vacia span { font-size: .78rem; font-weight: 600; }
+
+.kt-datos { min-width: 0; }
+.kt-area { display: inline-flex; align-items: center; gap: .45rem; padding: .25rem .8rem; border-radius: 999px; font-size: .78rem; font-weight: 700; color: var(--adm-text); background: color-mix(in srgb, var(--kt-color) 14%, var(--adm-surface)); border: 1px solid color-mix(in srgb, var(--kt-color) 35%, var(--adm-surface)); }
+.kt-area__punto { width: .6rem; height: .6rem; border-radius: 50%; background: var(--kt-color); display: inline-block; }
+.kt-titulo { font-size: 1.6rem; font-weight: 800; color: var(--adm-text); margin: .7rem 0 .6rem; line-height: 1.2; }
+.kt-descripcion { color: var(--adm-text); font-size: .95rem; line-height: 1.65; margin: 0 0 1.1rem; max-width: 70ch; }
+.kt-descripcion--vacia { color: var(--adm-warning); background: var(--adm-warning-soft); border: 1px dashed var(--adm-warning); border-radius: 10px; padding: .6rem .85rem; font-size: .85rem; }
+.kt-meta { display: flex; flex-wrap: wrap; gap: 1rem 2.5rem; margin: 0; padding-top: .9rem; border-top: 1px dashed var(--adm-border); }
+.kt-meta dt { font-size: .68rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--adm-text-subtle); margin-bottom: .15rem; }
+.kt-meta dd { margin: 0; font-size: .85rem; color: var(--adm-text); overflow-wrap: anywhere; }
+.kt-meta a { color: var(--kw-accent); text-decoration: none; }
+.kt-meta a:hover { text-decoration: underline; }
+
+.kt-kpis { display: grid; grid-template-columns: repeat(3, minmax(110px, 1fr)) minmax(240px, 2fr); border-top: 1px solid var(--adm-border); background: var(--adm-surface-2); }
+.kt-kpi { padding: .95rem 1.2rem; display: flex; flex-direction: column; gap: .1rem; text-decoration: none; color: inherit; border-right: 1px solid var(--adm-border); transition: background .15s ease; }
+a.kt-kpi:hover { background: var(--kw-accent-soft); text-decoration: none; color: inherit; }
+.kt-kpi:last-child { border-right: 0; }
+.kt-kpi__valor { font-size: 1.5rem; font-weight: 800; color: var(--adm-text); line-height: 1.1; }
+.kt-kpi__valor small { font-size: .85rem; font-weight: 700; color: var(--adm-text-subtle); }
+.kt-kpi__etiqueta { font-size: .74rem; font-weight: 600; color: var(--adm-text-muted); }
+.kt-kpi--tipos { flex-direction: row; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.kt-tipo { position: relative; width: 2rem; height: 2rem; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; background: var(--adm-surface-2); color: var(--adm-text-subtle); font-size: .8rem; }
+.kt-tipo.is-on { background: var(--kw-accent-soft); color: var(--kw-accent-strong); border: 1px solid var(--kw-accent-border); }
+.kt-tipo b { position: absolute; top: -.4rem; right: -.4rem; min-width: 1.05rem; height: 1.05rem; padding: 0 .22rem; border-radius: 999px; background: var(--kw-accent); color: #fff; font-size: .6rem; line-height: 1.05rem; text-align: center; }
+
+@media (max-width: 991.98px) {
+.kt-vista__cuerpo { grid-template-columns: 1fr; gap: 1.1rem; }
+.kt-portada { max-width: 420px; }
+.kt-kpis { grid-template-columns: repeat(3, 1fr); }
+.kt-kpi--tipos { grid-column: 1 / -1; border-top: 1px solid var(--adm-border); border-right: 0; }
+}
+@media (max-width: 575.98px) {
+.kt-vista__cabecera { padding: .8rem 1rem; }
+.kt-vista__cuerpo { padding: 1rem; }
+.kt-titulo { font-size: 1.3rem; }
+.kt-edicion { padding: 1rem; }
+.kt-edicion .kt-vista__cabecera { margin: -1rem -1rem 1rem; }
+.kt-kpi { padding: .8rem .8rem; }
+.kt-kpi__valor { font-size: 1.25rem; }
+}
+@media (prefers-reduced-motion: reduce) { .kt-ficha.is-editando .kt-edicion { animation: none; } }
+
+// ─── kawsay/temas/edit.blade.php: portada de videos ────────────────────────
+.kawsay-portada-cell {
+    width: 1%;
+    padding-right: 0;
+}
+
+.kawsay-portada-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.35rem;
+}
+
+.kawsay-portada-acciones .btn {
+    cursor: pointer;
+}

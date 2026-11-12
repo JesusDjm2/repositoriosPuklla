@@ -2,7 +2,7 @@
 @section('titulo', '- Panel Videos')
 @section('contenido')
 
-    <x-hero-banner titulo="Panel de Videos" subtitulo="Gestión del catálogo y del equipo de Videos"
+    <x-hero-banner titulo="Panel de Videos" subtitulo="Gestión del catálogo audiovisual y del equipo de Videos"
         icono="fa-video-camera" color="radio">
         <x-slot:stats>
             @php
@@ -17,14 +17,53 @@
         </x-slot:stats>
     </x-hero-banner>
 
-    <div class="modules-grid" data-animate-stagger>
-        <x-module-card href="{{ route('videos.index') }}" icono="fa-video-camera" color="radio"
-            titulo="Videos" descripcion="Catálogo de videos" />
-        <x-module-card href="{{ route('videoscat.index') }}" icono="fa-tags" color="radio"
-            titulo="Categorías de video" descripcion="Categorías del catálogo de videos" />
-        <x-module-card href="{{ route('admin.index') }}" icono="fa-users" color="radio"
-            titulo="Administradores" descripcion="Gestiona los usuarios con acceso a este panel"
-            :badge="$admins->count()" />
+    <div class="row">
+        <div class="col-md-6 col-lg-4 mb-4">
+            <x-dash-card
+                href="{{ route('videos.index') }}"
+                icono="fa-video-camera"
+                variante="videos"
+                titulo="Videos"
+                descripcion="Catálogo completo de materiales audiovisuales, conferencias y cápsulas.">
+                <x-slot:badges>
+                    <span class="stat-badge badge-registros">
+                        <i class="fa fa-play"></i> {{ $conteos['Videos'] ?? 0 }} videos
+                    </span>
+                </x-slot:badges>
+            </x-dash-card>
+        </div>
+
+        <div class="col-md-6 col-lg-4 mb-4">
+            <x-dash-card
+                href="{{ route('videoscat.index') }}"
+                icono="fa-tags"
+                variante="videos"
+                titulo="Categorías de Video"
+                descripcion="Clasificación temática de las producciones en video.">
+                <x-slot:badges>
+                    <span class="stat-badge badge-categorias">
+                        <i class="fa fa-tags"></i> {{ $conteos['Categorías de video'] ?? 0 }} categorías
+                    </span>
+                </x-slot:badges>
+            </x-dash-card>
+        </div>
+
+        @if (!empty($admins) && $admins->isNotEmpty())
+            <div class="col-md-6 col-lg-4 mb-4">
+                <x-dash-card
+                    href="{{ route('admin.index') }}"
+                    icono="fa-users"
+                    variante="usuarios"
+                    titulo="Administradores"
+                    descripcion="Usuarios con permisos para administrar videos.">
+                    <x-slot:badges>
+                        <span class="stat-badge badge-secciones">
+                            <i class="fa fa-user-circle"></i> {{ $admins->count() }} miembros
+                        </span>
+                    </x-slot:badges>
+                </x-dash-card>
+            </div>
+        @endif
     </div>
 
 @endsection

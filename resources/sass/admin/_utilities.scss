@@ -1,0 +1,160 @@
+// Utilidades y patrones de maquetación reutilizables del panel.
+// Bootstrap 4 no trae `gap`; estas clases reemplazan los style="gap:..."
+// que se repetían en las vistas.
+
+.adm-gap-1 { gap: 0.25rem; }
+.adm-gap-2 { gap: 0.5rem; }
+.adm-gap-3 { gap: 0.75rem; }
+.adm-gap-4 { gap: 1rem; }
+
+// Encabezado de página/sección: título + acciones. En escritorio van en una
+// fila; en celular las acciones bajan y ocupan el ancho completo.
+.adm-page-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+}
+
+.adm-page-head__title {
+    min-width: 0;
+    flex: 1 1 16rem;
+}
+
+.adm-page-head__title h1,
+.adm-page-head__title h2,
+.adm-page-head__title h4 {
+    margin-bottom: 0.2rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.adm-page-head__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+@media (max-width: 575.98px) {
+    .adm-page-head__actions {
+        width: 100%;
+    }
+
+    .adm-page-head__actions > .btn {
+        flex: 1 1 auto;
+    }
+}
+
+// Barra de filtros/herramientas: los controles se acomodan solos y nunca
+// empujan la página en horizontal.
+.adm-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.adm-toolbar > .adm-toolbar__grow {
+    flex: 1 1 14rem;
+    min-width: 0;
+}
+
+.adm-toolbar > .adm-toolbar__item {
+    flex: 0 1 11rem;
+    min-width: 0;
+}
+
+@media (max-width: 575.98px) {
+    .adm-toolbar > .adm-toolbar__item,
+    .adm-toolbar > .btn {
+        flex: 1 1 calc(50% - 0.25rem);
+    }
+}
+
+// Insignia pequeña para contadores dentro de listas o filas.
+.adm-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    padding: 0.16rem 0.5rem;
+    border-radius: 999px;
+    background: var(--adm-surface-2);
+    border: 1px solid var(--adm-border);
+    color: var(--adm-text-muted);
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+
+.adm-chip--pdf { background: var(--adm-danger-soft); color: var(--adm-danger); border-color: transparent; }
+.adm-chip--doc { background: var(--adm-info-soft); color: var(--adm-info); border-color: transparent; }
+.adm-chip--audio { background: var(--adm-success-soft); color: var(--adm-success); border-color: transparent; }
+.adm-chip--video { background: var(--adm-primary-soft); color: var(--adm-link); border-color: transparent; }
+.adm-chip--imagen { background: var(--adm-info-soft); color: var(--adm-info); border-color: transparent; }
+.adm-chip--aporte { background: var(--adm-warning-soft); color: var(--adm-warning); border-color: transparent; }
+.adm-chip--ok { background: var(--adm-success-soft); color: var(--adm-success); border-color: transparent; }
+.adm-chip--off { background: var(--adm-danger-soft); color: var(--adm-danger); border-color: transparent; }
+
+.adm-chip__count {
+    font-weight: 700;
+}
+
+// Variante dorada (acento) para etiquetas de categoría.
+.adm-chip--accent { background: var(--adm-accent-soft); color: var(--adm-accent-strong); border-color: transparent; font-weight: 600; }
+
+// Ícono en mosaico con color propio (p. ej. el color de una categoría guardado
+// en la base): style="--tile-color: {{ $cat->color }}".
+.adm-icon-tile {
+    --tile-color: var(--adm-accent);
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--adm-radius-sm);
+    background: color-mix(in srgb, var(--tile-color) 14%, transparent);
+    color: var(--tile-color);
+    font-size: 1.1rem;
+}
+
+// Miniaturas de portada en tablas y formularios.
+.adm-thumb {
+    // inline-block + overflow: si la imagen no carga, el texto alternativo
+    // no rompe la tabla (una <img> rota con alt deja de respetar width).
+    display: inline-block;
+    overflow: hidden;
+    font-size: 0.65rem;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--adm-border);
+    background: var(--adm-surface-2);
+}
+
+.adm-thumb--48x36 { width: 48px; height: 36px; }
+.adm-thumb--h36 { height: 36px; }
+
+// Imagen circular con aro de color (style="--ring-color: …").
+.adm-avatar-ring {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid var(--ring-color, var(--adm-accent));
+}
+
+.adm-link-inherit,
+.adm-link-inherit:hover {
+    color: inherit !important;
+    text-decoration: none;
+}
+
+.adm-divider-dashed {
+    width: 100%;
+    margin-bottom: 0;
+    border: 0;
+    border-bottom: 1px dashed var(--adm-border-strong);
+}

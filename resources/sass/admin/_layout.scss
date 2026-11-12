@@ -1,0 +1,616 @@
+// Estructura del panel: body, menú lateral, barra superior, contenido y botones base.
+// Parte del bundle resources/sass/admin.scss — usar solo variables --adm-* (ver _tokens.scss).
+
+// ─── Estructura general ─────────────────────────────────────────────────────
+body {
+    background: var(--adm-bg);
+    color: var(--adm-text);
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.wrapper {
+    width: 100%;
+    align-items: stretch;
+}
+
+// Overlay que cierra el sidebar off-canvas al tocar fuera de él (móvil/tablet)
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 15, 25, 0.5);
+    z-index: 1035;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-backdrop.active {
+    display: block;
+    opacity: 1;
+}
+
+// Evita el scroll del fondo mientras el menú móvil está abierto
+body.sidebar-open-lock {
+    overflow: hidden;
+}
+
+#sidebar {
+    width: 268px;
+    min-width: 268px;
+    max-width: 268px;
+    flex: 0 0 268px;
+    background: var(--adm-sidebar-bg);
+    color: var(--adm-sidebar-text);
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    z-index: 1030;
+    transition: margin-left 0.3s var(--adm-ease);
+}
+
+#sidebar ul li a {
+    padding: 0.65rem 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--puk-menu-text-muted);
+    border-bottom: 1px solid var(--puk-menu-divider);
+    border-radius: 0.5rem;
+    font-size: 0.92rem;
+    transition: background-color 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+}
+
+#sidebar ul li a i:first-child {
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+// Chevron que indica que un item despliega un submenú, y su estado
+// abierto/cerrado — antes no había ninguna pista visual de esto aparte del
+// propio contenido apareciendo o no.
+// Flecha de submenú: se anula el triángulo de borde de Bootstrap (.dropdown-toggle)
+// y se usa solo el ícono de FontAwesome, alineado a la derecha por flex.
+#sidebar .dropdown-toggle::after {
+    content: "\f107";
+    position: static;
+    display: inline-block;
+    width: auto;
+    height: auto;
+    border: 0;
+    vertical-align: 0;
+    font-family: FontAwesome;
+    margin-left: auto;
+    padding-left: 0.5rem;
+    font-size: 0.85rem;
+    opacity: 0.55;
+    transition: transform 0.25s ease;
+}
+
+#sidebar .dropdown-toggle[aria-expanded="true"]::after {
+    transform: rotate(180deg);
+}
+
+// Bootstrap 4 anima .collapsing con una curva lineal por defecto: se siente
+// brusca. La suavizamos y dejamos que el contenido aparezca con un pequeño
+// fade en vez de aparecer de golpe al terminar el slide.
+#sidebar .collapsing {
+    transition: height 0.28s ease;
+}
+
+#sidebar ul.collapse.show > li {
+    animation: sidebarSubmenuIn 0.2s ease both;
+}
+
+@keyframes sidebarSubmenuIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// Sangría de submenús: se acumula sola en cada nivel (proyecto → subgrupo →
+// item), así una jerarquía de 3 niveles (p. ej. Biblioteca digital/física
+// dentro de un proyecto) se distingue de una de 2 sin necesitar reglas por
+// nivel.
+#sidebar ul.collapse {
+    padding-left: 0.85rem;
+}
+
+#sidebar ul li a:hover {
+    color: var(--puk-menu-text);
+    background: var(--puk-menu-accent-soft);
+    padding-left: 0.5rem;
+}
+
+#sidebar ul li.active > a {
+    background: var(--role-accent-soft);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: inset 3px 0 0 var(--role-accent);
+}
+
+// Encabezado de sección dentro del sidebar (p. ej. "Proyectos", "Usuarios"):
+// agrupa items relacionados, no es clicable.
+#sidebar li.sidebar-section-title {
+    padding: 1.1rem 0.6rem 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+// Aviso de que un proyecto recién creado desde el CRUD de Proyectos aún no
+// tiene pantallas conectadas a este menú (requiere código una sola vez).
+#sidebar .menu-note {
+    margin-left: auto;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+// Flechita "→" que aparece al hacer hover sobre un item de submenú (antes vivía
+// como <style> suelto en medio de livewire/menu-admin.blade.php).
+.flecha-admin {
+    opacity: 0;
+    display: inline-block;
+    transform: translateX(-8px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+#sidebar ul li a:hover .flecha-admin {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+@media (max-width: 991.98px) {
+    #sidebar {
+        position: fixed;
+        z-index: 1040;
+        top: 0;
+        bottom: 0;
+        margin-left: -268px;
+        box-shadow: 0.5rem 0 1.5rem rgba(0, 0, 0, 0.25);
+    }
+
+    #sidebar.active {
+        margin-left: 0;
+    }
+}
+
+#content {
+    // min-width: 0 es clave: sin esto, un hijo ancho (tabla, fila de filtros)
+    // estira este ítem flex y TODA la página se desborda en horizontal.
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    padding: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 100% 0%, rgba(200, 142, 65, 0.06), transparent 45%),
+        radial-gradient(circle at 0% 100%, rgba(174, 12, 33, 0.045), transparent 40%),
+        var(--adm-bg);
+}
+
+// ─── Topbar ─────────────────────────────────────────────────────────────────
+.admin-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    height: 68px;
+    padding: 0 clamp(1rem, 2vw, 2rem);
+    background: var(--adm-topbar-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--adm-border);
+}
+
+.admin-topbar__toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    border: 1px solid var(--adm-border);
+    background: var(--adm-surface);
+    color: var(--adm-text);
+    font-size: 1.1rem;
+    transition: background-color 0.2s ease;
+}
+
+.admin-topbar__toggle:hover {
+    background: var(--adm-surface-2);
+}
+
+// Título y acciones crecen por igual (flex: 1 1 0) para que el bloque
+// .admin-topbar__center quede realmente al medio de la barra.
+.admin-topbar__title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.admin-topbar__date {
+    overflow: hidden;
+    color: var(--adm-text-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// Fecha larga en escritorio; abreviada en pantallas medianas.
+.admin-topbar__date-corta {
+    display: none;
+}
+
+@media (max-width: 1199.98px) {
+    .admin-topbar__date-larga,
+    .admin-topbar__cta-texto {
+        display: none;
+    }
+
+    .admin-topbar__date-corta {
+        display: inline;
+    }
+}
+
+.admin-topbar__center {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: center;
+}
+
+.admin-topbar__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 40px;
+    padding: 0.45rem 1rem;
+    border: 1px solid var(--adm-success);
+    border-radius: 999px;
+    background: var(--adm-success-soft);
+    color: var(--adm-success) !important;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none !important;
+    white-space: nowrap;
+    transition: background-color 0.18s var(--adm-ease), color 0.18s var(--adm-ease), transform 0.18s var(--adm-ease);
+}
+
+.admin-topbar__cta small {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    opacity: 0.8;
+}
+
+@media (hover: hover) {
+    .admin-topbar__cta:hover {
+        background: var(--adm-success);
+        color: var(--adm-surface) !important;
+        transform: translateY(-1px);
+    }
+}
+
+.admin-topbar__cta:focus-visible {
+    outline: 2px solid var(--adm-success);
+    outline-offset: 2px;
+}
+
+// (Selectores con .admin-topbar delante: este bloque está antes de las reglas
+// base de los botones en el archivo y debe ganarles.)
+// Celular: la fecha cede su espacio, cada bloque toma solo lo que necesita
+// (si no, el título se encoge a 0 y el ícono de descarga se monta encima).
+@media (max-width: 575.98px) {
+    .admin-topbar {
+        gap: 0.4rem;
+    }
+
+    .admin-topbar .admin-topbar__date {
+        display: none;
+    }
+
+    .admin-topbar .admin-topbar__title,
+    .admin-topbar .admin-topbar__actions {
+        flex: 0 0 auto;
+        gap: 0.35rem;
+    }
+
+    .admin-topbar .admin-topbar__center {
+        flex: 1 1 auto;
+    }
+
+    .admin-topbar .admin-topbar__toggle,
+    .admin-topbar .admin-topbar__icon-btn,
+    .admin-topbar .admin-topbar__cta {
+        width: 38px;
+        height: 38px;
+        min-height: 38px;
+    }
+
+    // La inicial es decorativa: en celular cede su lugar; "Salir" se mantiene.
+    .admin-topbar .admin-topbar__avatar {
+        display: none;
+    }
+
+    .admin-topbar .admin-topbar__user {
+        padding-left: 0.35rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .admin-topbar__cta {
+        width: 40px;
+        padding: 0;
+        justify-content: center;
+    }
+
+    .admin-topbar__cta-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+}
+
+.admin-topbar__title-text {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--adm-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// Pastilla que identifica el módulo actual (Biblioteca, Kawsay, Videos,
+// Canciones, Sisichakunay) ahora que el sidebar ya no cambia de color por
+// módulo — mismo acento institucional para no reintroducir un color por rol.
+.admin-topbar__module-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    background: var(--role-accent-soft);
+    color: var(--role-accent);
+    border: 1px solid var(--role-accent-border);
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+    .admin-topbar__module-badge-label {
+        display: none;
+    }
+}
+
+.admin-topbar__actions {
+    display: flex;
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    min-width: max-content;
+}
+
+.admin-topbar__icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--adm-border);
+    background: var(--adm-surface);
+    color: var(--adm-link);
+    font-size: 1.05rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.admin-topbar__icon-btn:hover,
+.admin-topbar__icon-btn:focus {
+    background: var(--puk-accent-soft);
+    color: var(--adm-link);
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.admin-topbar__user {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding-left: 0.7rem;
+    border-left: 1px solid var(--adm-border);
+}
+
+.admin-topbar__avatar {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, var(--puk-maroon), var(--puk-maroon-dark));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.admin-topbar__username {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--adm-text);
+}
+
+.admin-topbar__logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    color: var(--adm-text-muted);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.admin-topbar__logout:hover {
+    background: var(--adm-danger-soft);
+    color: var(--adm-danger);
+}
+
+@media (max-width: 991.98px) {
+    .admin-topbar__toggle {
+        display: inline-flex;
+    }
+}
+
+// ─── Contenido: relleno responsivo (reemplaza el p-5 fijo de Bootstrap) ────
+.admin-content {
+    padding: clamp(1rem, 0.5rem + 2.5vw, 3rem);
+}
+
+// Reafirma el color de marca sobre el .btn-primary de Bootstrap 4 (que por
+// defecto lo pinta de azul) para los botones dentro de los componentes
+// nuevos de esta hoja.
+// Reafirma el color de marca sobre CUALQUIER .btn-primary del panel admin
+// (Bootstrap 4 lo pinta de azul por defecto), no solo dentro de stat-card o
+// project-card — así los formularios de x-data-table/x-form-field también
+// lo heredan sin tener que repetir la regla en cada vista.
+.admin-content .btn-primary {
+    background: var(--puk-maroon);
+    border-color: var(--adm-link);
+}
+
+.admin-content .btn-primary:hover,
+.admin-content .btn-primary:focus {
+    background: var(--puk-maroon-dark) !important;
+    border-color: var(--puk-maroon-dark) !important;
+}
+
+// Botones de acción de los formularios/tablas del panel (Guardar, Cancelar,
+// Eliminar, Subir...): antes eran el Bootstrap 4 de fábrica (radio de 4px,
+// sin sombra, sin transición) — mismo tratamiento de elevación sutil que el
+// resto del sistema (module-card, hero-banner__actions), aplicado una sola
+// vez acá en vez de repetirlo vista por vista.
+.admin-content .btn {
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 0.4rem 0.9rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-content .btn-sm {
+    padding: 0.35rem 0.8rem;
+    font-size: 0.82rem;
+}
+
+.admin-content .btn-primary,
+.admin-content .btn-danger,
+.admin-content .btn-outline-secondary,
+.admin-content .btn-outline-danger {
+    box-shadow: 0 1px 2px rgba(20, 20, 40, 0.06);
+}
+
+.admin-content .btn-primary:hover,
+.admin-content .btn-danger:hover,
+.admin-content .btn-outline-secondary:hover,
+.admin-content .btn-outline-danger:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(20, 20, 40, 0.12);
+}
+
+.admin-content .btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.admin-content .btn-outline-secondary {
+    color: var(--bv-text, #495057);
+    border-color: var(--bv-border-strong, #ced4da);
+}
+
+.admin-content .btn-outline-secondary:hover,
+.admin-content .btn-outline-secondary:focus {
+    background: var(--bv-surface-2, #f8f9fb) !important;
+    color: var(--bv-text, #212529) !important;
+    border-color: var(--bv-border-strong, #ced4da) !important;
+}
+
+.admin-content .btn-outline-danger:hover,
+.admin-content .btn-outline-danger:focus {
+    background: var(--bv-danger, #dc3545) !important;
+    border-color: var(--bv-danger, #dc3545) !important;
+    color: #fff !important;
+}
+
+// ─── Animación Senior de Cambio de Tema (Circular Liquid Reveal) ─────────────
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+    z-index: 1;
+}
+
+::view-transition-new(root) {
+    z-index: 999999;
+}
+
+.bv-theme-toggle,
+.admin-topbar__icon-btn[data-theme-toggle] {
+    position: relative;
+    overflow: visible;
+
+    &.theme-toggle--animating {
+        animation: theme-btn-pulse 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+}
+
+@keyframes theme-btn-pulse {
+    0% {
+        transform: scale(0.9);
+        box-shadow: 0 0 0 0 rgba(200, 142, 65, 0.6);
+    }
+    40% {
+        transform: scale(1.15);
+        box-shadow: 0 0 0 10px rgba(200, 142, 65, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(200, 142, 65, 0);
+    }
+}
+
+

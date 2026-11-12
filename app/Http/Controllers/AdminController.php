@@ -44,7 +44,27 @@ class AdminController extends Controller
             $query->where('name', 'biblioteca');
         })->get();
         $conteos = $stats->paraRol('biblioteca');
-        return view('admin.bibliotecario', compact('admins', 'conteos'));
+
+        $statsData = [
+            'secciones' => \App\Models\Seccion::count(),
+            'categorias' => \App\Models\Categoria::count(),
+            'libros' => \App\Models\Libro::count(),
+            'libros_fisicos' => \App\Models\LibroFisico::count(),
+            'categorias_fisicas' => \App\Models\CategoriaFisica::count(),
+            'prestamos_total' => \App\Models\Prestamo::count(),
+            'prestamos_activos' => \App\Models\Prestamo::activos()->count(),
+            'prestamos_atrasados' => \App\Models\Prestamo::atrasados()->count(),
+            'materiales' => \App\Models\MaterialDidactico::count(),
+            'material_categorias' => \App\Models\CategoriaMaterialDidactico::count(),
+            'taqe_trabajos' => \App\Models\TaqeTrabajo::count(),
+            'taqe_categorias' => \App\Models\TaqeCategoria::count(),
+            'videos' => \App\Models\Video::count(),
+            'video_categorias' => \App\Models\VideoCategoria::count(),
+            'canciones' => \App\Models\Canciones::count(),
+            'canciones_categorias' => \App\Models\CancionesCategoria::count(),
+        ];
+
+        return view('admin.bibliotecario', compact('admins', 'conteos', 'statsData'));
     }
     public function kawsay(ProyectoEstadisticasService $stats)
     {
@@ -67,13 +87,12 @@ class AdminController extends Controller
         $conteos = $stats->paraRol('audios');
         return view('admin.canciones', compact('admins', 'conteos'));
     }
-    public function sisicha(ProyectoEstadisticasService $stats)
+    /**
+     * Acceso histórico a Sisichakunay: redirige al Panel unificado de Radio & Sisichakunay.
+     */
+    public function sisicha()
     {
-        $admins = User::whereHas('roles', function ($query) {
-            $query->where('name', 'sisicha');
-        })->get();
-        $conteos = $stats->paraRol('sisicha');
-        return view('admin.sisicha', compact('admins', 'conteos'));
+        return redirect()->route('adminRadio');
     }
     /** Panel combinado del admin general para Radio Pukllasunchis (sisicha + audios + videos). */
     public function radio(ProyectoEstadisticasService $stats)
