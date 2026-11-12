@@ -250,8 +250,8 @@
 
 .hero-banner--radio,
 .hero-banner--sisicha {
-    --_accent: #92471b;      // Terracota / Cobre cálido oficial de Radio Pukllasunchis & Sisipedia
-    --_accent-dark: #6c3f17; // Tono profundo oficial del proyecto (#6c3f17)
+    --_accent: #ae0c21;      // Rojo oscuro / Granate institucional idéntico al botón activo de tabs
+    --_accent-dark: #7a0515; // Tono profundo y elegante para el gradiente
 }
 
 // Afinación modo oscuro para Hero Banners de todos los proyectos
@@ -273,10 +273,10 @@
 
     .hero-banner--radio,
     .hero-banner--sisicha {
-        --_accent: #5a2612;
-        --_accent-dark: #1b100d;
-        border: 1px solid rgba(217, 119, 6, 0.35);
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.65), 0 0 35px rgba(146, 71, 27, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        --_accent: #780d19;
+        --_accent-dark: #2a0307;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.65), 0 0 35px rgba(174, 12, 33, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
 
     .hero-banner__stat {
