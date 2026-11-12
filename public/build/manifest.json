@@ -1,0 +1,34 @@
+{
+  "_sweetalert2.esm.all-C80wueXW.js": {
+    "file": "assets/sweetalert2.esm.all-C80wueXW.js",
+    "name": "sweetalert2.esm.all"
+  },
+  "resources/js/admin.js": {
+    "file": "assets/admin-LKjtGUIc.js",
+    "name": "admin",
+    "src": "resources/js/admin.js",
+    "isEntry": true,
+    "imports": [
+      "_sweetalert2.esm.all-C80wueXW.js"
+    ]
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-D4F9YbvN.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "_sweetalert2.esm.all-C80wueXW.js"
+    ]
+  },
+  "resources/sass/admin.scss": {
+    "file": "assets/admin-B-M4zqNH.css",
+    "src": "resources/sass/admin.scss",
+    "isEntry": true
+  },
+  "resources/sass/app.scss": {
+    "file": "assets/app-IgyIM7qE.css",
+    "src": "resources/sass/app.scss",
+    "isEntry": true
+  }
+}
