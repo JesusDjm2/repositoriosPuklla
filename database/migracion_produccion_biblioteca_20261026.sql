@@ -1,3 +1,6 @@
+-- ⚠️ NO EJECUTAR: reemplazado por migracion_produccion_taqe_material_20261112.sql
+--    (este usa ADD COLUMN IF NOT EXISTS, que solo existe en MariaDB, falla si una
+--    llave foránea ya existe e inserta trabajos de Taq'e de ejemplo).
 -- =============================================================================
 -- MIGRACIÓN / SINCRONIZACIÓN DE BIBLIOTECA A PRODUCCIÓN (repositoriosPuklla)
 -- FECHA: 26/10/2026

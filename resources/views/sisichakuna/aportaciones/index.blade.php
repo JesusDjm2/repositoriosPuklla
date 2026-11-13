@@ -4,351 +4,272 @@
     {{-- Summernote (editor de texto enriquecido para "detalle") se carga solo aquí
          porque es la única vista admin que usa este editor (jQuery ya está global). --}}
     <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
+    {{-- defer: jQuery también se carga con defer; sin esto Summernote corría antes que jQuery y fallaba. --}}
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js" defer></script>
 @endpush
 @section('contenido')
 @include('sisichakuna.partials.sisipedia-hero')
 @include('sisichakuna.partials.sisipedia-admin-nav', ['active' => 'aportaciones'])
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body py-3">
-        <div class="adm-page-head">
-            <div class="adm-page-head__title">
-                <h1 class="h4">
-                    <i class="fa fa-users mr-2 text-primary"></i>Aportaciones
-                </h1>
-                <small class="text-muted">Registros enviados por el equipo, docentes, líderes y estudiantes</small>
-            </div>
-            <div class="adm-page-head__actions">
-                <span class="adm-chip">
-                    {{ $aportaciones->total() }} total
-                </span>
-                @if($pendientesGeneral > 0)
-                    <span class="adm-chip adm-chip--aporte">
-                        <i class="fa fa-exclamation-circle mr-1"></i>{{ $pendientesGeneral }} pendiente(s)
-                    </span>
-                @endif
-            </div>
+@php
+    // Tono, ícono y etiqueta corta de cada rol (los mismos colores en KPIs, avatar y chip).
+    $rolMeta = [
+        'Equipo Puklla'   => ['tone' => 'info',    'icon' => 'fa-users'],
+        'Docente'         => ['tone' => 'primary', 'icon' => 'fa-graduation-cap'],
+        'Líder'           => ['tone' => 'success', 'icon' => 'fa-star'],
+        'Niño/Estudiante' => ['tone' => 'warning', 'icon' => 'fa-child'],
+    ];
+    $fileMeta = [
+        'imagen' => 'fa-picture-o', 'pdf' => 'fa-file-pdf-o', 'doc' => 'fa-file-word-o',
+        'audio' => 'fa-music', 'video' => 'fa-video-camera',
+    ];
+    $filtroEstado = request('estado');
+    $filtroRol = request('rol');
+    // URL de la lista conservando los demás filtros (para KPIs y segmentos).
+    $urlCon = fn (array $cambios) => route('sisipedia.aportaciones.index', array_filter(
+        array_merge(request()->only(['q', 'rol', 'estado']), $cambios),
+        fn ($v) => $v !== null && $v !== ''
+    ));
+    $iniciales = fn (string $nombre) => mb_strtoupper(collect(preg_split('/\s+/u', trim($nombre)))
+        ->filter()->take(2)->map(fn ($p) => mb_substr($p, 0, 1))->implode('')) ?: '?';
+@endphp
+
+{{-- ── Cabecera + resumen (los contadores son atajos de filtro) ───────────── --}}
+<section class="adm-panel" aria-labelledby="aportesTitulo">
+    <div class="adm-panel__head adm-page-head">
+        <div class="adm-page-head__title">
+            <span class="adm-panel__eyebrow">Sisipedia · Moderación</span>
+            <h1 class="adm-panel__title" id="aportesTitulo">Aportaciones</h1>
+            <p class="adm-panel__sub">Material enviado por el equipo, docentes, líderes y estudiantes desde la portada o desde un registro.</p>
         </div>
     </div>
-</div>
 
-@if($pendientesGeneral > 0)
-    <div class="alert alert-warning border-0 shadow-sm mb-4 sisipedia-aportes-alert d-flex align-items-start">
-        <span class="rounded-circle bg-warning text-dark d-inline-flex align-items-center justify-content-center mr-3 flex-shrink-0 sisipedia-aportes-alert-icon">
-            <i class="fa fa-link"></i>
-        </span>
-        <div>
-            <div class="font-weight-bold mb-1">Pendientes de vincular a un registro</div>
-            <p class="mb-0 small text-dark">
-                Hay <strong>{{ $pendientesGeneral }}</strong> aporte(s) desde la portada sin registro asignado.
-                Usa <strong>Vincular registro</strong> en la tabla para elegir la ficha Sisipedia donde se publicará el material.
-            </p>
+    <nav class="adm-kpis" aria-label="Resumen y filtros rápidos">
+        <a class="adm-kpi adm-tone--accent {{ ! $filtroEstado && ! $filtroRol ? 'is-active' : '' }}"
+           href="{{ route('sisipedia.aportaciones.index', request()->only('q')) }}">
+            <span class="adm-kpi__icon"><i class="fa fa-inbox" aria-hidden="true"></i></span>
+            <span class="adm-kpi__value">{{ $conteo['total'] }}</span>
+            <span class="adm-kpi__label">Todas</span>
+        </a>
+        <a class="adm-kpi adm-tone--warning {{ $filtroEstado === 'pendiente' ? 'is-active' : '' }}"
+           href="{{ $urlCon(['estado' => $filtroEstado === 'pendiente' ? null : 'pendiente']) }}">
+            <span class="adm-kpi__icon"><i class="fa fa-clock-o" aria-hidden="true"></i></span>
+            <span class="adm-kpi__value">{{ $conteo['pendientes'] }}</span>
+            <span class="adm-kpi__label">Por revisar</span>
+        </a>
+        @foreach ($roles as $rol)
+            @php $m = $rolMeta[$rol] ?? ['tone' => 'muted', 'icon' => 'fa-user']; @endphp
+            <a class="adm-kpi adm-tone--{{ $m['tone'] }} {{ $filtroRol === $rol ? 'is-active' : '' }}"
+               href="{{ $urlCon(['rol' => $filtroRol === $rol ? null : $rol]) }}">
+                <span class="adm-kpi__icon"><i class="fa {{ $m['icon'] }}" aria-hidden="true"></i></span>
+                <span class="adm-kpi__value">{{ $totals[$rol] ?? 0 }}</span>
+                {{-- <wbr> tras "/": "Niño/Estudiante" baja de línea en la barra, no a mitad de palabra --}}
+                <span class="adm-kpi__label">{!! str_replace('/', '/<wbr>', e(\App\Models\sisipedia\Aportacion::etiquetaRol($rol))) !!}</span>
+            </a>
+        @endforeach
+    </nav>
+
+    {{-- Filtros: funcionan sin JS (formulario GET); el JS solo los aplica al escribir/cambiar --}}
+    <form method="GET" action="{{ route('sisipedia.aportaciones.index') }}" id="filtrosAportForm" class="adm-panel__bar" role="search">
+        <div class="adm-seg" role="group" aria-label="Estado">
+            <a class="adm-seg__item {{ ! $filtroEstado ? 'is-active' : '' }}" href="{{ $urlCon(['estado' => null]) }}">
+                Todas <span class="adm-seg__count">{{ $conteo['total'] }}</span>
+            </a>
+            <a class="adm-seg__item {{ $filtroEstado === 'pendiente' ? 'is-active' : '' }}" href="{{ $urlCon(['estado' => 'pendiente']) }}">
+                Pendientes <span class="adm-seg__count">{{ $conteo['pendientes'] }}</span>
+            </a>
+            <a class="adm-seg__item {{ $filtroEstado === 'aprobada' ? 'is-active' : '' }}" href="{{ $urlCon(['estado' => 'aprobada']) }}">
+                Publicadas <span class="adm-seg__count">{{ $conteo['aprobadas'] }}</span>
+            </a>
         </div>
+        @if ($filtroEstado)
+            <input type="hidden" name="estado" value="{{ $filtroEstado }}">
+        @endif
+
+        <div class="adm-search adm-panel__grow">
+            <i class="fa fa-search" aria-hidden="true"></i>
+            <input type="search" name="q" id="filtroQ" value="{{ request('q') }}"
+                   class="form-control form-control-sm" placeholder="Buscar por nombre, título, institución o lugar…"
+                   aria-label="Buscar aportaciones" autocomplete="off">
+        </div>
+
+        <select name="rol" id="filtroRol" class="form-control form-control-sm adm-toolbar__item" aria-label="Filtrar por rol">
+            <option value="">Todos los roles</option>
+            @foreach ($roles as $rol)
+                <option value="{{ $rol }}" @selected($filtroRol === $rol)>{{ \App\Models\sisipedia\Aportacion::etiquetaRol($rol) }}</option>
+            @endforeach
+        </select>
+
+        @if (request()->hasAny(['q', 'rol', 'estado']))
+            <a href="{{ route('sisipedia.aportaciones.index') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fa fa-times mr-1" aria-hidden="true"></i>Quitar filtros
+            </a>
+        @endif
+        <noscript><button type="submit" class="btn btn-sm btn-primary">Filtrar</button></noscript>
+    </form>
+</section>
+
+{{-- ── Aviso: aportes de la portada que esperan un registro ──────────────── --}}
+@if ($pendientesGeneral > 0 && $filtroEstado !== 'pendiente')
+    <div class="adm-callout" role="status">
+        <span class="adm-callout__icon" aria-hidden="true"><i class="fa fa-link"></i></span>
+        <div class="adm-callout__body">
+            <span class="adm-callout__title">{{ $pendientesGeneral }} {{ $pendientesGeneral === 1 ? 'aporte espera' : 'aportes esperan' }} un registro</span>
+            Llegaron desde la portada sin ficha asignada. Pulsa <strong>Aprobar</strong> en cada uno para elegir el registro donde se publicará.
+        </div>
+        <a href="{{ $urlCon(['estado' => 'pendiente']) }}" class="btn btn-sm btn-warning font-weight-bold">Revisar ahora</a>
     </div>
 @endif
 
-@php
-    $rolMeta = [
-        'Equipo Puklla'   => ['color' => 'info', 'icon' => 'fa-users'],
-        'Docente'         => ['color' => 'primary',   'icon' => 'fa-graduation-cap'],
-        'Líder'           => ['color' => 'success',   'icon' => 'fa-star'],
-        'Niño/Estudiante' => ['color' => 'warning',   'icon' => 'fa-child'],
-    ];
-@endphp
-
-{{-- ── Tarjetas de resumen ───────────────────────────────────── --}}
-<div class="row mb-4 justify-content-center">
-    <div class="col-6 col-lg-2 mb-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body text-center py-3">
-                <div class="text-muted small mb-1">Total</div>
-                <div class="h3 mb-0 font-weight-bold">{{ $aportaciones->total() }}</div>
-            </div>
-        </div>
+{{-- ── Lista ─────────────────────────────────────────────────────────────── --}}
+@if ($aportaciones->isEmpty())
+    <div class="adm-empty">
+        <i class="fa fa-inbox" aria-hidden="true"></i>
+        <strong>No hay aportaciones con estos filtros</strong>
+        <span class="small">Prueba con otras palabras o quita los filtros.</span>
     </div>
-    @foreach($roles as $rol)
-        <div class="col-6 col-lg-2 mb-3">
-            <div class="card border-0 shadow-sm h-100 sisi-stat sisi-stat--{{ $rolMeta[$rol]['color'] ?? 'secondary' }}">
-                <div class="card-body text-center py-3">
-                    <div class="text-muted small mb-1">
-                        <i class="fa {{ $rolMeta[$rol]['icon'] ?? 'fa-user' }} mr-1"></i>{{ $rol }}
+@else
+    <p class="small text-muted mb-2">
+        Mostrando {{ $aportaciones->firstItem() }}–{{ $aportaciones->lastItem() }} de {{ $aportaciones->total() }}
+    </p>
+    <div class="adm-feed">
+        @foreach ($aportaciones as $ap)
+            @php
+                $cat = $ap->category;
+                $path = [];
+                for ($cur = $cat; $cur; $cur = $cur->parent ?? null) {
+                    array_unshift($path, $cur);
+                }
+                $m = $rolMeta[$ap->rol_nombre] ?? ['tone' => 'muted', 'icon' => 'fa-user'];
+                $archivos = $ap->archivos;
+                $extracto = $ap->detalle ? trim(html_entity_decode(strip_tags($ap->detalle))) : '';
+            @endphp
+            <article class="adm-entry adm-tone--{{ $m['tone'] }} {{ $ap->is_approved ? '' : 'adm-entry--pending' }}"
+                     aria-labelledby="ap-{{ $ap->id }}">
+                <span class="adm-avatar" aria-hidden="true">{{ $iniciales($ap->nombre_ol) }}</span>
+
+                <div class="adm-entry__main">
+                    <div class="adm-entry__head">
+                        <h2 class="adm-entry__name" id="ap-{{ $ap->id }}">{{ $ap->nombre_ol }}</h2>
+                        <span class="adm-pill"><i class="fa {{ $m['icon'] }}" aria-hidden="true"></i>{{ \App\Models\sisipedia\Aportacion::etiquetaRol($ap->rol_nombre) }}</span>
+                        @if ($ap->is_approved)
+                            <span class="adm-pill adm-tone--success"><i class="fa fa-check" aria-hidden="true"></i>Publicada</span>
+                        @else
+                            <span class="adm-pill adm-tone--warning"><i class="fa fa-clock-o" aria-hidden="true"></i>Por revisar</span>
+                        @endif
                     </div>
-                    <div class="h3 mb-0 font-weight-bold text-{{ $rolMeta[$rol]['color'] ?? 'secondary' }}">
-                        {{ $totals[$rol] ?? 0 }}
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endforeach
-</div>
 
-{{-- ── Filtros ───────────────────────────────────────────────── --}}
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body py-2">
-        <form method="GET" action="{{ route('sisipedia.aportaciones.index') }}" id="filtrosAportForm"
-              class="adm-toolbar">
+                    @if ($ap->titulo)
+                        <p class="adm-entry__title">{{ $ap->titulo }}</p>
+                    @endif
+                    @if ($extracto !== '')
+                        <p class="adm-entry__excerpt" title="{{ \Illuminate\Support\Str::limit($extracto, 600) }}">{{ $extracto }}</p>
+                    @endif
 
-            {{-- Keyword --}}
-            <div class="input-group input-group-sm adm-toolbar__grow">
-                <div class="input-group-prepend">
-                    <span class="input-group-text border-right-0">
-                        <i class="fa fa-search text-muted"></i>
-                    </span>
-                </div>
-                <input type="text" name="q" id="filtroQ"
-                       value="{{ request('q') }}"
-                       class="form-control form-control-sm border-left-0"
-                       placeholder="Buscar por nombre, título…"
-                       autocomplete="off">
-                <div class="input-group-append">
-                    <button type="button" id="clearQ"
-                            class="btn btn-outline-secondary btn-sm {{ request('q') ? '' : 'd-none' }}"
-                            tabindex="-1" title="Limpiar búsqueda">
-                        <i class="fa fa-times"></i>
-                    </button>
-                </div>
-            </div>
-
-            {{-- Rol --}}
-            <select name="rol" id="filtroRol" class="form-control form-control-sm adm-toolbar__item" aria-label="Filtrar por rol">
-                <option value="">Todos los roles</option>
-                @foreach($roles as $rol)
-                    <option value="{{ $rol }}" @selected(request('rol') === $rol)>{{ $rol }}</option>
-                @endforeach
-            </select>
-
-            {{-- Estado --}}
-            <select name="estado" id="filtroEstado" class="form-control form-control-sm adm-toolbar__item" aria-label="Filtrar por estado">
-                <option value="">Todos los estados</option>
-                <option value="pendiente" @selected(request('estado') === 'pendiente')>Pendiente</option>
-                <option value="aprobada"  @selected(request('estado') === 'aprobada')>Aprobada</option>
-            </select>
-
-            {{-- Limpiar todo --}}
-            @if(request()->hasAny(['q','rol','estado']))
-                <a href="{{ route('sisipedia.aportaciones.index') }}"
-                   class="btn btn-sm btn-outline-secondary" title="Quitar filtros">
-                    <i class="fa fa-times mr-1"></i>Limpiar
-                </a>
-            @endif
-
-        </form>
-    </div>
-</div>
-
-{{-- ── Tabla ─────────────────────────────────────────────────── --}}
-<div class="card border-0 shadow-sm">
-    <div class="card-body p-0">
-        @if($aportaciones->isEmpty())
-            <div class="text-center py-5 text-muted">
-                <i class="fa fa-inbox fa-2x mb-2 d-block"></i>
-                No hay aportaciones que coincidan con los filtros.
-            </div>
-        @else
-        <div class="table-responsive">
-            <table class="table table-hover mb-0 sisi-aportes-table">
-                <thead class="thead-light">
-                    <tr>
-                        <th class="sisi-col-min">#</th>
-                        <th>Nombre en lengua original</th>
-                        <th>Título</th>
-                        <th>Rol</th>
-                        <th>Registro (categoría)</th>
-                        <th class="text-center">Estado</th>
-                        <th>Institución / Trabajo / Ubicación</th>
-                        <th class="text-center">Archivos</th>
-                        <th>Fecha</th>
-                        <th class="sisi-col-min"><span class="sr-only">Acciones</span></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($aportaciones as $ap)
-                    @php
-                        $cat  = $ap->category;
-                        $path = [];
-                        $cur  = $cat;
-                        while ($cur) { array_unshift($path, $cur); $cur = $cur->parent ?? null; }
-                    @endphp
-                    <tr>
-                        <td class="text-muted small align-middle sisi-td-id" data-label="#">{{ $ap->id }}</td>
-
-                        {{-- Nombre + detalle colapsable --}}
-                        <td class="align-middle sisi-td-nombre" data-label="Nombre">
-                            <div class="font-weight-semibold">{{ $ap->nombre_ol }}</div>
-                            @if($ap->detalle)
-                                <div class="text-muted small mt-1 sisi-aporte-preview"
-                                     title="{{ html_entity_decode(strip_tags($ap->detalle)) }}">
-                                    {{ \Illuminate\Support\Str::limit(trim(html_entity_decode(strip_tags($ap->detalle))), 160) }}
-                                </div>
-                            @endif
-                        </td>
-                        <td class="align-middle small" data-label="Título">
-                            @if($ap->titulo)
-                                <span class="sisi-aporte-titulo">{{ $ap->titulo }}</span>
-                            @else
-                                <span class="text-muted">—</span>
-                            @endif
-                        </td>
-
-                        {{-- Rol --}}
-                        <td class="align-middle" data-label="Rol">
-                            <span class="badge badge-{{ $rolMeta[$ap->rol_nombre]['color'] ?? 'secondary' }}">
-                                <i class="fa {{ $rolMeta[$ap->rol_nombre]['icon'] ?? 'fa-user' }} mr-1"></i>
-                                {{ \App\Models\sisipedia\Aportacion::etiquetaRol($ap->rol_nombre) }}
-                            </span>
-                        </td>
-
-                        {{-- Ruta de categoría --}}
-                        <td class="align-middle sisi-aporte-registro" data-label="Registro">
-                            @if($cat)
-                                <div class="d-flex flex-wrap align-items-center adm-gap-1">
-                                    @foreach($path as $i => $node)
-                                        @if($i > 0)
-                                            <i class="fa fa-angle-right text-muted small" aria-hidden="true"></i>
-                                        @endif
-                                        <a href="{{ route('sisipedia.categories.admin-show', $node) }}"
-                                           class="adm-chip">
-                                            {{ $node->display_name }}
-                                        </a>
+                    <div class="adm-entry__meta">
+                        <span>
+                            <i class="fa fa-sitemap" aria-hidden="true"></i>
+                            @if ($cat)
+                                <ol class="adm-crumbs" aria-label="Registro">
+                                    @foreach ($path as $node)
+                                        <li><a href="{{ route('sisipedia.categories.admin-show', $node) }}">{{ $node->display_name }}</a></li>
                                     @endforeach
-                                </div>
+                                </ol>
                             @else
-                                <span class="adm-chip">Sin registro</span>
-                                @if(!$ap->is_approved)
-                                    <span class="adm-chip adm-chip--aporte">Requiere asignación</span>
-                                @endif
+                                <em>Sin registro asignado</em>
                             @endif
-                        </td>
+                        </span>
+                        @if ($ap->institucion)
+                            <span><i class="fa fa-building-o" aria-hidden="true"></i>{{ $ap->institucion }}</span>
+                        @endif
+                        @if ($ap->ubicacion)
+                            <span><i class="fa fa-map-marker" aria-hidden="true"></i>{{ $ap->ubicacion }}</span>
+                        @endif
+                        <span><i class="fa fa-calendar-o" aria-hidden="true"></i>
+                            <time datetime="{{ $ap->created_at->toDateString() }}" title="{{ $ap->created_at->format('d/m/Y H:i') }}">{{ $ap->created_at->format('d/m/Y') }}</time>
+                        </span>
+                    </div>
 
-                        <td class="align-middle text-center" data-label="Estado">
-                            @if($ap->is_approved)
-                                <span class="adm-chip adm-chip--ok">Aprobada</span>
-                            @else
-                                <span class="adm-chip adm-chip--aporte">Pendiente</span>
-                            @endif
-                        </td>
-
-                        {{-- Institución / Ubicación --}}
-                        <td class="align-middle small" data-label="Institución">
-                            @if($ap->institucion)
-                                <div><i class="fa fa-building text-muted mr-1"></i>{{ $ap->institucion }}</div>
-                            @endif
-                            @if($ap->ubicacion)
-                                <div><i class="fa fa-map-marker text-muted mr-1"></i>{{ $ap->ubicacion }}</div>
-                            @endif
-                            @if(!$ap->institucion && !$ap->ubicacion)
-                                <span class="text-muted">—</span>
-                            @endif
-                        </td>
-
-                        {{-- Archivos (desde nueva tabla) --}}
-                        <td class="align-middle text-center" data-label="Archivos">
-                            @php
-                                $archivos = $ap->relationLoaded('archivos') ? $ap->archivos : $ap->archivos()->get();
-                            @endphp
-                            <div class="d-flex justify-content-center flex-wrap adm-gap-1 sisi-aporte-archivos">
-                                @forelse($archivos as $archivo)
-                                    @php
-                                        $iconMap = ['imagen' => 'fa-file-image-o', 'pdf' => 'fa-file-pdf-o', 'doc' => 'fa-file-word-o', 'audio' => 'fa-music', 'video' => 'fa-video-camera'];
-                                        $colorMap = ['imagen' => 'info', 'pdf' => 'danger', 'doc' => 'primary', 'audio' => 'success', 'video' => 'warning'];
-                                    @endphp
-                                    @if($archivo->pendiente)
-                                        <span class="badge badge-secondary" title="Subiéndose a Drive en segundo plano">
-                                            <i class="fa fa-spinner fa-spin"></i>
-                                        </span>
-                                    @elseif($archivo->fallo_en)
-                                        <span class="badge badge-danger" title="No se pudo subir a Drive">
-                                            <i class="fa fa-exclamation-triangle"></i>
-                                        </span>
-                                    @elseif($archivo->tipo === 'imagen')
-                                        <a href="{{ $archivo->getUrl() }}" target="_blank" title="Ver imagen">
-                                            <img src="https://drive.google.com/thumbnail?id={{ $archivo->drive_id }}&sz=w60"
-                                                 alt="Imagen" width="60" height="60"
-                                                 class="sisi-aporte-thumb"
-                                                 onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';">
-                                            <span class="badge badge-info d-none"><i class="fa fa-image"></i></span>
-                                        </a>
+                    @if ($archivos->isNotEmpty())
+                        <div class="adm-entry__footer">
+                            <div class="adm-files" aria-label="{{ $archivos->count() }} archivo(s)">
+                                @foreach ($archivos->take(8) as $archivo)
+                                    @if ($archivo->pendiente)
+                                        <span class="adm-file" title="Subiéndose a Drive…"><i class="fa fa-spinner fa-spin" aria-hidden="true"></i></span>
+                                    @elseif ($archivo->fallo_en)
+                                        <span class="adm-file adm-file--error" title="No se pudo subir a Drive"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i></span>
                                     @else
-                                        <a href="{{ $archivo->getUrl() }}" target="_blank"
-                                           class="badge badge-{{ $colorMap[$archivo->tipo] ?? 'secondary' }}"
-                                           title="{{ $archivo->tipo }}: {{ $archivo->nombre_original ?? '' }}">
-                                            <i class="fa {{ $iconMap[$archivo->tipo] ?? 'fa-file' }}"></i>
+                                        <a href="{{ $archivo->getUrl() }}" target="_blank" rel="noopener"
+                                           class="adm-file adm-file--{{ $archivo->tipo }}"
+                                           title="{{ ucfirst($archivo->tipo) }}: {{ $archivo->nombre_original }}">
+                                            @if ($archivo->tipo === 'imagen' && $archivo->drive_id)
+                                                <img src="https://drive.google.com/thumbnail?id={{ $archivo->drive_id }}&sz=w80" alt="" loading="lazy" width="36" height="36">
+                                            @else
+                                                <i class="fa {{ $fileMeta[$archivo->tipo] ?? 'fa-file-o' }}" aria-hidden="true"></i>
+                                            @endif
+                                            <span class="sr-only">Abrir {{ $archivo->tipo }}</span>
                                         </a>
                                     @endif
-                                @empty
-                                    <span class="text-muted">—</span>
-                                @endforelse
+                                @endforeach
+                                @if ($archivos->count() > 8)
+                                    <span class="adm-files__more">+{{ $archivos->count() - 8 }}</span>
+                                @endif
                             </div>
-                        </td>
+                        </div>
+                    @endif
+                </div>
 
-                        {{-- Fecha --}}
-                        <td class="align-middle small text-nowrap text-muted" data-label="Fecha">
-                            {{ $ap->created_at->format('d/m/Y') }}
-                        </td>
-
-                        {{-- Acciones --}}
-                        <td class="align-middle text-right text-nowrap sisi-td-acciones">
-                            @if($cat)
-                                <a href="{{ route('sisipedia.categories.admin-show', $cat) }}"
-                                   class="btn btn-sm btn-outline-secondary" title="Ver en su registro" aria-label="Ver en su registro">
-                                    <i class="fa fa-eye"></i>
-                                </a>
-                            @endif
-                            <button type="button"
-                                    class="btn btn-sm btn-outline-primary sisipedia-btn-editar-ap"
-                                    data-toggle="modal"
-                                    data-target="#modalEditarAporte"
-                                    data-action="{{ route('sisipedia.aportaciones.update', $ap) }}"
-                                    data-nombre="{{ e($ap->nombre_ol) }}"
-                                    data-rol="{{ $ap->rol_nombre }}"
-                                    data-titulo="{{ e($ap->titulo ?? '') }}"
-                                    data-institucion="{{ e($ap->institucion ?? '') }}"
-                                    data-ubicacion="{{ e($ap->ubicacion ?? '') }}"
-                                    data-detalle="{{ \App\Services\HtmlSeguro::limpiar($ap->detalle) }}"
-                                    data-category-id="{{ $ap->category_id ?? '' }}"
-                                    data-is-approved="{{ $ap->is_approved ? '1' : '0' }}"
-                                    data-archivos-json="{{ $ap->archivos->toJson() }}"
-                                    title="Editar / Vincular aportación">
-                                <i class="fa fa-edit mr-1"></i>Editar
-                            </button>
-                            @if($cat)
-                                <form action="{{ route('sisipedia.categories.aportaciones.destroy', [$cat, $ap]) }}"
-                                      method="POST" class="d-inline"
-                                      data-confirm-delete="¿Eliminar la aportación de {{ $ap->nombre_ol }}?"
-                                      data-confirm-delete-text="Se borrarán también sus archivos. No se puede deshacer.">
-                                    @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" title="Eliminar" aria-label="Eliminar aportación">
-                                        <i class="fa fa-trash"></i>
-                                    </button>
-                                </form>
-                            @else
-                                <form action="{{ route('sisipedia.aportaciones.destroy', $ap) }}"
-                                      method="POST" class="d-inline"
-                                      data-confirm-delete="¿Eliminar la aportación de {{ $ap->nombre_ol }}?"
-                                      data-confirm-delete-text="Se borrarán también sus archivos. No se puede deshacer.">
-                                    @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" title="Eliminar" aria-label="Eliminar aportación">
-                                        <i class="fa fa-trash"></i>
-                                    </button>
-                                </form>
-                            @endif
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
-        {{-- Paginación --}}
-        @if($aportaciones->hasPages())
-            <div class="px-3 py-2 border-top">
-                {{ $aportaciones->links() }}
-            </div>
-        @endif
-        @endif
+                <div class="adm-entry__actions">
+                    @unless ($ap->is_approved)
+                        <button type="button" class="btn btn-sm btn-success font-weight-bold"
+                                data-toggle="modal" data-target="#modalAprobarAporte"
+                                data-action="{{ route('sisipedia.aportaciones.approve', $ap) }}"
+                                data-nombre="{{ $ap->nombre_ol }}"
+                                data-rol="{{ \App\Models\sisipedia\Aportacion::etiquetaRol($ap->rol_nombre) }}"
+                                data-needs-category="{{ $cat ? '0' : '1' }}">
+                            <i class="fa fa-check mr-1" aria-hidden="true"></i>Aprobar
+                        </button>
+                    @endunless
+                    @if ($cat)
+                        <a href="{{ route('sisipedia.categories.admin-show', $cat) }}#sisipedia-aportaciones-section"
+                           class="btn btn-sm btn-outline-secondary" title="Ver en su registro" aria-label="Ver en su registro">
+                            <i class="fa fa-eye" aria-hidden="true"></i>
+                        </a>
+                    @endif
+                    <button type="button"
+                            class="btn btn-sm btn-outline-primary sisipedia-btn-editar-ap"
+                            data-toggle="modal"
+                            data-target="#modalEditarAporte"
+                            data-action="{{ route('sisipedia.aportaciones.update', $ap) }}"
+                            data-nombre="{{ $ap->nombre_ol }}"
+                            data-rol="{{ $ap->rol_nombre }}"
+                            data-titulo="{{ $ap->titulo ?? '' }}"
+                            data-institucion="{{ $ap->institucion ?? '' }}"
+                            data-ubicacion="{{ $ap->ubicacion ?? '' }}"
+                            data-detalle="{{ \App\Services\HtmlSeguro::limpiar($ap->detalle) }}"
+                            data-category-id="{{ $ap->category_id ?? '' }}"
+                            data-is-approved="{{ $ap->is_approved ? '1' : '0' }}"
+                            data-archivos-json="{{ $archivos->toJson() }}">
+                        <i class="fa fa-pencil mr-1" aria-hidden="true"></i>Editar
+                    </button>
+                    <form action="{{ $cat ? route('sisipedia.categories.aportaciones.destroy', [$cat, $ap]) : route('sisipedia.aportaciones.destroy', $ap) }}"
+                          method="POST"
+                          data-confirm-delete="¿Eliminar la aportación de {{ $ap->nombre_ol }}?"
+                          data-confirm-delete-text="Se borrarán también sus archivos. No se puede deshacer.">
+                        @csrf @method('DELETE')
+                        <button class="btn btn-sm btn-outline-danger" title="Eliminar" aria-label="Eliminar aportación de {{ $ap->nombre_ol }}">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </div>
+            </article>
+        @endforeach
     </div>
-</div>
+
+    @if ($aportaciones->hasPages())
+        <div class="mt-3">{{ $aportaciones->links() }}</div>
+    @endif
+@endif
 
 {{-- Modal: Editar aportación --}}
 <div class="modal fade" id="modalEditarAporte" tabindex="-1" role="dialog" aria-labelledby="modalEditarAporteTitulo" aria-hidden="true">
@@ -589,9 +510,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Inicializar Summernote editor para el campo de detalle
-    document.addEventListener('DOMContentLoaded', function() {
-        if (window.jQuery) {
+    // Inicializar Summernote para "detalle". Ya estamos dentro de DOMContentLoaded:
+    // antes había un segundo listener anidado que nunca se ejecutaba y el editor
+    // arrancaba con la configuración por defecto.
+    (function () {
+        if (window.jQuery && jQuery.fn.summernote) {
             $('.summernote-editor').summernote({
                 height: 120,
                 toolbar: [
@@ -601,15 +524,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     ['insert', ['link']],
                     ['view', ['fullscreen', 'codeview']]
                 ],
-                placeholder: 'Describe los detalles de esta aportación...',
-                callbacks: {
-                    onInit: function() {
-                        $('.note-editable').css('font-size', '14px');
-                    }
-                }
+                placeholder: 'Describe los detalles de esta aportación...'
             });
         }
-    });
+    })();
 });
 </script>
 
@@ -851,52 +769,28 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <script>
+// Filtros: el formulario es GET real (funciona sin JS). Aquí solo se envía solo:
+// el rol al cambiarlo y la búsqueda tras una pausa al escribir.
 (function () {
-    var baseUrl  = '{{ route('sisipedia.aportaciones.index') }}';
-    var qInput   = document.getElementById('filtroQ');
-    var clearBtn = document.getElementById('clearQ');
-    var rolSel   = document.getElementById('filtroRol');
-    var estSel   = document.getElementById('filtroEstado');
-    var timer;
+    var form = document.getElementById('filtrosAportForm');
+    var q = document.getElementById('filtroQ');
+    var rol = document.getElementById('filtroRol');
+    if (!form) return;
+    var timer, inicial = q ? q.value : '';
 
-    // Construye la URL con los valores actuales y navega a ella
-    function navigate() {
-        var params = [];
-        var q   = qInput  ? qInput.value.trim()  : '';
-        var rol = rolSel  ? rolSel.value          : '';
-        var est = estSel  ? estSel.value          : '';
-        if (q)   params.push('q='      + encodeURIComponent(q));
-        if (rol) params.push('rol='    + encodeURIComponent(rol));
-        if (est) params.push('estado=' + encodeURIComponent(est));
-        window.location.href = baseUrl + (params.length ? '?' + params.join('&') : '');
-    }
-
-    // Keyword — debounce 420 ms
-    if (qInput) {
-        qInput.addEventListener('input', function () {
-            if (clearBtn) clearBtn.classList.toggle('d-none', !this.value);
+    if (q) {
+        // Tras recargar por una búsqueda, seguir escribiendo donde se quedó.
+        if (inicial) { q.focus(); q.setSelectionRange(inicial.length, inicial.length); }
+        q.addEventListener('input', function () {
             clearTimeout(timer);
-            timer = setTimeout(navigate, 420);
+            timer = setTimeout(function () {
+                if (q.value.trim() !== inicial.trim()) form.submit();
+            }, 500);
         });
+        // La x nativa del campo search vacía el texto: aplicar de inmediato.
+        q.addEventListener('search', function () { if (!q.value) form.submit(); });
     }
-
-    // Limpiar campo X
-    if (clearBtn) {
-        clearBtn.addEventListener('click', function () {
-            if (qInput) qInput.value = '';
-            clearBtn.classList.add('d-none');
-            clearTimeout(timer);
-            navigate();
-        });
-    }
-
-    // Dropdowns — navegar inmediatamente al cambiar
-    [rolSel, estSel].forEach(function (el) {
-        if (el) el.addEventListener('change', function () {
-            clearTimeout(timer);
-            navigate();
-        });
-    });
+    if (rol) rol.addEventListener('change', function () { form.submit(); });
 })();
 </script>
 

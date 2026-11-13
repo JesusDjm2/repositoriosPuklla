@@ -9,6 +9,8 @@
 //   4. components        hero-banner, module-card, project-card, data-table…
 //   5. bootstrap-bridge  Bootstrap 4 (cards, tablas, forms, badges) → tokens
 //   6. utilities         .adm-page-head, .adm-toolbar, .adm-chip, gaps
+//   6b. patterns         Piezas de pantalla: .adm-panel, .adm-kpi, .adm-seg,
+//                        .adm-feed/.adm-entry, .adm-callout, .adm-files…
 //   7. modules/*         Lo propio de cada proyecto (Sisipedia, Kawsay…)
 //
 // Reglas del sistema:
@@ -28,6 +30,7 @@
 @import 'admin/components';
 @import 'admin/bootstrap-bridge';
 @import 'admin/utilities';
+@import 'admin/patterns';
 
 @import 'admin/modules/dashboard';
 @import 'admin/modules/sisipedia';

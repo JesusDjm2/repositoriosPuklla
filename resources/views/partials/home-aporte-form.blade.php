@@ -261,21 +261,24 @@
                                                 <i
                                                     class="fa fa-folder-open me-1 text-{{ $uColor }}"></i>{{ $uCat->display_name }}
                                             </div>
+                                        @else
+                                            <div class="fw-semibold small text-dark text-truncate mb-1"
+                                                title="{{ $uap->titulo ?: 'Aporte general' }}">
+                                                <i class="fa fa-globe me-1 text-{{ $uColor }}"></i>{{ $uap->titulo ?: 'Aporte general' }}
+                                            </div>
                                         @endif
                                         {{-- Fecha --}}
                                         <div class="text-muted mt-1" style="font-size:.68rem;">
                                             {{ $uap->created_at->format('d/m/Y') }}
                                         </div>
                                     </div>
-                                    {{-- Botón de acción --}}
-                                    @if ($uCat)
-                                        <div class="card-footer bg-transparent border-0 pt-0 pb-3 px-3">
-                                            <a href="{{ route('sisipedia.categories.show', $uCat) }}"
-                                                class="btn btn-{{ $uColor }} btn-sm w-100 fw-semibold">
-                                                <i class="fa fa-arrow-right me-1"></i>Ver registro
-                                            </a>
-                                        </div>
-                                    @endif
+                                    {{-- Botón de acción: el registro, o la lista de aportes generales si no tiene registro --}}
+                                    <div class="card-footer bg-transparent border-0 pt-0 pb-3 px-3">
+                                        <a href="{{ $uCat ? route('sisipedia.categories.show', $uCat) . '#sisipedia-aportaciones-section' : route('public.sisi') . '#sisipedia-tree-aportaciones-section' }}"
+                                            class="btn btn-{{ $uColor }} btn-sm w-100 fw-semibold">
+                                            <i class="fa fa-arrow-right me-1"></i>{{ $uCat ? 'Ver registro' : 'Ver aporte' }}
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         @endforeach

@@ -29,6 +29,7 @@ class ProyectoDetector
         'kawsay' => [
             'kawsay',
             'kawsay.nosotros',
+            'kawsay.contacto',
             'kawsay.buscar',
             'kawsay.area',
             'kawsay.tema',

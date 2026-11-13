@@ -43,6 +43,7 @@ Route::get('/repositorio/sisipedia', [EnlacesController::class, 'index'])->name(
 Route::get('/eesppukllasunchis', [EnlacesController::class, 'eesp'])->name('eesppukllasunchis');
 Route::get('/kawsay', [EnlacesController::class, 'kawsay'])->name('kawsay');
 Route::get('/kawsay/nosotros', fn () => view('kawsay.nosotros'))->name('kawsay.nosotros');
+Route::get('/kawsay/contacto', fn () => view('kawsay.contacto'))->name('kawsay.contacto');
 // Streaming de video de Kawsay (proxy a Drive con soporte de Range). Ruta fuera de
 // /kawsay/... para no chocar con los wildcards /kawsay/{area}/{tema}/{tipo} de abajo.
 Route::get('kawsay-video/{archivo}/stream', [VideoStreamController::class, 'kawsayArchivo'])->name('kawsay.archivo.video.stream');

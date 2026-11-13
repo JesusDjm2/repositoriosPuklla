@@ -229,18 +229,6 @@ body.bv-no-scroll { overflow: hidden; }
     box-shadow: inset 3px 0 0 var(--role-accent);
 }
 
-.flecha-admin {
-    opacity: 0;
-    transform: translateX(-20px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    display: inline-block;
-}
-
-a:hover .flecha-admin {
-    opacity: 1;
-    transform: translateX(0);
-}
-
 .bv-sidebar-footer {
     padding: 0.75rem 1.5rem 0;
     border-top: 1px solid var(--bv-sidebar-border);

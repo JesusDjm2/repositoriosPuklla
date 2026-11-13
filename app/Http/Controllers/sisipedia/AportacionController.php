@@ -22,8 +22,6 @@ class AportacionController extends Controller
     public function adminIndex(Request $request)
     {
         $roles = Aportacion::ROLES;
-        $categories = Category::orderBy('name')->get(['id', 'name', 'parent_id']);
-
 
         $query = Aportacion::with(['category.parent.parent', 'archivos'])
             ->latest();
@@ -50,6 +48,7 @@ class AportacionController extends Controller
             $q = $request->q;
             $query->where(function ($sub) use ($q) {
                 $sub->where('nombre_ol',  'like', "%{$q}%")
+                    ->orWhere('titulo',      'like', "%{$q}%")
                     ->orWhere('institucion', 'like', "%{$q}%")
                     ->orWhere('ubicacion',   'like', "%{$q}%");
             });
@@ -59,9 +58,17 @@ class AportacionController extends Controller
         $aportaciones = $query->paginate(20);
         $aportaciones->withQueryString();
 
+        // Contadores globales (no dependen de los filtros): sirven de resumen y de atajos.
         $totals = Aportacion::selectRaw('rol_nombre, count(*) as total')
             ->groupBy('rol_nombre')
             ->pluck('total', 'rol_nombre');
+
+        $resumen = Aportacion::selectRaw('COUNT(*) AS total, SUM(is_approved = 1) AS aprobadas')->first();
+        $conteo = [
+            'total' => (int) $resumen->total,
+            'aprobadas' => (int) $resumen->aprobadas,
+            'pendientes' => (int) $resumen->total - (int) $resumen->aprobadas,
+        ];
 
         $pendientesGeneral = Aportacion::whereNull('category_id')
             ->where('is_approved', false)
@@ -70,7 +77,7 @@ class AportacionController extends Controller
         $categoryPickerRows = $this->categoriesForPicker();
 
         return view('sisichakuna.aportaciones.index', compact(
-            'aportaciones', 'roles', 'categories', 'totals', 'pendientesGeneral', 'categoryPickerRows'
+            'aportaciones', 'roles', 'totals', 'conteo', 'pendientesGeneral', 'categoryPickerRows'
         ));
     }
 

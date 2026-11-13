@@ -173,9 +173,11 @@ class EnlacesController extends Controller
         $ultimosImagenes = $this->latestArchivosPorTipo('imagen');
         $ultimosVideos = $this->latestArchivosPorTipo('video');
 
+        // Todas las aportaciones publicadas, vengan de la portada o de la vista de un registro.
+        // Las de la portada que no se pudieron ligar a un registro quedan sin category_id:
+        // también cuentan (su tarjeta enlaza a "Aportaciones recientes" de Registros).
         $ultimosAportes = Aportacion::query()
             ->where('is_approved', true)
-            ->whereNotNull('category_id')
             ->with(['category.parent.parent'])
             ->latest()
             ->take(8)

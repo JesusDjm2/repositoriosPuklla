@@ -60,19 +60,66 @@
         btn.replaceWith(marco);
     });
 
-    /* ── Entrada del hero: UN solo momento orquestado (título → frase →
-       buscador → áreas en cascada). gsap.from() parte del estado final, así
-       que si GSAP no carga o falla, todo queda visible igual. ──────────── */
+    /* ── Scroll Snap & Secciones 100vh ────────────────────────────────── */
+    if (document.body.classList.contains('kawsay-snap-page')) {
+        document.documentElement.classList.add('kawsay-snap-enabled');
+    }
+
+    // Scroll suave en enlaces de salto entre secciones (#seccion-areas, etc.)
+    document.querySelectorAll('.kawsay-scroll-hint, a[href^="#seccion-"]').forEach(function (link) {
+        link.addEventListener('click', function (e) {
+            var targetId = this.getAttribute('href');
+            if (targetId && targetId.startsWith('#')) {
+                var target = document.querySelector(targetId);
+                if (target) {
+                    e.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        });
+    });
+
+    // Soporte táctil para las tarjetas volteables (flip cards)
+    document.querySelectorAll('.kawsay-flip-card').forEach(function (card) {
+        card.addEventListener('click', function (e) {
+            // En pantallas táctiles sin hover fino: primer toque voltea para ver el reverso; segundo toque navega
+            if (window.matchMedia('(hover: none)').matches) {
+                if (!card.classList.contains('is-flipped')) {
+                    e.preventDefault();
+                    document.querySelectorAll('.kawsay-flip-card.is-flipped').forEach(function (c) {
+                        if (c !== card) c.classList.remove('is-flipped');
+                    });
+                    card.classList.add('is-flipped');
+                }
+            }
+            // En pantallas con cursor/mouse: el clic en cualquier parte de la tarjeta navega inmediatamente
+        });
+    });
+
+    /* ── Entrada del hero y tarjetas (GSAP) ────────────────────────────── */
     function entradaHero() {
-        var texto = document.querySelector('.khero__texto');
-        if (!texto || typeof gsap === 'undefined') return;
+        if (typeof gsap === 'undefined') return;
         gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', function () {
             var tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-            tl.from(texto.children, { y: 22, opacity: 0, duration: 0.6, stagger: 0.08 })
-              .from('.khero__areas-titulo', { opacity: 0, duration: 0.4 }, '-=0.45')
-              .from('.khero-area', {
-                  y: 26, opacity: 0, scale: 0.96, duration: 0.6, stagger: 0.08, ease: 'back.out(1.4)',
-              }, '-=0.4');
+            var heroCenter = document.querySelector('.kawsay-hero-center');
+            if (heroCenter) {
+                tl.from(heroCenter.children, { y: 22, opacity: 0, duration: 0.6, stagger: 0.08 });
+            }
+            var cards = document.querySelectorAll('.kawsay-flip-card');
+            if (cards.length) {
+                gsap.from(cards, {
+                    scrollTrigger: {
+                        trigger: '#seccion-areas',
+                        start: 'top 80%',
+                    },
+                    y: 35,
+                    opacity: 0,
+                    scale: 0.95,
+                    duration: 0.7,
+                    stagger: 0.1,
+                    ease: 'back.out(1.2)'
+                });
+            }
         });
     }
 

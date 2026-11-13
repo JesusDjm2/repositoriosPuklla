@@ -65,7 +65,7 @@ body.sidebar-open-lock {
     border-bottom: 1px solid var(--puk-menu-divider);
     border-radius: 0.5rem;
     font-size: 0.92rem;
-    transition: background-color 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 #sidebar ul li a i:first-child {
@@ -99,41 +99,28 @@ body.sidebar-open-lock {
     transform: rotate(180deg);
 }
 
-// Bootstrap 4 anima .collapsing con una curva lineal por defecto: se siente
-// brusca. La suavizamos y dejamos que el contenido aparezca con un pequeño
-// fade en vez de aparecer de golpe al terminar el slide.
-#sidebar .collapsing {
-    transition: height 0.28s ease;
+// ─── Interacción del menú ───────────────────────────────────────────────────
+// Bootstrap pone `a:hover { text-decoration: underline }` y el navegador un
+// contorno blanco al hacer clic: en un menú eso se ve como un error. El hover se
+// expresa con fondo + color, y el foco solo se dibuja al navegar con teclado.
+#sidebar a,
+#sidebar a:hover,
+#sidebar a:focus {
+    text-decoration: none;
 }
 
-#sidebar ul.collapse.show > li {
-    animation: sidebarSubmenuIn 0.2s ease both;
+#sidebar a:focus {
+    outline: none;
 }
 
-@keyframes sidebarSubmenuIn {
-    from {
-        opacity: 0;
-        transform: translateY(-4px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-// Sangría de submenús: se acumula sola en cada nivel (proyecto → subgrupo →
-// item), así una jerarquía de 3 niveles (p. ej. Biblioteca digital/física
-// dentro de un proyecto) se distingue de una de 2 sin necesitar reglas por
-// nivel.
-#sidebar ul.collapse {
-    padding-left: 0.85rem;
+#sidebar a:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--role-accent-border, var(--puk-menu-divider));
 }
 
 #sidebar ul li a:hover {
     color: var(--puk-menu-text);
     background: var(--puk-menu-accent-soft);
-    padding-left: 0.5rem;
 }
 
 #sidebar ul li.active > a {
@@ -141,6 +128,106 @@ body.sidebar-open-lock {
     color: #ffffff;
     font-weight: 600;
     box-shadow: inset 3px 0 0 var(--role-accent);
+}
+
+// ─── Submenús ───────────────────────────────────────────────────────────────
+// Se cuelgan de una línea guía vertical (alineada con el ícono del padre) en vez
+// de solo sangrarse. La sangría se acumula sola por nivel, así una jerarquía de
+// 3 niveles (proyecto → subgrupo → item) se distingue de una de 2.
+#sidebar ul.collapse,
+#sidebar ul.collapsing {
+    margin: 0.15rem 0 0.35rem 1.15rem;
+    padding-left: 0.55rem;
+    border-left: 1px solid var(--puk-menu-divider);
+}
+
+#sidebar ul.collapse > li > a,
+#sidebar ul.collapsing > li > a {
+    position: relative;
+    padding: 0.45rem 0.6rem;
+    border-bottom: 0;
+    font-size: 0.87rem;
+}
+
+// Marca sobre la línea guía: tenue al pasar el mouse, de color en el item activo.
+#sidebar ul.collapse > li > a::before,
+#sidebar ul.collapsing > li > a::before {
+    content: "";
+    position: absolute;
+    left: calc(-0.55rem - 1px);
+    top: 0.45rem;
+    bottom: 0.45rem;
+    width: 2px;
+    border-radius: 2px;
+    background: transparent;
+    transition: background-color 0.2s ease;
+}
+
+#sidebar ul.collapse > li > a:hover::before {
+    background: var(--puk-menu-text-muted);
+}
+
+#sidebar ul.collapse > li.active > a {
+    box-shadow: none;
+}
+
+#sidebar ul.collapse > li.active > a::before {
+    background: var(--role-accent);
+}
+
+// La flecha "→" sigue en el HTML pero ya no se muestra: aun invisible ocupaba
+// sitio, descentraba el texto y su salto lateral competía con la línea guía.
+#sidebar .flecha-admin {
+    display: none;
+}
+
+// Chevron del item que despliega: gira con la misma curva que el despliegue.
+#sidebar .dropdown-toggle::after {
+    transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.2s ease;
+}
+
+#sidebar .dropdown-toggle:hover::after,
+#sidebar .dropdown-toggle[aria-expanded="true"]::after {
+    opacity: 0.9;
+}
+
+// Despliegue: Bootstrap 4 anima la altura de forma lineal y el contenido aparecía
+// recién al terminar (dos movimientos seguidos). Ahora la altura usa una curva
+// suave y, mientras se abre, los items entran en cascada; al cerrar se desvanecen.
+// Solo se anima durante el despliegue (.collapsing), no al cargar cada página.
+#sidebar .collapsing {
+    transition: height 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+#sidebar .dropdown-toggle[aria-expanded="true"] + .collapsing > li {
+    animation: sidebarSubmenuIn 0.22s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+#sidebar .dropdown-toggle[aria-expanded="true"] + .collapsing > li:nth-child(2) { animation-delay: 0.03s; }
+#sidebar .dropdown-toggle[aria-expanded="true"] + .collapsing > li:nth-child(3) { animation-delay: 0.06s; }
+#sidebar .dropdown-toggle[aria-expanded="true"] + .collapsing > li:nth-child(n + 4) { animation-delay: 0.09s; }
+
+#sidebar .dropdown-toggle[aria-expanded="false"] + .collapsing > li {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+@keyframes sidebarSubmenuIn {
+    from {
+        opacity: 0;
+        transform: translateX(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #sidebar .collapsing { transition: none; }
+    #sidebar .dropdown-toggle + .collapsing > li { animation: none; transition: none; }
+    #sidebar .dropdown-toggle::after { transition: none; }
 }
 
 // Encabezado de sección dentro del sidebar (p. ej. "Proyectos", "Usuarios"):
@@ -163,20 +250,6 @@ body.sidebar-open-lock {
     text-transform: uppercase;
     letter-spacing: 0.03em;
     color: rgba(255, 255, 255, 0.45);
-}
-
-// Flechita "→" que aparece al hacer hover sobre un item de submenú (antes vivía
-// como <style> suelto en medio de livewire/menu-admin.blade.php).
-.flecha-admin {
-    opacity: 0;
-    display: inline-block;
-    transform: translateX(-8px);
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-#sidebar ul li a:hover .flecha-admin {
-    opacity: 1;
-    transform: translateX(0);
 }
 
 @media (max-width: 991.98px) {

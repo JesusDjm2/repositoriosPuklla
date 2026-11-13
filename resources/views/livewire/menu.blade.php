@@ -15,6 +15,7 @@
         $navItems = [
             ['label' => 'Inicio', 'href' => route('kawsay'), 'active' => request()->routeIs('kawsay'), 'icon' => 'fa-home'],
             ['label' => 'Nosotros', 'href' => route('kawsay.nosotros'), 'active' => request()->routeIs('kawsay.nosotros'), 'icon' => 'fa-info-circle'],
+            ['label' => 'Contáctanos', 'href' => route('kawsay.contacto'), 'active' => request()->routeIs('kawsay.contacto'), 'icon' => 'fa-envelope'],
         ];
     } elseif ($isRadio) {
         $navItems = [
@@ -103,10 +104,8 @@
                         <img src="{{ asset('img/logo-iesp-pukllasunchis.png') }}" alt="Logo EESP Pukllasunchis"
                             class="logo" width="168" decoding="async">
                     @elseif ($isKawsay)
-                        <img src="{{ asset('img/proyectos/kawsay.logo-blanco.png') }}" alt="Logo Kawsay"
-                            class="logo logo--on-top" width="168" decoding="async">
                         <img src="{{ asset('img/kawsay.png') }}" alt="Logo Kawsay"
-                            class="logo logo--on-scroll" width="168" decoding="async">
+                            class="logo" width="168" decoding="async">
                     @elseif ($isRadio || $isSisipedia)
                         {{-- Arriba del todo el menú va transparente sobre la foto del hero (ver
                              regla :not(.is-scrolled) en estilos.css) y el logo a color se perdía

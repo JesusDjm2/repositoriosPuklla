@@ -7,374 +7,590 @@
    2. Portada: carruseles por formato y menú "Explorar"
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ═══ 1. COMPARTIDOS ═════════════════════════════════════════════════════════ */
-/* ── Portada: hero en mosaico (.khero) ─────────────────────────────────────
-   Izquierda: qué es Kawsay y cómo empezar (buscar / formato / tema sugerido).
-   Derecha: las 4 áreas en mosaico 2×2 con sus pinturas A COLOR.
-   - Sin velo oscuro sobre toda la foto: solo un degradado detrás del texto
-     (izquierda en escritorio, arriba/abajo en celular) y otro arriba para que
-     el menú transparente del sitio se lea.
-   - Los nombres de las áreas van sobre una franja sólida de su color, nunca
-     directo sobre la pintura.
-   - Un solo flujo, sin márgenes negativos por ancho de pantalla. */
-.khero {
-    position: relative;
-    overflow: hidden;
-    /* Sube detrás del menú del sitio (que es sticky y no reserva hueco fijo) */
-    margin-top: calc(var(--nav-height) * -1);
-    padding: calc(var(--nav-height) + 2.75rem) 0 clamp(4rem, 3rem + 3vw, 5.5rem);
-    background: #1d2113;
-    color: #fff;
+/* ═══ 1. COMPARTIDOS & SCROLL SNAP ═════════════════════════════════════════════ */
+
+/* ── Scroll Snap (Full-Page Snap Scroll 100vh) ────────────────────────────── */
+html.kawsay-snap-enabled,
+html:has(body.kawsay-snap-page) {
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
 }
 
-.khero__fondo {
+body.kawsay-snap-page {
+    background: #ffffff;
+    overflow-x: hidden;
+}
+
+/* El navbar se mantiene con fondo blanco limpio en Kawsay */
+body.is-kawsay .menuPuklla {
+    background: #ffffff !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Todos los iconos con color entero (relleno sólido), igual que el icono de login */
+body.is-kawsay .menuPuklla .menu-actions .menu-link--social {
+    background: var(--project-accent, #6e7d1e) !important;
+    border-color: var(--project-accent, #6e7d1e) !important;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--project-accent, #6e7d1e) 30%, transparent) !important;
+}
+body.is-kawsay .menuPuklla .menu-actions .menu-link--social i {
+    color: #ffffff !important;
+}
+body.is-kawsay .menuPuklla .menu-actions .menu-link--social:hover,
+body.is-kawsay .menuPuklla .menu-actions .menu-link--social:focus-visible {
+    background: color-mix(in srgb, var(--project-accent, #6e7d1e) 78%, black) !important;
+    border-color: color-mix(in srgb, var(--project-accent, #6e7d1e) 78%, black) !important;
+    transform: translateY(-2px);
+}
+
+/* Regla base de secciones 100vh con Scroll Snap */
+.kawsay-seccion-snap {
+    min-height: 100vh;
+    min-height: 100dvh;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* Anclaje del pie de página con Scroll Snap inmediatamente tras la sección 2 */
+body.kawsay-snap-page .puklla-footer {
+    scroll-snap-align: start;
+    scroll-snap-stop: normal;
+}
+
+@media (min-width: 992px) and (min-height: 650px) {
+    .kawsay-seccion-snap:not(.kawsay-seccion-publicaciones) {
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+    }
+}
+
+/* ═══ SECCIÓN 1: INICIO (Fondo blanco, centrado: Texto → Logo → Buscador) ═══ */
+.kawsay-seccion-inicio {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #ffffff;
+    padding: calc(var(--puklla-nav-h, 4.5rem) + 1.25rem) 1.5rem 2.5rem;
+    text-align: center;
+}
+
+.kawsay-hero-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 720px;
+    width: 100%;
+    margin: auto 0;
+}
+
+.kawsay-hero-eyebrow-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.55rem, 1.4vw, 1.1rem);
+    margin: 0 0 0.85rem;
+}
+
+.kawsay-hero-eyebrow {
+    margin: 0;
+    color: var(--kp-accent, #6e7d1e);
+    font-size: clamp(0.85rem, 0.75rem + 0.3vw, 1.05rem);
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.kawsay-branch-decor--eyebrow {
+    height: clamp(22px, 3.2vh, 32px);
+    width: auto;
+    object-fit: contain;
+    opacity: 0.85;
+}
+
+.kawsay-hero-logo-box {
+    margin: 0.4rem 0 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.kawsay-hero-logo-img {
+    max-width: min(330px, 76vw);
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 24px rgba(42, 37, 32, 0.08));
+    transition: transform 0.3s ease;
+}
+
+.kawsay-hero-logo-img:hover {
+    transform: scale(1.02);
+}
+
+.kawsay-hero-lema {
+    color: #4a503d;
+    font-family: "EB Garamond", Georgia, serif;
+    font-size: clamp(1.15rem, 1rem + 0.6vw, 1.45rem);
+    font-style: italic;
+    margin: 0 0 1.75rem;
+    max-width: 42ch;
+    line-height: 1.35;
+}
+
+/* Buscador grande y centrado */
+.kawsay-hero-search-form {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 580px;
+    background: #ffffff;
+    border: 2px solid var(--kp-accent, #6e7d1e);
+    border-radius: 999px;
+    padding: 0.35rem;
+    box-shadow: 0 12px 36px rgba(110, 125, 30, 0.12), 0 4px 12px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+}
+
+.kawsay-hero-search-form:focus-within {
+    border-color: color-mix(in srgb, var(--kp-accent, #6e7d1e) 85%, black);
+    box-shadow: 0 16px 44px rgba(110, 125, 30, 0.22), 0 0 0 4px color-mix(in srgb, var(--kp-accent, #6e7d1e) 20%, transparent);
+    transform: translateY(-2px);
+}
+
+.kawsay-hero-search-icon {
+    position: absolute;
+    left: 1.35rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--kp-accent, #6e7d1e);
+    font-size: 1.1rem;
+    pointer-events: none;
+}
+
+.kawsay-hero-search-form input[type="search"] {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0 1rem 0 3.1rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #24281c;
+    font-size: 1.05rem;
+    outline: none;
+}
+
+.kawsay-hero-search-form input[type="search"]::placeholder {
+    color: #8c9280;
+    font-size: 0.98rem;
+}
+
+.kawsay-hero-search-form button[type="submit"] {
+    flex-shrink: 0;
+    min-height: 48px;
+    padding: 0 1.75rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--kp-accent, #6e7d1e);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.98rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--kp-accent, #6e7d1e) 35%, transparent);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.kawsay-hero-search-form button[type="submit"]:hover {
+    background: color-mix(in srgb, var(--kp-accent, #6e7d1e) 82%, black);
+    transform: scale(1.02);
+}
+
+.kawsay-hero-search-form button[type="submit"]:active {
+    transform: scale(0.97);
+}
+
+/* Indicador de scroll inferior */
+.kawsay-scroll-hint {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: auto;
+    color: var(--kp-muted, #5f6655);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.kawsay-scroll-hint:hover {
+    color: var(--kp-accent, #6e7d1e);
+    transform: translateY(3px);
+}
+
+.kawsay-scroll-hint-arrow {
+    font-size: 0.95rem;
+    animation: kawsayBounce 2s infinite ease-in-out;
+}
+
+.kawsay-scroll-hint--subtle {
+    margin-top: 1rem;
+    padding-bottom: 0.5rem;
+}
+
+@keyframes kawsayBounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(6px); }
+    60% { transform: translateY(3px); }
+}
+
+/* ═══ SECCIÓN 2: EXPLORA NUESTRAS ÁREAS DE TRABAJO ═══════════════════════════ */
+.kawsay-seccion-areas {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #faf9f6;
+    padding: calc(var(--puklla-nav-h, 4.5rem) + 0.75rem) 1rem 2rem;
+    position: relative;
+}
+
+.kawsay-areas-wrapper {
+    width: 100%;
+    max-width: 1480px;
+    margin: auto 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Título con ramas decorativas a cada lado */
+.kawsay-areas-header {
+    margin-bottom: clamp(1.1rem, 2.3vh, 1.85rem);
+    text-align: center;
+}
+
+.kawsay-decor-heading {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.75rem, 2vw, 1.6rem);
+    margin: 0;
+}
+
+.kawsay-branch-decor {
+    height: clamp(28px, 4.2vh, 44px);
+    width: auto;
+    object-fit: contain;
+    opacity: 0.88;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.06));
+    user-select: none;
+    pointer-events: none;
+}
+
+.kawsay-branch-left {
+    transform: scaleX(-1);
+}
+
+.kawsay-branch-right {
+    transform: none;
+}
+
+.kawsay-section-h2 {
+    font-family: "EB Garamond", Georgia, serif;
+    font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.75rem);
+    font-weight: 700;
+    color: #24281c;
+    margin: 0;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+}
+
+/* 4 áreas en una misma línea */
+.kawsay-flip-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(0.85rem, 1.6vw, 1.85rem);
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ─── 3D FLIP CARD ──────────────────────────────────────────────────────── */
+.kawsay-flip-card {
+    --area-color: #6e7d1e;
+    perspective: 1200px;
+    height: clamp(330px, 46vh, 430px);
+    cursor: pointer;
+    outline: none;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.kawsay-flip-card:hover,
+.kawsay-flip-card:focus,
+.kawsay-flip-card:active {
+    text-decoration: none;
+    color: inherit;
+}
+
+.kawsay-flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    transform-style: preserve-3d;
+    transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 10px 28px rgba(36, 40, 28, 0.08);
+}
+
+/* Volteo al pasar el mouse (hover) o foco */
+.kawsay-flip-card:hover .kawsay-flip-card-inner,
+.kawsay-flip-card:focus-visible .kawsay-flip-card-inner,
+.kawsay-flip-card.is-flipped .kawsay-flip-card-inner {
+    transform: rotateY(180deg);
+}
+
+.kawsay-flip-card:focus-visible {
+    outline: 3px solid var(--area-color);
+    outline-offset: 4px;
+    border-radius: 22px;
+}
+
+.kawsay-flip-card-front,
+.kawsay-flip-card-back {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    overflow: hidden;
+}
+
+/* ── FRENTE ── */
+.kawsay-flip-card-front {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid rgba(36, 40, 28, 0.1);
+    transform: rotateY(0deg);
+}
+
+.kawsay-flip-card-media {
+    position: relative;
+    flex: 1 1 auto;
+    overflow: hidden;
+    background: #24281c;
+}
+
+.kawsay-flip-card-media img {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 50% 40%;
+    transition: transform 0.6s ease;
 }
 
-/* Degradados de lectura: arriba (menú) + izquierda (texto) */
-.khero::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-        linear-gradient(to bottom, rgba(12, 14, 6, 0.55) 0, rgba(12, 14, 6, 0) 9rem),
-        linear-gradient(to top, rgba(12, 14, 6, 0.5) 0, rgba(12, 14, 6, 0) 10rem),
-        linear-gradient(90deg, rgba(18, 20, 10, 0.86) 0%, rgba(18, 20, 10, 0.62) 40%, rgba(18, 20, 10, 0.22) 72%, rgba(18, 20, 10, 0.12) 100%);
+.kawsay-flip-card:hover .kawsay-flip-card-media img {
+    transform: scale(1.06);
 }
 
-/* Borde inferior: un horizonte orgánico (como una loma del territorio) del
-   color de la página, en vez del degradado a gris que dejaba una franja
-   lechosa sobre la pintura y cortaba las tarjetas. SVG en línea: 0 peticiones. */
-.khero::after {
-    content: "";
-    position: absolute;
-    inset: auto 0 -1px;
-    height: clamp(2.25rem, 4vw, 3.5rem);
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 80' preserveAspectRatio='none'%3E%3Cpath fill='%23f2f2f2' d='M0 54 C 180 30 330 26 520 40 C 700 54 820 70 1010 58 C 1180 47 1310 22 1440 30 L1440 80 L0 80 Z'/%3E%3Cpath fill='%23f2f2f2' fill-opacity='.45' d='M0 40 C 220 18 400 22 600 34 C 790 46 930 58 1120 44 C 1270 33 1360 16 1440 18 L1440 80 L0 80 Z'/%3E%3C/svg%3E") center bottom / 100% 100% no-repeat;
-    pointer-events: none;
+.kawsay-flip-card-media img[data-foco="abajo"] {
+    object-position: center 78%;
 }
 
-.khero__grid {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    /* minmax(0, 1fr): sin esto, la fila deslizable de atajos (nowrap) ensancha
-       la columna y en celular todo el hero queda más ancho que la pantalla. */
-    grid-template-columns: minmax(0, 1fr);
-    gap: 2rem;
-    align-items: center;
-}
-
-@media (min-width: 992px) {
-    .khero__grid {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-        gap: 3rem;
-    }
-}
-
-/* ── Texto ── */
-.khero__eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin: 0 0 0.6rem;
-    color: #e6dcae;
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-}
-
-.khero__eyebrow::before {
-    content: "";
-    width: 2rem;
-    height: 2px;
-    border-radius: 2px;
-    background: currentColor;
-}
-
-.khero__titulo {
-    margin: 0 0 0.5rem;
-    color: #fff;
-    font-family: "EB Garamond", Georgia, serif;
-    font-size: clamp(2.75rem, 1.7rem + 4.2vw, 4.5rem);
-    font-weight: 700;
-    line-height: 0.95;
-    letter-spacing: -0.01em;
-    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
-}
-
-.khero__lema {
-    max-width: 30ch;
-    margin: 0 0 1.5rem;
-    color: rgba(255, 255, 255, 0.92);
-    font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.3rem);
-    line-height: 1.4;
-}
-
-/* Buscador: la acción principal, grande y clara */
-.khero__buscar {
-    position: relative;
-    display: flex;
-    max-width: 32rem;
-    margin-bottom: 1rem;
-    padding: 0.3rem;
-    border-radius: 999px;
-    background: #fff;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
-}
-
-.khero__buscar:focus-within {
-    outline: 3px solid rgba(255, 255, 255, 0.55);
-    outline-offset: 3px;
-}
-
-.khero__buscar-icono {
-    position: absolute;
-    top: 50%;
-    left: 1.15rem;
-    color: #7a8070;
-    transform: translateY(-50%);
-    pointer-events: none;
-}
-
-.khero__buscar input {
-    flex: 1 1 auto;
-    min-width: 0;
-    min-height: 48px;
-    padding: 0 0.75rem 0 2.75rem;
-    border: 0;
-    border-radius: 999px;
-    background: transparent;
-    color: #24281c;
-    font-size: 16px; /* evita el zoom automático en iOS */
-}
-
-.khero__buscar input:focus { outline: none; }
-.khero__buscar input::placeholder { color: #7a8070; }
-
-.khero__buscar button {
-    flex-shrink: 0;
-    min-height: 48px;
-    padding: 0 1.5rem;
-    border: 0;
-    border-radius: 999px;
-    background: var(--kp-accent);
-    color: #fff;
-    font-weight: 700;
-    transition: background-color 0.18s var(--kp-ease), transform 0.18s var(--kp-ease);
-}
-
-@media (hover: hover) {
-    .khero__buscar button:hover { background: color-mix(in srgb, var(--kp-accent) 82%, black); }
-}
-
-.khero__buscar button:active { transform: scale(0.97); }
-
-/* Atajos por formato: un toque, sin escribir */
-.khero__atajos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.khero__atajo {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    min-height: 44px;
-    padding: 0.45rem 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.32);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.12);
-    color: #fff;
-    font-size: 0.92rem;
-    font-weight: 600;
-    text-decoration: none;
-    backdrop-filter: blur(4px);
-    transition: background-color 0.18s var(--kp-ease), color 0.18s var(--kp-ease), transform 0.18s var(--kp-ease);
-}
-
-@media (hover: hover) {
-    .khero__atajo:hover {
-        background: #fff;
-        color: #24281c;
-        transform: translateY(-1px);
-    }
-}
-
-.khero__atajo:active { transform: scale(0.97); }
-
-.khero__sugerencias {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.35rem 0.9rem;
-    margin: 0;
-    color: rgba(255, 255, 255, 0.75);
-    font-size: 0.9rem;
-}
-
-.khero__sugerencias a {
-    color: #fff;
-    font-weight: 600;
-    text-decoration: underline;
-    text-decoration-color: rgba(255, 255, 255, 0.45);
-    text-underline-offset: 3px;
-}
-
-.khero__sugerencias a:hover { text-decoration-color: #fff; }
-
-/* ── Mosaico de áreas ── */
-.khero__areas-titulo {
-    margin: 0 0 0.75rem;
-    color: rgba(255, 255, 255, 0.85);
-    font-family: inherit;
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-}
-
-.khero__mosaico {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.85rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.khero-area {
-    --area-color: var(--kp-accent);
-
-    position: relative;
-    display: block;
-    overflow: hidden;
-    aspect-ratio: 4 / 3;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    border-radius: 18px;
-    background: var(--area-color);
-    color: #fff;
-    text-decoration: none;
-    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
-    transition: transform 0.3s var(--kp-ease), box-shadow 0.3s var(--kp-ease);
-}
-
-@media (hover: hover) {
-    .khero-area:hover {
-        color: #fff;
-        transform: translateY(-4px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
-    }
-
-    .khero-area:hover .khero-area__media img { transform: scale(1.06); }
-    .khero-area:hover .khero-area__meta i { transform: translateX(4px); }
-}
-
-.khero-area:active { transform: scale(0.98); }
-
-.khero-area:focus-visible {
-    outline: 3px solid #fff;
-    outline-offset: 3px;
-}
-
-.khero-area__media {
+.kawsay-flip-card-fallback {
     position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2.5rem;
+    background: var(--area-color);
+    color: #ffffff;
+    font-size: 3rem;
 }
 
-.khero-area__media img {
+/* Contador de temas en el frente (badge superior flotante) */
+.kawsay-card-count-badge {
     position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s var(--kp-ease);
-}
-
-.khero-area__media img[data-foco="abajo"] { object-position: center 78%; }
-
-/* Franja sólida del color del área: el nombre siempre se lee */
-.khero-area__pie {
-    position: absolute;
-    inset: auto 0 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    padding: 0.65rem 0.9rem 0.7rem;
-    background: color-mix(in srgb, var(--area-color) 90%, black);
-}
-
-.khero-area__nombre {
-    display: -webkit-box;
-    overflow: hidden;
-    font-size: 1rem;
-    font-weight: 700;
-    line-height: 1.2;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-}
-
-.khero-area__meta {
+    top: 0.85rem;
+    right: 0.85rem;
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    color: rgba(255, 255, 255, 0.82);
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(18, 22, 12, 0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: #ffffff;
     font-size: 0.8rem;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
-.khero-area__meta i {
-    font-size: 0.75rem;
-    transition: transform 0.2s var(--kp-ease);
+/* Pie del frente con título */
+.kawsay-flip-card-foot {
+    flex-shrink: 0;
+    padding: 0.9rem 1rem 1rem;
+    background: color-mix(in srgb, var(--area-color) 92%, black);
+    color: #ffffff;
+    text-align: center;
 }
 
-/* ── Tablet y celular ── */
+.kawsay-card-title {
+    margin: 0;
+    font-size: clamp(0.95rem, 0.85rem + 0.3vw, 1.15rem);
+    font-weight: 700;
+    line-height: 1.25;
+    color: #ffffff;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+}
+
+/* ── REVERSO (VOLTEADO) ── */
+.kawsay-flip-card-back {
+    transform: rotateY(180deg);
+    background: linear-gradient(155deg, color-mix(in srgb, var(--area-color) 94%, black) 0%, color-mix(in srgb, var(--area-color) 70%, black) 100%);
+    color: #ffffff;
+    padding: 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.kawsay-flip-card-back-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    height: 100%;
+    justify-content: space-between;
+}
+
+.kawsay-card-back-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: #ffffff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.kawsay-card-back-title {
+    font-family: "EB Garamond", Georgia, serif;
+    font-size: clamp(1.25rem, 1.1rem + 0.35vw, 1.5rem);
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.2;
+    margin: 0.5rem 0;
+}
+
+.kawsay-card-back-desc {
+    font-size: clamp(0.84rem, 0.78rem + 0.15vw, 0.92rem);
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.94);
+    margin: 0 0 1rem;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-height: 140px;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+.kawsay-card-back-desc::-webkit-scrollbar { display: none; }
+
+.kawsay-card-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    width: 100%;
+    max-width: 220px;
+    padding: 0.65rem 1.25rem;
+    border-radius: 999px;
+    background: #ffffff;
+    color: var(--area-color);
+    font-weight: 700;
+    font-size: 0.92rem;
+    text-decoration: none;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kawsay-flip-card:hover .kawsay-card-back-btn,
+.kawsay-card-back-btn:hover {
+    background: #fdfcfa;
+    color: color-mix(in srgb, var(--area-color) 80%, black);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.kawsay-flip-card:hover .kawsay-card-back-btn i,
+.kawsay-card-back-btn:hover i {
+    transform: translateX(4px);
+}
+
+/* ─── RESPONSIVE PARA SECCIÓN ÁREAS ───────────────────────────────────────── */
+@media (max-width: 1199.98px) {
+    .kawsay-flip-grid {
+        gap: 1rem;
+    }
+    .kawsay-flip-card {
+        height: clamp(320px, 44vh, 400px);
+    }
+}
+
 @media (max-width: 991.98px) {
-    .khero {
-        padding: calc(var(--nav-height) + 1.75rem) 0 3.5rem;
+    .kawsay-seccion-snap {
+        min-height: auto;
+        height: auto;
+        padding-top: calc(var(--puklla-nav-h, 4.5rem) + 1.5rem);
+        padding-bottom: 2.5rem;
     }
-
-    /* El texto ocupa todo el ancho: degradado de arriba hacia abajo */
-    .khero::before {
-        background: linear-gradient(to bottom, rgba(14, 16, 8, 0.78) 0%, rgba(14, 16, 8, 0.6) 55%, rgba(14, 16, 8, 0.82) 100%);
+    .kawsay-flip-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
     }
-
-    .khero__lema { max-width: none; }
-
-    /* Atajos en una fila deslizable para no ocupar dos o tres renglones */
-    .khero__atajos {
-        flex-wrap: nowrap;
-        margin-right: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
-        padding-right: calc(var(--bs-gutter-x, 1.5rem) * 0.5);
-        overflow-x: auto;
-        scrollbar-width: none;
+    .kawsay-flip-card {
+        height: 340px;
     }
-
-    .khero__atajos::-webkit-scrollbar { display: none; }
-    .khero__atajo { flex-shrink: 0; }
 }
 
 @media (max-width: 575.98px) {
-    .khero__grid { gap: 1.5rem; }
-    .khero__lema { margin-bottom: 1.1rem; }
-    .khero__buscar button { padding: 0 1.1rem; }
-    .khero__mosaico { gap: 0.6rem; }
-    .khero-area { aspect-ratio: 1 / 1; border-radius: 14px; }
-    .khero-area__pie { padding: 0.5rem 0.65rem 0.55rem; }
-    .khero-area__nombre { font-size: 0.88rem; }
-    .khero-area__meta { font-size: 0.74rem; }
+    .kawsay-flip-grid {
+        grid-template-columns: 1fr;
+        max-width: 340px;
+        gap: 1.25rem;
+    }
+    .kawsay-flip-card {
+        height: 320px;
+    }
 }
 
 
