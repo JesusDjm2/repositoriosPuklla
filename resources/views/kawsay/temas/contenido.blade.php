@@ -15,10 +15,6 @@
                 </div>
                 <p class="kawsay-area-header__desc mb-0">{{ $tema->titulo }} · {{ $archivos->count() }} {{ $archivos->count() === 1 ? 'archivo' : 'archivos' }}</p>
             </div>
-            <form action="{{ route('kawsay.buscar') }}" method="GET" class="kawsay-header-search">
-                <input type="text" name="query" placeholder="Buscar en Kawsay..." minlength="3" required aria-label="Buscar en Kawsay">
-                <button type="submit" aria-label="Buscar"><i class="fa fa-search"></i></button>
-            </form>
         </div>
     </div>
 </div>

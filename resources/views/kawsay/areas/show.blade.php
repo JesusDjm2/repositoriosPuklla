@@ -50,10 +50,6 @@
                     </p>
                 </div>
             </div>
-            <form action="{{ route('kawsay.buscar') }}" method="GET" class="karea-hero__buscar" role="search">
-                <input type="search" name="query" placeholder="Busca un tema o material…" minlength="3" required aria-label="Buscar en Kawsay">
-                <button type="submit"><i class="fa fa-search" aria-hidden="true"></i><span>Buscar</span></button>
-            </form>
         </div>
     </header>
 

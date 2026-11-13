@@ -57,6 +57,27 @@
         ];
     }
 
+    // Comprobación de página de inicio para mostrar u ocultar el buscador del menú
+    $isHome = match ($proyectoActual) {
+        'kawsay' => request()->routeIs('kawsay'),
+        'sisipedia' => request()->routeIs('index'),
+        'eesp' => request()->routeIs('eesppukllasunchis'),
+        'radio' => request()->routeIs('cancionesPuklla'),
+        default => request()->routeIs('hub'),
+    };
+
+    $searchHref = match ($proyectoActual) {
+        'kawsay' => route('kawsay.buscar'),
+        'sisipedia' => route('sisipedia.buscar'),
+        default => route('busqueda'),
+    };
+
+    $searchPlaceholder = match ($proyectoActual) {
+        'kawsay' => 'Buscar en Kawsay: temas, fichas, videos, fotos…',
+        'sisipedia' => 'Buscar en Sisipedia…',
+        default => 'Buscar en todos los registros…',
+    };
+
     // Cuenta: icono + destino + etiqueta legible (se reusa en el pill del panel lateral)
     // El admin completo va primero porque puede tener además cualquiera de los
     // otros roles (ej. admin+kawsay) y su panel principal manda sobre el de un
@@ -122,13 +143,38 @@
                     @endif
                 </a>
 
-                <button type="button" class="menu-toggle" id="menuToggle" aria-label="Abrir menú" aria-expanded="false"
-                    aria-controls="menuSidebar">
-                    <span class="hamburger-line" aria-hidden="true"></span>
-                    <span class="hamburger-line" aria-hidden="true"></span>
-                    <span class="hamburger-line" aria-hidden="true"></span>
-                </button>
+                <div class="menu-bar-actions">
+                    @if (!$isHome)
+                        <button type="button" class="menu-bar-search" id="menuBarSearchToggle"
+                            aria-label="Abrir buscador" title="Buscar" aria-expanded="false" aria-controls="menuSearchDropdown">
+                            <i class="fa fa-search" aria-hidden="true"></i>
+                        </button>
+                    @endif
+
+                    <button type="button" class="menu-toggle" id="menuToggle" aria-label="Abrir menú" aria-expanded="false"
+                        aria-controls="menuSidebar">
+                        <span class="hamburger-line" aria-hidden="true"></span>
+                        <span class="hamburger-line" aria-hidden="true"></span>
+                        <span class="hamburger-line" aria-hidden="true"></span>
+                    </button>
+                </div>
             </div>
+
+            @if (!$isHome)
+                <div class="menu-search-dropdown" id="menuSearchDropdown" aria-hidden="true">
+                    <div class="menu-search-dropdown__inner">
+                        <form action="{{ $searchHref }}" method="GET" role="search" class="menu-search-form">
+                            <i class="fa fa-search menu-search-form__icon" aria-hidden="true"></i>
+                            <input type="search" name="query" id="menuSearchInput" class="menu-search-form__input"
+                                placeholder="{{ $searchPlaceholder }}" minlength="3" maxlength="120" autocomplete="off" required>
+                            <button type="submit" class="menu-search-form__submit">Buscar</button>
+                            <button type="button" class="menu-search-form__close" id="menuSearchClose" aria-label="Cerrar buscador">
+                                <i class="fa fa-times" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @endif
 
             <div class="menu-overlay" id="menuOverlay" aria-hidden="true"></div>
 
@@ -155,12 +201,14 @@
                     </ul>
 
                     <div class="menu-actions">
-                        {{-- Sin buscador acá: casi todas las vistas públicas ya
-                             tienen su propio buscador en el hero. En su lugar,
-                             redes sociales con el acento de color de cada
-                             proyecto (--project-accent) en vez del logo/color
-                             de marca de cada red. Las URLs salen de
-                             $socialLinks (arriba, por proyecto). --}}
+                        @if (!$isHome)
+                            <button type="button" class="menu-link menu-link--search" id="menuSearchToggle"
+                                title="Buscar" aria-label="Abrir buscador" aria-expanded="false" aria-controls="menuSearchDropdown">
+                                <i class="fa fa-search" aria-hidden="true"></i>
+                                <span class="menu-link__label">Buscar</span>
+                            </button>
+                        @endif
+
                         @foreach ($socialLinks as $social)
                             <a href="{{ $social['href'] }}" class="menu-link menu-link--social"
                                 title="{{ $social['label'] }}" aria-label="{{ $social['label'] }}"
@@ -172,6 +220,7 @@
 
                         @if ($accountIsLogout)
                             <a href="{{ $accountHref }}" class="menu-link menu-link--login" title="{{ $accountLabel }}"
+                                aria-label="{{ $accountLabel }}"
                                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                 <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                                 <span class="menu-link__label">{{ $accountLabel }}</span>
@@ -180,7 +229,8 @@
                                 @csrf
                             </form>
                         @else
-                            <a href="{{ $accountHref }}" class="menu-link menu-link--login" title="{{ $accountLabel }}">
+                            <a href="{{ $accountHref }}" class="menu-link menu-link--login" title="{{ $accountLabel }}"
+                                aria-label="{{ $accountLabel }}">
                                 <i class="fas fa-user" aria-hidden="true"></i>
                                 <span class="menu-link__label">{{ $accountLabel }}</span>
                             </a>
@@ -234,10 +284,62 @@
             menuClose?.addEventListener('click', toggleMenu);
             menuOverlay?.addEventListener('click', toggleMenu);
 
+            // Buscador desplegable del menú (cuando no estamos en inicio)
+            const searchDropdown = document.getElementById('menuSearchDropdown');
+            const searchToggle = document.getElementById('menuSearchToggle');
+            const barSearchToggle = document.getElementById('menuBarSearchToggle');
+            const searchClose = document.getElementById('menuSearchClose');
+            const searchInput = document.getElementById('menuSearchInput');
+
+            function toggleSearch(open) {
+                if (!searchDropdown) return;
+                const shouldOpen = typeof open === 'boolean' ? open : !searchDropdown.classList.contains('is-open');
+                searchDropdown.classList.toggle('is-open', shouldOpen);
+                searchDropdown.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+                searchToggle?.classList.toggle('is-active', shouldOpen);
+                searchToggle?.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+                barSearchToggle?.classList.toggle('is-active', shouldOpen);
+                barSearchToggle?.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+
+                if (shouldOpen) {
+                    setTimeout(function() { searchInput?.focus(); }, 80);
+                }
+            }
+
+            searchToggle?.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleSearch();
+            });
+
+            barSearchToggle?.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleSearch();
+            });
+
+            searchClose?.addEventListener('click', function(e) {
+                e.preventDefault();
+                toggleSearch(false);
+            });
+
+            // Cerrar buscador al hacer clic fuera
+            document.addEventListener('click', function(e) {
+                if (searchDropdown?.classList.contains('is-open')) {
+                    if (!searchDropdown.contains(e.target) && !searchToggle?.contains(e.target) && !barSearchToggle?.contains(e.target)) {
+                        toggleSearch(false);
+                    }
+                }
+            });
+
             // Cerrar con ESC
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && menuSidebar?.classList.contains('active')) {
-                    toggleMenu();
+                if (e.key === 'Escape') {
+                    if (searchDropdown?.classList.contains('is-open')) {
+                        toggleSearch(false);
+                    } else if (menuSidebar?.classList.contains('active')) {
+                        toggleMenu();
+                    }
                 }
             });
 

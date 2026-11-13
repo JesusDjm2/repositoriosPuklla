@@ -17,14 +17,11 @@
 @section('contenido')
 <div class="kawsay-area-header">
     <div class="container py-4 py-md-5">
-        <div class="kawsay-tema-header">
+        <div class="kawsay-tema-header mb-3">
             <a href="{{ route('kawsay.area', $areaSlug) }}" class="kawsay-back-link kawsay-tema-header__back">
                 <i class="fa fa-arrow-left"></i> {{ $area->nombre }}
             </a>
-            <form action="{{ route('kawsay.buscar') }}" method="GET" class="kawsay-header-search kawsay-tema-header__search">
-                <input type="text" name="query" placeholder="Buscar en Kawsay..." minlength="3" required aria-label="Buscar en Kawsay">
-                <button type="submit" aria-label="Buscar"><i class="fa fa-search"></i></button>
-            </form>
+        </div>
 
         <div class="kawsay-tema-hero">
             @if ($tema->imagen)

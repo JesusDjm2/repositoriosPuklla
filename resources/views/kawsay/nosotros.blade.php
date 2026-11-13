@@ -10,10 +10,6 @@
                 <h1 class="kawsay-area-header__title mt-2">Nosotros</h1>
                 <p class="kawsay-area-header__desc mb-0">Quiénes somos y qué es el repositorio educativo Kawsay.</p>
             </div>
-            <form action="{{ route('kawsay.buscar') }}" method="GET" role="search" class="kawsay-header-search">
-                <input type="text" name="query" placeholder="Buscar..." minlength="3" required aria-label="Buscar en Kawsay">
-                <button type="submit" aria-label="Buscar"><i class="fa fa-search"></i></button>
-            </form>
         </div>
     </div>
 </div>

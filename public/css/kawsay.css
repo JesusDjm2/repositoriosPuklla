@@ -28,22 +28,6 @@ body.is-kawsay .menuPuklla {
     box-shadow: 0 2px 14px rgba(0, 0, 0, 0.04) !important;
 }
 
-/* Todos los iconos con color entero (relleno sólido), igual que el icono de login */
-body.is-kawsay .menuPuklla .menu-actions .menu-link--social {
-    background: var(--project-accent, #6e7d1e) !important;
-    border-color: var(--project-accent, #6e7d1e) !important;
-    box-shadow: 0 4px 14px color-mix(in srgb, var(--project-accent, #6e7d1e) 30%, transparent) !important;
-}
-body.is-kawsay .menuPuklla .menu-actions .menu-link--social i {
-    color: #ffffff !important;
-}
-body.is-kawsay .menuPuklla .menu-actions .menu-link--social:hover,
-body.is-kawsay .menuPuklla .menu-actions .menu-link--social:focus-visible {
-    background: color-mix(in srgb, var(--project-accent, #6e7d1e) 78%, black) !important;
-    border-color: color-mix(in srgb, var(--project-accent, #6e7d1e) 78%, black) !important;
-    transform: translateY(-2px);
-}
-
 /* Regla base de secciones 100vh con Scroll Snap */
 .kawsay-seccion-snap {
     min-height: 100vh;
