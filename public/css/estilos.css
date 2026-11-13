@@ -2690,6 +2690,10 @@ button.lib-book-card__btn { border: 0; cursor: pointer; font-family: inherit; }
   .menuPuklla .menu-bar-search {
     display: none !important;
   }
+  /* En escritorio/tablet, el botón de login no se muestra a visitantes (vive en el pie de página) */
+  .menuPuklla .menu-link--guest-mobile {
+    display: none !important;
+  }
 }
 
 @media (max-width: 767px) {
@@ -3404,7 +3408,8 @@ button.lib-book-card__btn { border: 0; cursor: pointer; font-family: inherit; }
   padding: 1.6em 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5em 1.5em;
+  align-items: center;
+  gap: 0.75em 1.5em;
   justify-content: space-between;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.88);
@@ -3423,10 +3428,56 @@ button.lib-book-card__btn { border: 0; cursor: pointer; font-family: inherit; }
 .puklla-footer__bottom p {
   margin: 0;
 }
+
+/* ── Acceso Institucional / Intranet en el pie de página ── */
+.puklla-footer__auth {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.puklla-footer__auth-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.95rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff !important;
+  text-decoration: none !important;
+  font-weight: 700;
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.puklla-footer__auth-link:hover {
+  background: #ffffff;
+  color: var(--project-accent, #ae0c21) !important;
+  border-color: #ffffff;
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+.puklla-footer__auth-link i {
+  font-size: 12px;
+}
+.puklla-footer__auth-link--active {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+.puklla-footer__auth-sep {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: bold;
+}
+
 @media (max-width: 767px) {
   .puklla-footer__bottom {
     justify-content: center;
     text-align: center;
+    flex-direction: column;
+    gap: 0.85rem;
   }
 }
 

@@ -246,21 +246,33 @@
                             </a>
                         @endforeach
 
-                        @if ($accountIsLogout)
-                            <a href="{{ $accountHref }}" class="menu-link menu-link--login" title="{{ $accountLabel }}"
-                                aria-label="{{ $accountLabel }}"
-                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
-                                <span class="menu-link__label">{{ $accountLabel }}</span>
-                            </a>
-                            <form id="logout-form" action="{{ $accountHref }}" method="POST" class="d-none">
-                                @csrf
-                            </form>
+                        @if (Auth::check())
+                            {{-- Usuario AUTENTICADO: visible en cabecera con botón de acceso a panel / logout --}}
+                            @if ($accountIsLogout)
+                                <a href="{{ $accountHref }}" class="menu-link menu-link--login menu-link--auth" title="{{ $accountLabel }}"
+                                    aria-label="{{ $accountLabel }}"
+                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                                    <span class="menu-link__label">{{ $accountLabel }}</span>
+                                </a>
+                                <form id="logout-form" action="{{ $accountHref }}" method="POST" class="d-none">
+                                    @csrf
+                                </form>
+                            @else
+                                <a href="{{ $accountHref }}" class="menu-link menu-link--login menu-link--auth" title="{{ $accountLabel }}"
+                                    aria-label="{{ $accountLabel }}">
+                                    <i class="fas fa-user-shield" aria-hidden="true"></i>
+                                    <span class="menu-link__label">{{ $accountLabel }}</span>
+                                </a>
+                            @endif
                         @else
-                            <a href="{{ $accountHref }}" class="menu-link menu-link--login" title="{{ $accountLabel }}"
-                                aria-label="{{ $accountLabel }}">
-                                <i class="fas fa-user" aria-hidden="true"></i>
-                                <span class="menu-link__label">{{ $accountLabel }}</span>
+                            {{-- Usuario VISITANTE: en desktop/tablet no se muestra en el menú superior
+                                 (vive en el pie de página como Acceso Institucional). En móvil se mantiene
+                                 dentro del drawer al abrir el menú lateral. --}}
+                            <a href="{{ $accountHref }}" class="menu-link menu-link--login menu-link--guest-mobile"
+                                title="Acceso institucional" aria-label="Acceso institucional">
+                                <i class="fas fa-lock" aria-hidden="true"></i>
+                                <span class="menu-link__label">Acceso institucional</span>
                             </a>
                         @endif
                     </div>

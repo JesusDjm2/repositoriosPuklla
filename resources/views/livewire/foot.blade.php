@@ -102,6 +102,39 @@
 
             <div class="puklla-footer__bottom">
                 <p>Asociación Pukllasunchis &copy; {{ date('Y') }}. Todos los derechos reservados.</p>
+
+                {{-- Acceso Institucional / Intranet a nivel senior --}}
+                <div class="puklla-footer__auth">
+                    @auth
+                        @php
+                            $user = Auth::user();
+                            $panelRoute = route('home');
+                            $panelText = 'Mi Panel';
+                            if ($user->hasRole('admin')) { $panelRoute = route('admin.principal'); $panelText = 'Panel Principal'; }
+                            elseif ($user->hasRole('kawsay')) { $panelRoute = route('adminKawsay'); $panelText = 'Panel Kawsay'; }
+                            elseif ($user->hasRole('biblioteca')) { $panelRoute = route('bibliotecario'); $panelText = 'Panel Biblioteca'; }
+                            elseif ($user->hasRole('videos')) { $panelRoute = route('adminVideos'); $panelText = 'Panel Videos'; }
+                            elseif ($user->hasRole('audios')) { $panelRoute = route('adminCanciones'); $panelText = 'Panel Canciones'; }
+                            elseif ($user->hasRole('sisicha')) { $panelRoute = route('adminSisicha'); $panelText = 'Panel Sisicha'; }
+                        @endphp
+                        <a href="{{ $panelRoute }}" class="puklla-footer__auth-link puklla-footer__auth-link--active" title="Ir a {{ $panelText }}">
+                            <i class="fa fa-user-shield" aria-hidden="true"></i> {{ $panelText }}
+                        </a>
+                        <span class="puklla-footer__auth-sep" aria-hidden="true">·</span>
+                        <a href="{{ route('logout') }}" class="puklla-footer__auth-link" title="Cerrar sesión"
+                            onclick="event.preventDefault(); document.getElementById('footer-logout-form').submit();">
+                            <i class="fa fa-sign-out-alt" aria-hidden="true"></i> Salir
+                        </a>
+                        <form id="footer-logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                            @csrf
+                        </form>
+                    @else
+                        <a href="{{ route('home') }}" class="puklla-footer__auth-link" title="Acceso institucional para docentes y administradores">
+                            <i class="fa fa-lock" aria-hidden="true"></i> Acceso Institucional
+                        </a>
+                    @endauth
+                </div>
+
                 <p>Hecho por <a href="https://www.facebook.com/DjmWebMaster" target="_blank"
                         rel="nofollow noopener">DJM2</a></p>
             </div>
