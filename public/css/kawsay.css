@@ -9,6 +9,58 @@
 
 /* ═══ 1. COMPARTIDOS & SCROLL SNAP ═════════════════════════════════════════════ */
 
+/* ── Tipografía oficial de Kawsay (Exclusiva de este proyecto):
+      - Títulos: Montserrat (peso 700)
+      - Párrafos y texto general: Inter (pesos 400 y 500)
+──────────────────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Montserrat:wght@700&display=swap');
+
+body.is-kawsay {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 400;
+}
+
+body.is-kawsay h1,
+body.is-kawsay h2,
+body.is-kawsay h3,
+body.is-kawsay h4,
+body.is-kawsay h5,
+body.is-kawsay h6,
+body.is-kawsay .h1,
+body.is-kawsay .h2,
+body.is-kawsay .h3,
+body.is-kawsay .h4,
+body.is-kawsay .h5,
+body.is-kawsay .h6,
+body.is-kawsay .kawsay-section-h2,
+body.is-kawsay .kawsay-card-back-title,
+body.is-kawsay .ktema-stage__title,
+body.is-kawsay .karea-hero__titulo,
+body.is-kawsay .karea-seccion,
+body.is-kawsay .kport-head__title,
+body.is-kawsay .kcar__title,
+body.is-kawsay .kexp__title,
+body.is-kawsay .kdest__title,
+body.is-kawsay .kcom__title,
+body.is-kawsay .ktema-stage__ph-title,
+body.is-kawsay .kawsay-hero-eyebrow,
+body.is-kawsay .kawsay-area-header__title {
+    font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 700;
+}
+
+body.is-kawsay p,
+body.is-kawsay .ktema-stage__desc,
+body.is-kawsay .karea-hero__desc,
+body.is-kawsay .kcar__sub,
+body.is-kawsay .kport-head__sub,
+body.is-kawsay .kdest__desc,
+body.is-kawsay .kcom__text,
+body.is-kawsay .kcom__sub,
+body.is-kawsay .kawsay-hero-lema {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
 /* ── Scroll Snap (Full-Page Snap Scroll 100vh) ────────────────────────────── */
 html.kawsay-snap-enabled,
 html:has(body.kawsay-snap-page) {
@@ -84,6 +136,7 @@ body.kawsay-snap-page .puklla-footer {
 .kawsay-hero-eyebrow {
     margin: 0;
     color: var(--kp-accent, #6e7d1e);
+    font-family: 'Montserrat', sans-serif;
     font-size: clamp(0.85rem, 0.75rem + 0.3vw, 1.05rem);
     font-weight: 700;
     letter-spacing: 0.18em;
@@ -118,12 +171,12 @@ body.kawsay-snap-page .puklla-footer {
 
 .kawsay-hero-lema {
     color: #4a503d;
-    font-family: "EB Garamond", Georgia, serif;
-    font-size: clamp(1.15rem, 1rem + 0.6vw, 1.45rem);
-    font-style: italic;
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(1rem, 0.95rem + 0.4vw, 1.25rem);
+    font-weight: 400;
     margin: 0 0 1.75rem;
-    max-width: 42ch;
-    line-height: 1.35;
+    max-width: 44ch;
+    line-height: 1.45;
 }
 
 /* Buscador grande y centrado */
@@ -290,8 +343,8 @@ body.kawsay-snap-page .puklla-footer {
 }
 
 .kawsay-section-h2 {
-    font-family: "EB Garamond", Georgia, serif;
-    font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.75rem);
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.4rem);
     font-weight: 700;
     color: #24281c;
     margin: 0;
@@ -486,8 +539,8 @@ body.kawsay-snap-page .puklla-footer {
 }
 
 .kawsay-card-back-title {
-    font-family: "EB Garamond", Georgia, serif;
-    font-size: clamp(1.25rem, 1.1rem + 0.35vw, 1.5rem);
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(1.15rem, 1rem + 0.3vw, 1.35rem);
     font-weight: 700;
     color: #ffffff;
     line-height: 1.2;
@@ -495,6 +548,7 @@ body.kawsay-snap-page .puklla-footer {
 }
 
 .kawsay-card-back-desc {
+    font-family: 'Inter', sans-serif;
     font-size: clamp(0.84rem, 0.78rem + 0.15vw, 0.92rem);
     line-height: 1.45;
     color: rgba(255, 255, 255, 0.94);
@@ -961,8 +1015,9 @@ body.kawsay-snap-page .puklla-footer {
 }
 
 .ktema-stage__title {
+    font-family: 'Montserrat', sans-serif;
     font-size: clamp(1.6rem, 2.3vw, 2.35rem);
-    font-weight: 800;
+    font-weight: 700;
     color: #0f172a;
     line-height: 1.18;
     letter-spacing: -0.02em;
@@ -988,7 +1043,9 @@ body.kawsay-snap-page .puklla-footer {
 
 .ktema-stage__desc {
     color: #475569;
+    font-family: 'Inter', sans-serif;
     font-size: clamp(0.9rem, 1vw, 1.02rem);
+    font-weight: 400;
     line-height: 1.62;
     margin-bottom: 0;
 }
@@ -1446,17 +1503,19 @@ body {
 .kport-head__title {
     margin: 0 0 0.35rem;
     color: var(--kp-ink);
-    font-family: "EB Garamond", Georgia, serif;
-    font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.4rem);
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(1.6rem, 1.2rem + 1.3vw, 2.2rem);
     font-weight: 700;
-    line-height: 1.1;
+    line-height: 1.15;
 }
 
 .kport-head__sub {
     max-width: 52ch;
     margin: 0;
     color: var(--kp-muted);
+    font-family: 'Inter', sans-serif;
     font-size: 0.98rem;
+    font-weight: 400;
 }
 
 /* Atajos por formato (solo celular/tablet) */
@@ -1553,17 +1612,19 @@ body {
 .kcar__title {
     margin: 0;
     color: var(--kp-ink);
-    font-family: "EB Garamond", Georgia, serif;
-    font-size: 1.5rem;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.35rem;
     font-weight: 700;
-    line-height: 1.15;
+    line-height: 1.2;
 }
 
 .kcar__sub {
     margin: 0.1rem 0 0;
     overflow: hidden;
     color: var(--kp-muted);
+    font-family: 'Inter', sans-serif;
     font-size: 0.88rem;
+    font-weight: 400;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -1932,8 +1993,8 @@ body {
     gap: 0.5rem;
     margin: 0 0 0.75rem;
     color: var(--kp-ink);
-    font-family: "EB Garamond", Georgia, serif;
-    font-size: 1.35rem;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.25rem;
     font-weight: 700;
 }
 
@@ -2238,15 +2299,17 @@ body {
 .kdest__eyebrow .fa-star { color: #d9a21b; }
 
 .kdest__title {
-    font-family: "EB Garamond", Georgia, serif;
-    font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.2rem);
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(1.4rem, 1.1rem + 1.1vw, 1.95rem);
     font-weight: 700;
-    line-height: 1.1;
+    line-height: 1.18;
 }
 
 .kdest__desc {
     color: var(--kp-muted);
+    font-family: 'Inter', sans-serif;
     font-size: 0.95rem;
+    font-weight: 400;
     line-height: 1.55;
 }
 
@@ -2381,10 +2444,10 @@ body {
 .karea-hero__titulo {
     margin: 0 0 0.5rem;
     color: #fff;
-    font-family: "EB Garamond", Georgia, serif;
-    font-size: clamp(2rem, 1.4rem + 2.4vw, 3rem);
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(1.8rem, 1.3rem + 2vw, 2.6rem);
     font-weight: 700;
-    line-height: 1.05;
+    line-height: 1.12;
     text-shadow: 0 2px 14px rgba(0, 0, 0, 0.25);
 }
 
@@ -2392,7 +2455,9 @@ body {
     max-width: 60ch;
     margin: 0 0 0.75rem;
     color: rgba(255, 255, 255, 0.9);
+    font-family: 'Inter', sans-serif;
     font-size: 1rem;
+    font-weight: 400;
     line-height: 1.55;
 }
 
@@ -2453,8 +2518,8 @@ body {
 .karea-seccion {
     margin: 0 0 1.25rem;
     color: var(--kp-ink);
-    font-family: "EB Garamond", Georgia, serif;
-    font-size: 1.6rem;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.45rem;
     font-weight: 700;
 }
 
