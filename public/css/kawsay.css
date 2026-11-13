@@ -764,35 +764,532 @@ body.kawsay-snap-page .puklla-footer {
     .kcom__avatar { width: 2.2rem; height: 2.2rem; font-size: .95rem; }
 }
 
-/* Portada del tema: foto principal en la cabecera de la vista del tema
-   (a la izquierda del texto en desktop; arriba del título en mobile). */
-/* Rejilla de la cabecera del tema: volver + contenido a la izquierda y el
-   buscador en la derecha, centrado en vertical respecto a TODA la cabecera.
-   En mobile se apila: volver, buscador, foto y texto. */
-.kawsay-tema-header {
-    display: grid; grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: "back search" "hero search";
-    column-gap: 2rem; row-gap: 1rem;
+/* ── Vista Detalle de Tema (Kawsay) — Layout a 100vh ─────────────────
+   - Fondo limpio y luminoso (sin hero oscuro ni foto de fondo).
+   - En PC: Todo el escenario (Volver, Foto a la izq, Contenido a la der
+     y barra de formatos en una sola línea) entra dentro de 100vh.
+   - En Tablet y Móvil: Flujo adaptativo natural, sin apretar elementos.
+───────────────────────────────────────────────────────────────────── */
+
+.ktema-stage {
+    position: relative;
+    background-color: #faf9f6;
+    background-image:
+        radial-gradient(at 0% 0%, color-mix(in srgb, var(--area-color, #6e7d1e) 8%, transparent) 0px, transparent 55%),
+        radial-gradient(at 100% 100%, color-mix(in srgb, var(--area-color, #6e7d1e) 5%, transparent) 0px, transparent 50%),
+        #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    color: #1e293b;
 }
-.kawsay-tema-header__back { grid-area: back; justify-self: start; }
-.kawsay-tema-header__search { grid-area: search; align-self: center; width: 260px; }
-.kawsay-tema-header > .kawsay-tema-hero { grid-area: hero; }
+
+@media (min-width: 992px) {
+    .ktema-stage {
+        height: calc(100vh - var(--puklla-nav-h, 4.5rem));
+        min-height: calc(100vh - var(--puklla-nav-h, 4.5rem));
+        max-height: calc(100vh - var(--puklla-nav-h, 4.5rem));
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ktema-stage > .container {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding-top: 1.1rem;
+        padding-bottom: 0.9rem;
+    }
+
+    .ktema-stage__body {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        margin-top: auto;
+        margin-bottom: auto;
+    }
+}
+
+/* En monitores de escritorio con poca altura vertical, permitir scroll seguro sin mutilar */
+@media (min-width: 992px) and (max-height: 650px) {
+    .ktema-stage {
+        height: auto;
+        min-height: calc(100vh - var(--puklla-nav-h, 4.5rem));
+        max-height: none;
+        overflow: visible;
+    }
+}
+
+/* ── Navegación superior (Botón Volver) ── */
+.ktema-stage__top {
+    flex-shrink: 0;
+    margin-bottom: 0.5rem;
+}
+
+.ktema-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 0.83rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all .2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.ktema-back-btn:hover {
+    color: var(--area-color, #6e7d1e);
+    border-color: var(--area-color, #6e7d1e);
+    background: color-mix(in srgb, var(--area-color, #6e7d1e) 8%, #ffffff);
+    transform: translateX(-3px);
+    text-decoration: none;
+}
+
+.ktema-back-btn i {
+    font-size: 0.8rem;
+    transition: transform .2s ease;
+}
+
+.ktema-back-btn:hover i {
+    transform: translateX(-2px);
+}
+
+/* ── Columna izquierda: Imagen destacada del tema ── */
+.ktema-stage__media-wrap {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ktema-stage__figure {
+    width: 100%;
+    margin: 0;
+    aspect-ratio: 4 / 3;
+    max-height: clamp(240px, 42vh, 400px);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 18px 40px -12px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    background: #e2e8f0;
+    position: relative;
+}
+
+.ktema-stage__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ktema-stage__figure:hover .ktema-stage__img {
+    transform: scale(1.035);
+}
+
+/* Placeholder artístico cuando el tema no tiene imagen */
+.ktema-stage__figure--placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--area-color, #6e7d1e) 16%, #ffffff), color-mix(in srgb, var(--area-color, #6e7d1e) 6%, #f8fafc));
+    border: 2px dashed color-mix(in srgb, var(--area-color, #6e7d1e) 30%, transparent);
+    padding: 2rem 1.5rem;
+    text-align: center;
+}
+
+.ktema-stage__ph-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--area-color, #6e7d1e) 18%, transparent);
+    color: var(--area-color, #6e7d1e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7rem;
+    margin-bottom: 0.85rem;
+}
+
+.ktema-stage__ph-area {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--area-color, #6e7d1e);
+    margin-bottom: 0.25rem;
+}
+
+.ktema-stage__ph-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #1e293b;
+    line-height: 1.3;
+    max-width: 280px;
+}
+
+/* ── Columna derecha: Título, descripción y acciones ── */
+.ktema-stage__content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.ktema-stage__badge-row {
+    margin-bottom: 0.35rem;
+}
+
+.ktema-stage__area-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.22rem 0.65rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--area-color, #6e7d1e) 12%, transparent);
+    color: var(--area-color, #6e7d1e);
+}
+
+.ktema-stage__title {
+    font-size: clamp(1.6rem, 2.3vw, 2.35rem);
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.75rem;
+}
+
+.ktema-stage__desc-scroll {
+    max-height: clamp(100px, 18vh, 180px);
+    overflow-y: auto;
+    padding-right: 0.6rem;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--area-color, #6e7d1e) 35%, transparent) transparent;
+}
+
+.ktema-stage__desc-scroll::-webkit-scrollbar {
+    width: 5px;
+}
+
+.ktema-stage__desc-scroll::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--area-color, #6e7d1e) 35%, transparent);
+    border-radius: 999px;
+}
+
+.ktema-stage__desc {
+    color: #475569;
+    font-size: clamp(0.9rem, 1vw, 1.02rem);
+    line-height: 1.62;
+    margin-bottom: 0;
+}
+
+.ktema-stage__share-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-top: 0.85rem;
+    padding-top: 0.4rem;
+}
+
+.ktema-stage__share-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.ktema-stage .kawsay-share {
+    margin-top: 0;
+    gap: 0.45rem;
+}
+
+.ktema-stage .kawsay-share a,
+.ktema-stage .kawsay-share button {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: all .2s ease;
+}
+
+.ktema-stage .kawsay-share a:hover,
+.ktema-stage .kawsay-share button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.ktema-stage .kawsay-share a[aria-label*="WhatsApp"]:hover {
+    background: #25d366;
+    border-color: #25d366;
+    color: #ffffff;
+}
+
+.ktema-stage .kawsay-share a[aria-label*="Facebook"]:hover {
+    background: #1877f2;
+    border-color: #1877f2;
+    color: #ffffff;
+}
+
+.ktema-stage .kawsay-share .kawsay-share__copy:hover {
+    background: var(--area-color, #6e7d1e);
+    border-color: var(--area-color, #6e7d1e);
+    color: #ffffff;
+}
+
+.ktema-stage .kawsay-share .kawsay-share__copy.is-copiado {
+    background: #10b981 !important;
+    border-color: #10b981 !important;
+    color: #ffffff !important;
+}
+
+/* ── Franja inferior de formatos (Dock en una sola línea en PC) ── */
+.ktema-stage__dock-section {
+    flex-shrink: 0;
+    padding-top: 0.75rem;
+    padding-bottom: 0.25rem;
+    border-top: 1px solid color-mix(in srgb, var(--area-color, #6e7d1e) 15%, #e2e8f0);
+}
+
+.ktema-dock-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.45rem;
+}
+
+.ktema-dock-header__eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #64748b;
+}
+
+.ktema-dock-scroll {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding-bottom: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+.ktema-dock-scroll::-webkit-scrollbar {
+    height: 4px;
+}
+
+.ktema-dock-scroll::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--area-color, #6e7d1e) 30%, transparent);
+    border-radius: 999px;
+}
+
+.ktema-dock-track {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+    min-width: min-content;
+}
+
+.ktema-dock-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.38rem 0.7rem;
+    border-radius: 999px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #1e293b;
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all .2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    cursor: pointer;
+}
+
+button.ktema-dock-pill {
+    font: inherit;
+    appearance: none;
+}
+
+.ktema-dock-pill:hover {
+    color: var(--area-color, #6e7d1e);
+    border-color: var(--area-color, #6e7d1e);
+    background: #ffffff;
+    box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.12), 0 2px 6px -1px color-mix(in srgb, var(--area-color, #6e7d1e) 25%, transparent);
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+.ktema-dock-pill__icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--area-color, #6e7d1e) 12%, transparent);
+    color: var(--area-color, #6e7d1e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    transition: background .2s ease, color .2s ease;
+}
+
+.ktema-dock-pill:hover .ktema-dock-pill__icon {
+    background: var(--area-color, #6e7d1e);
+    color: #ffffff;
+}
+
+.ktema-dock-pill__name {
+    line-height: 1;
+}
+
+.ktema-dock-pill__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.2rem;
+    height: 1.2rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: var(--area-color, #6e7d1e);
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    margin-left: 0.15rem;
+}
+
+.ktema-dock-pill--empty {
+    opacity: 0.42;
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    cursor: default;
+    pointer-events: none;
+}
+
+.ktema-dock-pill--empty .ktema-dock-pill__icon {
+    background: #e2e8f0;
+    color: #94a3b8;
+}
+
+.ktema-dock-pill--empty .ktema-dock-pill__count {
+    background: #cbd5e1;
+    color: #64748b;
+}
+
+/* Indicador sutil para explorar catálogo y comentarios abajo */
+.ktema-scroll-cue {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #64748b;
+    text-decoration: none;
+    transition: color .2s ease;
+}
+
+.ktema-scroll-cue:hover {
+    color: var(--area-color, #6e7d1e);
+    text-decoration: none;
+}
+
+.ktema-scroll-cue i {
+    animation: ktemaBounce 2s infinite ease-in-out;
+}
+
+@keyframes ktemaBounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(3px); }
+    60% { transform: translateY(1.5px); }
+}
+
+/* ── Adaptación responsive: Tablets y Mobile ── */
+@media (max-width: 991.98px) {
+    .ktema-stage {
+        height: auto;
+        min-height: auto;
+        max-height: none;
+        overflow: visible;
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .ktema-stage__figure {
+        aspect-ratio: 16 / 10;
+        max-height: 340px;
+    }
+
+    .ktema-stage__desc-scroll {
+        max-height: none;
+        overflow-y: visible;
+        padding-right: 0;
+    }
+
+    .ktema-stage__dock-section {
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+    }
+
+    .ktema-dock-scroll {
+        scroll-snap-type: x mandatory;
+    }
+
+    .ktema-dock-pill {
+        scroll-snap-align: start;
+    }
+}
+
 @media (max-width: 767.98px) {
-    .kawsay-tema-header { grid-template-columns: minmax(0, 1fr); grid-template-areas: "back" "search" "hero"; }
-    .kawsay-tema-header__search { align-self: stretch; width: auto; }
-}
-.kawsay-tema-hero { display: flex; align-items: center; gap: 2.5rem; }
-.kawsay-tema-hero__texto { flex: 1; min-width: 0; }
-.kawsay-tema-hero__foto {
-    flex: 0 0 min(32%, 340px); margin: 0; aspect-ratio: 4 / 3;
-    border-radius: 16px; overflow: hidden;
-    border: 3px solid rgba(255, 255, 255, .35);
-    box-shadow: 0 16px 36px rgba(0, 0, 0, .3);
-}
-.kawsay-tema-hero__foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
-@media (max-width: 767.98px) {
-    .kawsay-tema-hero { flex-direction: column; align-items: stretch; gap: 1.1rem; }
-    .kawsay-tema-hero__foto { flex: none; aspect-ratio: 16 / 9; }
+    .ktema-stage {
+        padding-top: 1.15rem;
+        padding-bottom: 1.15rem;
+    }
+
+    .ktema-stage__figure {
+        aspect-ratio: 16 / 9;
+        border-radius: 16px;
+        max-height: 230px;
+    }
+
+    .ktema-stage__title {
+        font-size: 1.45rem;
+        margin-top: 0.2rem;
+        margin-bottom: 0.55rem;
+    }
+
+    .ktema-stage__desc {
+        font-size: 0.92rem;
+        line-height: 1.55;
+    }
+
+    .ktema-dock-pill {
+        padding: 0.35rem 0.65rem;
+        font-size: 0.78rem;
+    }
+
+    .ktema-dock-pill__icon {
+        width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
+    }
 }
 
 .kawsay-back-link { color: rgba(255, 255, 255, .85); text-decoration: none; font-size: .85rem; font-weight: 600; }

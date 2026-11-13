@@ -15,81 +15,139 @@
 @endsection
 
 @section('contenido')
-<div class="kawsay-area-header">
-    <div class="container py-4 py-md-5">
-        <div class="kawsay-tema-header mb-3">
-            <a href="{{ route('kawsay.area', $areaSlug) }}" class="kawsay-back-link kawsay-tema-header__back">
-                <i class="fa fa-arrow-left"></i> {{ $area->nombre }}
+@php
+    $areaColor = $area->color ?: '#6e7d1e';
+    // Mapeo de nombres cortos para optimizar la fila única horizontal en PC
+    $nombresCortos = [
+        'ficha' => 'Fichas',
+        'teoria' => 'Teoría',
+        'video' => 'Videos',
+        'presentacion' => 'Presentaciones',
+        'bibliografia' => 'Bibliografía',
+        'galeria' => 'Galería',
+        'audio' => 'Audios',
+        'experiencia' => 'Experiencias',
+        'mapa' => 'Mapas',
+    ];
+@endphp
+
+<section class="ktema-stage" style="--area-color: {{ $areaColor }};">
+    <div class="container">
+        {{-- Barra superior de navegación --}}
+        <div class="ktema-stage__top">
+            <a href="{{ route('kawsay.area', $areaSlug) }}" class="ktema-back-btn">
+                <i class="fa fa-arrow-left" aria-hidden="true"></i>
+                <span>Volver a <strong>{{ $area->nombre }}</strong></span>
             </a>
         </div>
 
-        <div class="kawsay-tema-hero">
-            @if ($tema->imagen)
-                <figure class="kawsay-tema-hero__foto">
-                    <img src="{{ asset($tema->imagen) }}" alt="{{ $tema->titulo }}" fetchpriority="high">
-                </figure>
-            @endif
-            <div class="kawsay-tema-hero__texto">
-                <h1 class="kawsay-area-header__title mb-0">{{ $tema->titulo }}</h1>
-                @if ($tema->descripcion)
-                    <p class="kawsay-area-header__desc">{!! nl2br(e($tema->descripcion)) !!}</p>
-                @endif
-
-                <div class="kawsay-share">
-                    <a href="https://wa.me/?text={{ urlencode($tema->titulo . ' - ' . request()->url()) }}" target="_blank" rel="noopener" aria-label="Compartir por WhatsApp">
-                        <i class="fab fa-whatsapp"></i>
-                    </a>
-                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(request()->url()) }}" target="_blank" rel="noopener" aria-label="Compartir en Facebook">
-                        <i class="fab fa-facebook"></i>
-                    </a>
-                    <button type="button" class="kawsay-share__copy" data-url="{{ request()->url() }}" aria-label="Copiar enlace">
-                        <i class="fa fa-link"></i>
-                    </button>
+        {{-- Cuerpo principal dividido: Izquierda imagen, Derecha contenido --}}
+        <div class="ktema-stage__body row g-4 g-xl-5 align-items-center">
+            <div class="col-12 col-lg-5 col-xl-5">
+                <div class="ktema-stage__media-wrap">
+                    @if ($tema->imagen)
+                        <figure class="ktema-stage__figure">
+                            <img src="{{ asset($tema->imagen) }}" alt="{{ $tema->titulo }}" class="ktema-stage__img" fetchpriority="high">
+                        </figure>
+                    @else
+                        <div class="ktema-stage__figure ktema-stage__figure--placeholder">
+                            <div class="ktema-stage__ph-icon"><i class="fa fa-leaf" aria-hidden="true"></i></div>
+                            <span class="ktema-stage__ph-area">{{ $area->nombre }}</span>
+                            <span class="ktema-stage__ph-title">{{ $tema->titulo }}</span>
+                        </div>
+                    @endif
                 </div>
             </div>
 
-        </div>
-        </div>
-    </div>
-</div>
+            <div class="col-12 col-lg-7 col-xl-7">
+                <div class="ktema-stage__content">
+                    <div class="ktema-stage__badge-row">
+                        <span class="ktema-stage__area-badge">
+                            <i class="fa fa-folder-open" aria-hidden="true"></i> {{ $area->nombre }}
+                        </span>
+                    </div>
 
-<div class="container py-4 py-md-5">
-    <h2 class="h5 fw-bold mb-3">En este tema encontrarás</h2>
-    <div class="row g-3">
-        @foreach ($tiposContenido as $tipoSlug => $tipo)
-            @php $total = $conteos[$tipoSlug] ?? 0; @endphp
-            @if ($total > 0 && $tipoSlug === 'galeria' && $fotos->isNotEmpty())
-                {{-- Galería fotográfica: no lleva a otra página, abre el visor en popup. --}}
-                <div class="col-6 col-md-3">
-                    <button type="button" class="kawsay-tipo-card" id="kawsayGaleriaBtn" aria-haspopup="dialog">
-                        <span class="kawsay-tipo-card__icon"><i class="fa {{ $tipo['icono'] }}"></i></span>
-                        <span class="kawsay-tipo-card__title">{{ $tipo['label'] }}</span>
-                        <span class="kawsay-tipo-card__count">{{ $fotos->count() }} {{ $fotos->count() === 1 ? 'foto' : 'fotos' }}</span>
-                    </button>
+                    <h1 class="ktema-stage__title">{{ $tema->titulo }}</h1>
+
+                    @if ($tema->descripcion)
+                        <div class="ktema-stage__desc-scroll">
+                            <p class="ktema-stage__desc">{!! nl2br(e($tema->descripcion)) !!}</p>
+                        </div>
+                    @endif
+
+                    <div class="ktema-stage__share-row">
+                        <span class="ktema-stage__share-label">Compartir:</span>
+                        <div class="kawsay-share">
+                            <a href="https://wa.me/?text={{ urlencode($tema->titulo . ' - ' . request()->url()) }}" target="_blank" rel="noopener" aria-label="Compartir por WhatsApp" title="Compartir en WhatsApp">
+                                <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                            </a>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(request()->url()) }}" target="_blank" rel="noopener" aria-label="Compartir en Facebook" title="Compartir en Facebook">
+                                <i class="fab fa-facebook-f" aria-hidden="true"></i>
+                            </a>
+                            <button type="button" class="kawsay-share__copy" data-url="{{ request()->url() }}" aria-label="Copiar enlace" title="Copiar enlace al portapapeles">
+                                <i class="fa fa-link" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            @elseif ($total > 0)
-                <div class="col-6 col-md-3">
-                    <a href="{{ route('kawsay.contenido', [$areaSlug, $temaSlug, $tipoSlug]) }}" class="kawsay-tipo-card">
-                        <span class="kawsay-tipo-card__icon"><i class="fa {{ $tipo['icono'] }}"></i></span>
-                        <span class="kawsay-tipo-card__title">{{ $tipo['label'] }}</span>
-                        <span class="kawsay-tipo-card__count">{{ $total }} {{ $total === 1 ? 'archivo' : 'archivos' }}</span>
+            </div>
+        </div>
+
+        {{-- Franja inferior: Formatos en una sola línea en PC --}}
+        <div class="ktema-stage__dock-section">
+            <div class="ktema-dock-header">
+                <span class="ktema-dock-header__eyebrow">
+                    <i class="fa fa-layer-group me-1" aria-hidden="true"></i> Formatos disponibles
+                </span>
+
+                @if ($catalogo->isNotEmpty() || $tema->comentarios->isNotEmpty())
+                    <a href="#mas-contenido" class="ktema-scroll-cue d-none d-lg-inline-flex" aria-label="Ver catálogo y comentarios">
+                        <span>Catálogo y comentarios</span>
+                        <i class="fa fa-chevron-down" aria-hidden="true"></i>
                     </a>
-                </div>
-            @else
-                <div class="col-6 col-md-3">
-                    <span class="kawsay-tipo-card kawsay-tipo-card--vacio">
-                        <span class="kawsay-tipo-card__icon"><i class="fa {{ $tipo['icono'] }}"></i></span>
-                        <span class="kawsay-tipo-card__title">{{ $tipo['label'] }}</span>
-                        <span class="kawsay-tipo-card__count">Próximamente</span>
-                    </span>
-                </div>
-            @endif
-        @endforeach
-    </div>
+                @endif
+            </div>
 
-    {{-- Libros y videos del catálogo asignados a este tema (Panel → Libros/Videos → "Tema del repositorio") --}}
+            <div class="ktema-dock-scroll">
+                <div class="ktema-dock-track" role="toolbar" aria-label="Formatos de contenido">
+                    @foreach ($tiposContenido as $tipoSlug => $tipo)
+                        @php
+                            $total = $conteos[$tipoSlug] ?? 0;
+                            $nombreCorto = $nombresCortos[$tipoSlug] ?? $tipo['label'];
+                        @endphp
+
+                        @if ($total > 0 && $tipoSlug === 'galeria' && $fotos->isNotEmpty())
+                            {{-- Galería fotográfica: no lleva a otra página, abre el visor en popup. --}}
+                            <button type="button" class="ktema-dock-pill ktema-dock-pill--active" id="kawsayGaleriaBtn" aria-haspopup="dialog" title="{{ $tipo['label'] }} ({{ $fotos->count() }} {{ $fotos->count() === 1 ? 'foto' : 'fotos' }})">
+                                <span class="ktema-dock-pill__icon"><i class="fa {{ $tipo['icono'] }}" aria-hidden="true"></i></span>
+                                <span class="ktema-dock-pill__name">{{ $nombreCorto }}</span>
+                                <span class="ktema-dock-pill__count">{{ $fotos->count() }}</span>
+                            </button>
+                        @elseif ($total > 0)
+                            <a href="{{ route('kawsay.contenido', [$areaSlug, $temaSlug, $tipoSlug]) }}" class="ktema-dock-pill ktema-dock-pill--active" title="{{ $tipo['label'] }} ({{ $total }} {{ $total === 1 ? 'archivo' : 'archivos' }})">
+                                <span class="ktema-dock-pill__icon"><i class="fa {{ $tipo['icono'] }}" aria-hidden="true"></i></span>
+                                <span class="ktema-dock-pill__name">{{ $nombreCorto }}</span>
+                                <span class="ktema-dock-pill__count">{{ $total }}</span>
+                            </a>
+                        @else
+                            <span class="ktema-dock-pill ktema-dock-pill--empty" title="{{ $tipo['label'] }} (Próximamente)">
+                                <span class="ktema-dock-pill__icon"><i class="fa {{ $tipo['icono'] }}" aria-hidden="true"></i></span>
+                                <span class="ktema-dock-pill__name">{{ $nombreCorto }}</span>
+                                <span class="ktema-dock-pill__count">0</span>
+                            </span>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{-- Sección secundaria accesible al hacer scroll: Catálogo y comentarios --}}
+<div class="container py-4 py-md-5" id="mas-contenido">
+    {{-- Libros y videos del catálogo asignados a este tema --}}
     @if ($catalogo->isNotEmpty())
-        <section class="kcar ktema-catalogo" id="catalogo-tema" aria-labelledby="kcar-titulo-catalogo" data-kcar>
+        <section class="kcar ktema-catalogo mb-5" id="catalogo-tema" aria-labelledby="kcar-titulo-catalogo" data-kcar>
             <div class="kcar__head">
                 <span class="kcar__icon" aria-hidden="true"><i class="fa fa-book-open"></i></span>
                 <div class="kcar__heading">
