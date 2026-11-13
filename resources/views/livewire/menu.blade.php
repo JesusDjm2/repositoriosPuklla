@@ -146,7 +146,7 @@
                 <div class="menu-bar-actions">
                     @if (!$isHome)
                         <button type="button" class="menu-bar-search" id="menuBarSearchToggle"
-                            aria-label="Abrir buscador" title="Buscar" aria-expanded="false" aria-controls="menuSearchDropdown">
+                            aria-label="Abrir buscador" title="Buscar" aria-expanded="false" aria-controls="menuSearchModal">
                             <i class="fa fa-search" aria-hidden="true"></i>
                         </button>
                     @endif
@@ -161,17 +161,45 @@
             </div>
 
             @if (!$isHome)
-                <div class="menu-search-dropdown" id="menuSearchDropdown" aria-hidden="true">
-                    <div class="menu-search-dropdown__inner">
-                        <form action="{{ $searchHref }}" method="GET" role="search" class="menu-search-form">
-                            <i class="fa fa-search menu-search-form__icon" aria-hidden="true"></i>
-                            <input type="search" name="query" id="menuSearchInput" class="menu-search-form__input"
-                                placeholder="{{ $searchPlaceholder }}" minlength="3" maxlength="120" autocomplete="off" required>
-                            <button type="submit" class="menu-search-form__submit">Buscar</button>
-                            <button type="button" class="menu-search-form__close" id="menuSearchClose" aria-label="Cerrar buscador">
-                                <i class="fa fa-times" aria-hidden="true"></i>
-                            </button>
-                        </form>
+                {{-- Modal Buscador Spotlight / Nivel Senior --}}
+                <div class="puklla-search-modal" id="menuSearchModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="pukllaSearchModalTitle">
+                    <div class="puklla-search-modal__backdrop" id="menuSearchBackdrop"></div>
+                    <div class="puklla-search-modal__dialog">
+                        <div class="puklla-search-modal__card">
+                            <header class="puklla-search-modal__header">
+                                <span class="puklla-search-modal__eyebrow" id="pukllaSearchModalTitle">
+                                    <i class="fa fa-compass" aria-hidden="true"></i> Explorar Repositorio
+                                </span>
+                                <button type="button" class="puklla-search-modal__close" id="menuSearchClose" aria-label="Cerrar buscador (Esc)">
+                                    <span class="puklla-search-modal__kbd">ESC</span>
+                                    <i class="fa fa-times" aria-hidden="true"></i>
+                                </button>
+                            </header>
+
+                            <form action="{{ $searchHref }}" method="GET" role="search" class="puklla-search-modal__form">
+                                <div class="puklla-search-modal__input-wrap">
+                                    <i class="fa fa-search puklla-search-modal__icon" aria-hidden="true"></i>
+                                    <input type="search" name="query" id="menuSearchInput" class="puklla-search-modal__input"
+                                        placeholder="{{ $searchPlaceholder }}" minlength="3" maxlength="120"
+                                        autocomplete="off" enterkeyhint="search" required>
+                                    <button type="submit" class="puklla-search-modal__submit" aria-label="Buscar">
+                                        <span>Buscar</span>
+                                        <i class="fa fa-arrow-right" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </form>
+
+                            <footer class="puklla-search-modal__footer">
+                                <div class="puklla-search-modal__hints">
+                                    <span class="puklla-search-modal__hint"><kbd>↵</kbd> Buscar</span>
+                                    <span class="puklla-search-modal__hint"><kbd>ESC</kbd> Cerrar</span>
+                                </div>
+                                <div class="puklla-search-modal__badge">
+                                    <span class="puklla-search-modal__dot"></span>
+                                    <span>{{ $isKawsay ? 'Kawsay' : ($isSisipedia ? 'Sisipedia' : ($isBiblioteca ? 'Biblioteca' : 'Pukllasunchis')) }}</span>
+                                </div>
+                            </footer>
+                        </div>
                     </div>
                 </div>
             @endif
@@ -203,7 +231,7 @@
                     <div class="menu-actions">
                         @if (!$isHome)
                             <button type="button" class="menu-link menu-link--search" id="menuSearchToggle"
-                                title="Buscar" aria-label="Abrir buscador" aria-expanded="false" aria-controls="menuSearchDropdown">
+                                title="Buscar" aria-label="Abrir buscador" aria-expanded="false" aria-controls="menuSearchModal">
                                 <i class="fa fa-search" aria-hidden="true"></i>
                                 <span class="menu-link__label">Buscar</span>
                             </button>
@@ -284,61 +312,74 @@
             menuClose?.addEventListener('click', toggleMenu);
             menuOverlay?.addEventListener('click', toggleMenu);
 
-            // Buscador desplegable del menú (cuando no estamos en inicio)
-            const searchDropdown = document.getElementById('menuSearchDropdown');
+            // Modal Buscador Spotlight / Nivel Senior (cuando no estamos en inicio)
+            const searchModal = document.getElementById('menuSearchModal');
+            const searchBackdrop = document.getElementById('menuSearchBackdrop');
             const searchToggle = document.getElementById('menuSearchToggle');
             const barSearchToggle = document.getElementById('menuBarSearchToggle');
             const searchClose = document.getElementById('menuSearchClose');
             const searchInput = document.getElementById('menuSearchInput');
 
-            function toggleSearch(open) {
-                if (!searchDropdown) return;
-                const shouldOpen = typeof open === 'boolean' ? open : !searchDropdown.classList.contains('is-open');
-                searchDropdown.classList.toggle('is-open', shouldOpen);
-                searchDropdown.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+            function toggleSearchModal(open) {
+                if (!searchModal) return;
+                const shouldOpen = typeof open === 'boolean' ? open : !searchModal.classList.contains('is-open');
+                searchModal.classList.toggle('is-open', shouldOpen);
+                searchModal.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
                 searchToggle?.classList.toggle('is-active', shouldOpen);
                 searchToggle?.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
                 barSearchToggle?.classList.toggle('is-active', shouldOpen);
                 barSearchToggle?.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
 
+                // Bloquear scroll de la página de fondo mientras el popup está abierto
                 if (shouldOpen) {
-                    setTimeout(function() { searchInput?.focus(); }, 80);
+                    document.body.classList.add('puklla-modal-open');
+                    document.body.style.overflow = 'hidden';
+                    setTimeout(function() {
+                        searchInput?.focus();
+                        searchInput?.select();
+                    }, 120);
+                } else {
+                    document.body.classList.remove('puklla-modal-open');
+                    if (!menuSidebar?.classList.contains('active')) {
+                        document.body.style.overflow = '';
+                    }
                 }
             }
 
             searchToggle?.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                toggleSearch();
+                toggleSearchModal(true);
             });
 
             barSearchToggle?.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                toggleSearch();
+                toggleSearchModal(true);
             });
 
             searchClose?.addEventListener('click', function(e) {
                 e.preventDefault();
-                toggleSearch(false);
+                toggleSearchModal(false);
             });
 
-            // Cerrar buscador al hacer clic fuera
-            document.addEventListener('click', function(e) {
-                if (searchDropdown?.classList.contains('is-open')) {
-                    if (!searchDropdown.contains(e.target) && !searchToggle?.contains(e.target) && !barSearchToggle?.contains(e.target)) {
-                        toggleSearch(false);
-                    }
-                }
+            searchBackdrop?.addEventListener('click', function(e) {
+                e.preventDefault();
+                toggleSearchModal(false);
             });
 
-            // Cerrar con ESC
+            // Atajos de teclado: ESC para cerrar buscador (o menú), Ctrl+K / Cmd+K para abrir buscador
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
-                    if (searchDropdown?.classList.contains('is-open')) {
-                        toggleSearch(false);
+                    if (searchModal?.classList.contains('is-open')) {
+                        toggleSearchModal(false);
                     } else if (menuSidebar?.classList.contains('active')) {
                         toggleMenu();
+                    }
+                } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    if (searchModal) {
+                        e.preventDefault();
+                        toggleSearchModal(true);
                     }
                 }
             });
