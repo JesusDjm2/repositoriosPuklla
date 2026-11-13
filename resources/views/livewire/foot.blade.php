@@ -66,19 +66,19 @@
                     <ul class="puklla-footer__social">
                         <li>
                             <a href="https://www.facebook.com/AsociacionPukllasunchis" target="_blank" rel="noopener"
-                                aria-label="Facebook">
+                                aria-label="Facebook" class="puklla-footer__social-link puklla-footer__social-link--facebook">
                                 <i class="fa-brands fa-facebook-f" aria-hidden="true"></i>
                             </a>
                         </li>
                         <li>
                             <a href="https://www.instagram.com/asociacionpuklla/" target="_blank" rel="noopener"
-                                aria-label="Instagram">
+                                aria-label="Instagram" class="puklla-footer__social-link puklla-footer__social-link--instagram">
                                 <i class="fa-brands fa-instagram" aria-hidden="true"></i>
                             </a>
                         </li>
                         <li>
                             <a href="https://www.youtube.com/@AsociacionPukllasunchis" target="_blank" rel="noopener"
-                                aria-label="YouTube">
+                                aria-label="YouTube" class="puklla-footer__social-link puklla-footer__social-link--youtube">
                                 <i class="fa-brands fa-youtube" aria-hidden="true"></i>
                             </a>
                         </li>

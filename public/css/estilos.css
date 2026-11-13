@@ -2898,37 +2898,50 @@ button.lib-book-card__btn { border: 0; cursor: pointer; font-family: inherit; }
 }
 
 /* ================================================================
-   PUKLLA FOOTER (rediseño Biblioteca) — clases visuales nuevas;
-   el contenido (proyectos, institución, redes) sigue viniendo de
-   livewire/foot.blade.php sin cambios de fondo.
+   PUKLLA FOOTER — Fondo dinámico con color del proyecto activo
+   (--project-accent), texto general blanco de alto contraste y
+   redes sociales interactivas nivel senior con efectos de brillo
+   y micro-animaciones.
    ================================================================ */
 .puklla-footer {
-  background: #1a1712;
-  color: rgba(255, 255, 255, 0.65);
-  padding: 4em 0 0;
+  background-color: var(--project-accent, #ae0c21);
+  background-image: linear-gradient(
+    175deg,
+    color-mix(in srgb, var(--project-accent, #ae0c21) 94%, black) 0%,
+    color-mix(in srgb, var(--project-accent, #ae0c21) 76%, black) 100%
+  );
+  color: #ffffff;
+  padding: 4.5em 0 0;
   font-family: system-ui, -apple-system, sans-serif;
+  position: relative;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 .puklla-footer a {
   text-decoration: none;
-  color: inherit;
-  transition: color 0.3s ease;
+  color: #ffffff;
+  transition: all 0.25s ease;
 }
 .puklla-footer__top {
-  padding-bottom: 2.5em;
+  padding-bottom: 2.8em;
 }
 .puklla-footer__brand {
   display: inline-block;
   margin-bottom: 1.2em;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+.puklla-footer__brand:hover {
+  transform: translateY(-2px);
+  opacity: 0.95;
 }
 .puklla-footer__brand img {
   display: block;
 }
 .puklla-footer__tagline {
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 15px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14.5px;
   line-height: 1.6;
-  max-width: 320px;
-  margin-bottom: 1.4em;
+  max-width: 330px;
+  margin-bottom: 1.5em;
 }
 .puklla-footer__contact {
   list-style: none;
@@ -2937,43 +2950,68 @@ button.lib-book-card__btn { border: 0; cursor: pointer; font-family: inherit; }
 }
 .puklla-footer__contact li {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 0.8em;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0.9em;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.65);
+  color: #ffffff;
 }
-.puklla-footer__contact i {
-  color: var(--project-accent);
-  margin-top: 3px;
-  width: 16px;
-  text-align: center;
+.puklla-footer__contact li i {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
   flex-shrink: 0;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.25s ease;
+}
+.puklla-footer__contact li:hover i {
+  background: #ffffff;
+  color: var(--project-accent, #ae0c21);
+  transform: scale(1.12);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
 }
 .puklla-footer__contact a {
-  color: rgba(255, 255, 255, 0.65);
+  color: #ffffff;
+  transition: opacity 0.2s ease, text-decoration 0.2s ease;
 }
 .puklla-footer__contact a:hover {
-  color: var(--project-accent);
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.puklla-footer__contact a.wasa:hover {
+  color: #65ff9f !important;
+  text-decoration: underline;
 }
 .puklla-footer__heading {
-  color: #fff;
+  color: #ffffff;
   text-transform: uppercase;
-  font-size: 16px;
-  letter-spacing: 0.04em;
-  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  font-weight: 800;
   position: relative;
-  margin-bottom: 1.6em;
-  padding-bottom: 0.6em;
+  margin-bottom: 1.5em;
+  padding-bottom: 0.65em;
 }
 .puklla-footer__heading::after {
   content: "";
   position: absolute;
   left: 0;
   bottom: 0;
-  width: 32px;
-  height: 2px;
-  background: var(--project-accent);
+  width: 36px;
+  height: 3px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
 }
 .puklla-footer__links {
   list-style: none;
@@ -2981,72 +3019,149 @@ button.lib-book-card__btn { border: 0; cursor: pointer; font-family: inherit; }
   margin: 0;
 }
 .puklla-footer__links li {
-  margin-bottom: 0.7em;
+  margin-bottom: 0.65em;
 }
 .puklla-footer__links a {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.88);
   font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.25s ease;
 }
 .puklla-footer__links a:hover {
-  color: var(--project-accent);
+  color: #ffffff;
+  transform: translateX(4px);
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.45);
 }
 .puklla-footer__links--static li {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.82);
   font-size: 14px;
 }
+
+/* ── Redes Sociales Nivel Senior ───────────────────────────────── */
 .puklla-footer__social {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
-  gap: 0.7em;
+  gap: 0.75rem;
 }
+.puklla-footer__social-link,
 .puklla-footer__social a {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
   text-decoration: none;
-  transition: 0.3s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.25s ease,
+              border-color 0.25s ease,
+              box-shadow 0.32s ease,
+              color 0.25s ease;
+  position: relative;
 }
+.puklla-footer__social-link i,
+.puklla-footer__social a i {
+  font-size: 17px;
+  transition: transform 0.25s ease;
+  display: inline-block;
+}
+.puklla-footer__social-link:hover,
 .puklla-footer__social a:hover {
-  background: var(--project-accent);
-  border-color: var(--project-accent);
-  color: #1a1712;
-  transform: translateY(-2px);
+  background: #ffffff;
+  border-color: #ffffff;
+  transform: translateY(-4px) scale(1.08);
+}
+.puklla-footer__social-link:hover i,
+.puklla-footer__social a:hover i {
+  transform: scale(1.15);
+}
+.puklla-footer__social-link:active,
+.puklla-footer__social a:active {
+  transform: translateY(-1px) scale(0.98);
 }
 
-/* Buscador global en el pie: mismo destino que el de la portada principal
-   (busca entre los registros de todos los proyectos), pero discreto — una
-   línea que se ilumina con el acento del proyecto activo, sin caja ni botón
-   de relleno, para no competir con el resto del footer. */
+/* Facebook: disco blanco, glifo azul oficial y resplandor azul */
+.puklla-footer__social-link--facebook:hover,
+.puklla-footer__social a[aria-label*="Facebook"]:hover,
+.puklla-footer__social a:has(.fa-facebook-f):hover {
+  background: #ffffff;
+  color: #1877f2;
+  box-shadow: 0 10px 24px rgba(24, 119, 242, 0.42), 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+/* Instagram: disco blanco, glifo degradado original y resplandor fucsia */
+.puklla-footer__social-link--instagram:hover,
+.puklla-footer__social a[aria-label*="Instagram"]:hover,
+.puklla-footer__social a:has(.fa-instagram):hover {
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(228, 64, 95, 0.45), 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+.puklla-footer__social-link--instagram:hover i,
+.puklla-footer__social a[aria-label*="Instagram"]:hover i,
+.puklla-footer__social a:has(.fa-instagram):hover i {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* YouTube: disco blanco, glifo rojo oficial y resplandor rojo */
+.puklla-footer__social-link--youtube:hover,
+.puklla-footer__social a[aria-label*="YouTube"]:hover,
+.puklla-footer__social a:has(.fa-youtube):hover {
+  background: #ffffff;
+  color: #ff0000;
+  box-shadow: 0 10px 24px rgba(255, 0, 0, 0.42), 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+/* Spotify */
+.puklla-footer__social-link--spotify:hover,
+.puklla-footer__social a[aria-label*="Spotify"]:hover,
+.puklla-footer__social a:has(.fa-spotify):hover {
+  background: #ffffff;
+  color: #1db954;
+  box-shadow: 0 10px 24px rgba(29, 185, 84, 0.42), 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+/* Buscador global en el pie */
 .puklla-footer__search {
   display: flex;
   align-items: center;
-  gap: 0.5em;
+  gap: 0.6em;
   margin-top: 1.6em;
-  padding-bottom: 0.4em;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
-  transition: border-color 0.25s ease;
+  padding: 0.45em 1em;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
 }
 .puklla-footer__search:focus-within {
-  border-color: var(--project-accent);
+  background: rgba(255, 255, 255, 0.24);
+  border-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25), 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 .puklla-footer__search input {
   flex: 1;
   min-width: 0;
   background: transparent;
   border: none;
-  padding: 0.3em 0;
-  color: #fff;
-  font-size: 14px;
+  padding: 0.25em 0;
+  color: #ffffff;
+  font-size: 13.5px;
 }
 .puklla-footer__search input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.75);
 }
 .puklla-footer__search input:focus {
   outline: none;
@@ -3055,36 +3170,41 @@ button.lib-book-card__btn { border: 0; cursor: pointer; font-family: inherit; }
   flex-shrink: 0;
   background: none;
   border: none;
-  padding: 0.3em 0.1em;
-  color: rgba(255, 255, 255, 0.55);
+  padding: 0.25em 0.35em;
+  color: rgba(255, 255, 255, 0.88);
   font-size: 14px;
   cursor: pointer;
-  transition: color 0.25s ease, transform 0.15s ease;
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 .puklla-footer__search:focus-within button,
 .puklla-footer__search button:hover {
-  color: var(--project-accent);
+  color: #ffffff;
+  transform: scale(1.15);
 }
 .puklla-footer__search button:active {
   transform: scale(0.92);
 }
 
 .puklla-footer__bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1.4em 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 1.6em 0;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5em 1.5em;
   justify-content: space-between;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.88);
 }
 .puklla-footer__bottom a {
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 600;
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 0.2s ease;
 }
 .puklla-footer__bottom a:hover {
-  color: var(--project-accent);
+  opacity: 0.8;
+  color: #ffffff;
 }
 .puklla-footer__bottom p {
   margin: 0;
